@@ -41,12 +41,22 @@ const CourseDetail = () => {
   const [quizScore, setQuizScore] = useState(null);
   const [submittingQuiz, setSubmittingQuiz] = useState(false);
   
-  // Créateur de Quiz (Prof)
+  // Créateur / Édition de Quiz (Prof)
   const [showAddQuiz, setShowAddQuiz] = useState(false);
+  const [editingQuizId, setEditingQuizId] = useState(null); // null = création, sinon id du quiz en cours de modification
   const [quizTitle, setQuizTitle] = useState('');
   const [quizQuestions, setQuizQuestions] = useState([
     { questionText: '', options: ['', ''], correctAnswerIndex: 0 }
   ]);
+  const [savingQuiz, setSavingQuiz] = useState(false);
+
+  // Aperçu Prof (tester un quiz sans enregistrer de vraie tentative)
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  // Résultats des élèves pour un quiz donné (vue Prof)
+  const [viewingResultsQuiz, setViewingResultsQuiz] = useState(null);
+  const [quizResults, setQuizResults] = useState([]);
+  const [loadingResults, setLoadingResults] = useState(false);
 
   useEffect(() => {
     fetchCourseDetails();
@@ -217,6 +227,20 @@ const CourseDetail = () => {
     setActiveQuiz(quiz);
     setQuizAnswers({});
     setQuizScore(null);
+    setIsPreviewMode(false);
+    setShowAddQuiz(false);
+    setViewingResultsQuiz(null);
+  };
+
+  // Le prof peut tester son propre quiz sans que ça enregistre une vraie
+  // tentative en base (pas d'appel à /submit, calcul fait localement).
+  const handlePreviewQuiz = (quiz) => {
+    setActiveQuiz(quiz);
+    setQuizAnswers({});
+    setQuizScore(null);
+    setIsPreviewMode(true);
+    setShowAddQuiz(false);
+    setViewingResultsQuiz(null);
   };
 
   const handleSelectQuizAnswer = (questionIdx, answerIdx) => {
@@ -227,8 +251,25 @@ const CourseDetail = () => {
   };
 
   const handleSubmitQuiz = async () => {
+    // Mode aperçu (prof) : on calcule le score localement, sans appeler
+    // l'API ni créer de QuizResult en base.
+    if (isPreviewMode) {
+      let score = 0;
+      activeQuiz.questions.forEach((q, idx) => {
+        if (quizAnswers[idx] !== undefined && quizAnswers[idx] === q.correctAnswerIndex) {
+          score++;
+        }
+      });
+      const total = activeQuiz.questions.length;
+      setQuizScore({
+        score,
+        total,
+        percentage: Math.round((score / total) * 100),
+      });
+      return;
+    }
+
     setSubmittingQuiz(true);
-    const answersArray = Object.keys(quizAnswers).map(key => quizAnswers[key]);
 
     try {
       const res = await api(`/quizzes/${activeQuiz._id}/submit`, {
@@ -288,23 +329,76 @@ const CourseDetail = () => {
     setQuizQuestions(updated);
   };
 
-  const handleCreateQuiz = async (e) => {
+  const resetQuizForm = () => {
+    setQuizTitle('');
+    setQuizQuestions([{ questionText: '', options: ['', ''], correctAnswerIndex: 0 }]);
+    setEditingQuizId(null);
+    setShowAddQuiz(false);
+  };
+
+  const handleSaveQuiz = async (e) => {
     e.preventDefault();
+    setSavingQuiz(true);
     try {
-      const quiz = await api('/quizzes', {
-        method: 'POST',
-        body: JSON.stringify({
-          courseId: id,
-          title: quizTitle,
-          questions: quizQuestions
-        })
-      });
-      setQuizzes([...quizzes, quiz]);
-      setQuizTitle('');
-      setQuizQuestions([{ questionText: '', options: ['', ''], correctAnswerIndex: 0 }]);
-      setShowAddQuiz(false);
+      if (editingQuizId) {
+        // Modification d'un quiz existant
+        const updated = await api(`/quizzes/${editingQuizId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ title: quizTitle, questions: quizQuestions }),
+        });
+        setQuizzes(quizzes.map(q => (q._id === editingQuizId ? updated : q)));
+      } else {
+        // Création d'un nouveau quiz
+        const quiz = await api('/quizzes', {
+          method: 'POST',
+          body: JSON.stringify({
+            courseId: id,
+            title: quizTitle,
+            questions: quizQuestions
+          })
+        });
+        setQuizzes([...quizzes, quiz]);
+      }
+      resetQuizForm();
     } catch (err) {
       alert(err.message);
+    } finally {
+      setSavingQuiz(false);
+    }
+  };
+
+  const handleEditQuiz = (quiz) => {
+    setEditingQuizId(quiz._id);
+    setQuizTitle(quiz.title);
+    // Copie profonde pour ne pas modifier l'objet du state `quizzes` directement
+    setQuizQuestions(quiz.questions.map(q => ({ ...q, options: [...q.options] })));
+    setShowAddQuiz(true);
+    setViewingResultsQuiz(null);
+  };
+
+  const handleDeleteQuiz = async (quizId) => {
+    if (!window.confirm('Voulez-vous vraiment supprimer ce quiz ? Les résultats des élèves associés seront aussi supprimés.')) return;
+    try {
+      await api(`/quizzes/${quizId}`, { method: 'DELETE' });
+      setQuizzes(quizzes.filter(q => q._id !== quizId));
+      if (editingQuizId === quizId) resetQuizForm();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleViewResults = async (quiz) => {
+    setViewingResultsQuiz(quiz);
+    setShowAddQuiz(false);
+    setLoadingResults(true);
+    try {
+      const allResults = await api('/quizzes/teacher/results');
+      setQuizResults(allResults.filter(r => r.quiz?._id === quiz._id));
+    } catch (err) {
+      console.error(err);
+      setQuizResults([]);
+    } finally {
+      setLoadingResults(false);
     }
   };
 
@@ -371,9 +465,13 @@ const CourseDetail = () => {
             <h2 className="text-xl font-extrabold text-white mt-3 mb-2">{course.title}</h2>
             <p className="text-xs text-slate-400 leading-relaxed mb-4">{course.description}</p>
             <div className="flex items-center gap-3 border-t border-white/5 pt-4">
-              <img src={course.teacher?.avatar} alt={course.teacher?.name} className="w-9 h-9 rounded-full object-cover border border-white/10" />
+              <img
+                src={course.teacher?.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (course.teacher?.name || 'Prof')}
+                alt={course.teacher?.name || 'Professeur'}
+                className="w-9 h-9 rounded-full object-cover border border-white/10"
+              />
               <div>
-                <div className="text-xs font-bold text-slate-300">Prof. {course.teacher?.name}</div>
+                <div className="text-xs font-bold text-slate-300">Prof. {course.teacher?.name || 'Non renseigné'}</div>
                 <div className="text-[10px] text-slate-500">Auteur du cours</div>
               </div>
             </div>
@@ -475,7 +573,15 @@ const CourseDetail = () => {
                           }}
                         >
                           <div className="flex items-center gap-2 truncate">
-                            {lesson.contentType === 'video' ? <Play className="w-3.5 h-3.5" /> : lesson.contentType === 'pdf' ? <FileText className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5" />}
+                            {lesson.contentType === 'video' ? (
+                              <Play className="w-3.5 h-3.5" />
+                            ) : lesson.contentType === 'pdf' ? (
+                              <FileText className="w-3.5 h-3.5" />
+                            ) : lesson.contentType === 'jitsi' ? (
+                              <img src="https://cdn.jsdelivr.net/npm/@thesvg/icons/icons/jitsi.svg" alt="Jitsi" className="w-3.5 h-3.5" />
+                            ) : (
+                              <Video className="w-3.5 h-3.5" />
+                            )}
                             <span className="truncate">{lesson.title}</span>
                           </div>
                           {user?.role === 'teacher' && (
@@ -531,7 +637,8 @@ const CourseDetail = () => {
                         >
                           <option value="video">Vidéo YouTube</option>
                           <option value="pdf">Document PDF</option>
-                          <option value="meet">Visioconférence Google Meet</option>
+                          <option value="meet">Visioconférence Google Meet (lien externe)</option>
+                          <option value="jitsi">Salle de classe en direct (intégrée - Jitsi)</option>
                           <option value="text">Texte / Exercice rédigé</option>
                         </select>
                       </div>
@@ -548,6 +655,17 @@ const CourseDetail = () => {
                           className="input-animated p-1.5"
                           placeholder="https://www.youtube.com/watch?v=..."
                         />
+                      </div>
+                    )}
+
+                    {newLessonType === 'jitsi' && (
+                      <div className="flex items-center gap-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                        <img src="https://cdn.jsdelivr.net/npm/@thesvg/icons/icons/jitsi.svg" alt="Jitsi" className="w-6 h-6 shrink-0" />
+                        <p className="text-slate-400 text-[11px] leading-relaxed">
+                          Une salle de classe virtuelle sera créée automatiquement pour cette leçon.
+                          Aucun lien à saisir : les élèves rejoignent le direct directement depuis la
+                          page du cours, sans quitter la plateforme.
+                        </p>
                       </div>
                     )}
 
@@ -664,6 +782,24 @@ const CourseDetail = () => {
                     </div>
                   )}
 
+                  {/* Salle de classe en direct intégrée (Jitsi) */}
+                  {activeLesson.contentType === 'jitsi' && (
+                    <div className="w-full space-y-3">
+                      <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3 text-xs text-slate-300">
+                        <img src="https://cdn.jsdelivr.net/npm/@thesvg/icons/icons/jitsi.svg" alt="Jitsi" className="w-5 h-5 shrink-0" />
+                        <span>Salle de classe en direct — activez votre caméra/micro dans la fenêtre ci-dessous pour rejoindre.</span>
+                      </div>
+                      <div className="w-full h-[600px] rounded-2xl overflow-hidden border border-white/5 bg-black">
+                        <iframe
+                          src={`https://meet.jit.si/profsow-${course._id}-${activeLesson._id}`}
+                          title={activeLesson.title}
+                          allow="camera; microphone; fullscreen; display-capture; autoplay"
+                          style={{ width: '100%', height: '100%', border: 0 }}
+                        ></iframe>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Google Meet Link */}
                   {activeLesson.contentType === 'meet' && activeLesson.meetLink && (
                     <div className="p-8 bg-white/5 border border-white/5 rounded-2xl text-center flex flex-col items-center">
@@ -770,7 +906,17 @@ const CourseDetail = () => {
                 </h3>
                 {user?.role === 'teacher' && (
                   <button
-                    onClick={() => setShowAddQuiz(!showAddQuiz)}
+                    onClick={() => {
+                      if (showAddQuiz) {
+                        resetQuizForm();
+                      } else {
+                        setEditingQuizId(null);
+                        setQuizTitle('');
+                        setQuizQuestions([{ questionText: '', options: ['', ''], correctAnswerIndex: 0 }]);
+                        setShowAddQuiz(true);
+                        setViewingResultsQuiz(null);
+                      }
+                    }}
                     className="btn-shiny px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -782,8 +928,10 @@ const CourseDetail = () => {
               {/* FORMULAIRE DE CRÉATION DE QUIZ (PROF) */}
               {showAddQuiz && user?.role === 'teacher' && (
                 <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl space-y-4 mb-6 text-xs slide-in">
-                  <h4 className="text-sm font-bold text-white border-b border-white/5 pb-2">Nouveau Quiz</h4>
-                  <form onSubmit={handleCreateQuiz} className="space-y-4">
+                  <h4 className="text-sm font-bold text-white border-b border-white/5 pb-2">
+                    {editingQuizId ? 'Modifier le Quiz' : 'Nouveau Quiz'}
+                  </h4>
+                  <form onSubmit={handleSaveQuiz} className="space-y-4">
                     <div className="space-y-1">
                       <label className="block text-slate-400">Titre du Quiz</label>
                       <input
@@ -872,16 +1020,17 @@ const CourseDetail = () => {
                       <div className="flex gap-2">
                         <button
                           type="button"
-                          onClick={() => setShowAddQuiz(false)}
+                          onClick={resetQuizForm}
                           className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded text-white"
                         >
                           Annuler
                         </button>
                         <button
                           type="submit"
-                          className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold"
+                          disabled={savingQuiz}
+                          className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold disabled:opacity-60"
                         >
-                          Créer le Quiz
+                          {savingQuiz ? 'Enregistrement...' : editingQuizId ? 'Enregistrer les modifications' : 'Créer le Quiz'}
                         </button>
                       </div>
                     </div>
@@ -891,12 +1040,19 @@ const CourseDetail = () => {
 
               {/* LISTE ET JEU DU QUIZ */}
               {activeQuiz ? (
-                /* QUIZ ACTIF (RÉALISATION ÉLÈVE) */
+                /* QUIZ ACTIF (RÉALISATION ÉLÈVE OU APERÇU PROF) */
                 <div className="space-y-6">
                   <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                    <h4 className="text-base font-bold text-white">{activeQuiz.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-base font-bold text-white">{activeQuiz.title}</h4>
+                      {isPreviewMode && (
+                        <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                          Mode aperçu — non enregistré
+                        </span>
+                      )}
+                    </div>
                     <button
-                      onClick={() => setActiveQuiz(null)}
+                      onClick={() => { setActiveQuiz(null); setIsPreviewMode(false); }}
                       className="text-slate-400 hover:text-white text-xs font-bold"
                     >
                       Retour
@@ -910,10 +1066,13 @@ const CourseDetail = () => {
                       </div>
                       <h4 className="text-2xl font-bold text-white">Résultats</h4>
                       <p className="text-slate-400 text-sm">
-                        Vous avez terminé le quiz avec le score de :
+                        {isPreviewMode ? 'Aperçu du score obtenu avec ces réponses :' : 'Vous avez terminé le quiz avec le score de :'}
                       </p>
                       <div className="text-4xl font-black text-indigo-400">{quizScore.score} / {quizScore.total}</div>
                       <p className="text-slate-500 text-xs">Pourcentage d'exactitude : {quizScore.percentage}%</p>
+                      {isPreviewMode && (
+                        <p className="text-amber-400 text-xs">Cette tentative n'a pas été enregistrée (mode aperçu).</p>
+                      )}
                       
                       {/* Correction recap */}
                       <div className="bg-slate-900 border border-white/5 rounded-2xl p-6 text-left space-y-4 max-w-xl mx-auto text-xs max-h-60 overflow-y-auto">
@@ -930,7 +1089,7 @@ const CourseDetail = () => {
                       </div>
 
                       <button
-                        onClick={() => setActiveQuiz(null)}
+                        onClick={() => { setActiveQuiz(null); setIsPreviewMode(false); }}
                         className="w-full max-w-xs btn-neon text-white font-bold py-3 rounded-xl cursor-pointer"
                       >
                         Terminer
@@ -968,9 +1127,62 @@ const CourseDetail = () => {
                         {submittingQuiz ? (
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         ) : (
-                          <span>Soumettre mes réponses</span>
+                          <span>{isPreviewMode ? 'Voir le score (aperçu)' : 'Soumettre mes réponses'}</span>
                         )}
                       </button>
+                    </div>
+                  )}
+                </div>
+              ) : viewingResultsQuiz ? (
+                /* RÉSULTATS DES ÉLÈVES POUR CE QUIZ (PROF) */
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                    <h4 className="text-base font-bold text-white">
+                      Résultats — <span className="text-purple-400">{viewingResultsQuiz.title}</span>
+                    </h4>
+                    <button
+                      onClick={() => { setViewingResultsQuiz(null); setQuizResults([]); }}
+                      className="text-slate-400 hover:text-white text-xs font-bold"
+                    >
+                      Retour
+                    </button>
+                  </div>
+
+                  {loadingResults ? (
+                    <div className="flex justify-center py-12">
+                      <div className="loader-spinner"></div>
+                    </div>
+                  ) : quizResults.length === 0 ? (
+                    <div className="text-center py-12 text-slate-500">
+                      <GraduationCap className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                      <p className="text-sm">Aucun élève n'a encore soumis ce quiz.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {quizResults
+                        .slice()
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .map((r) => (
+                        <div key={r._id} className="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-xl text-sm">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={r.student?.avatar}
+                              alt={r.student?.name}
+                              className="w-8 h-8 rounded-full object-cover border border-white/10"
+                            />
+                            <div>
+                              <div className="font-bold text-slate-200">{r.student?.name || 'Élève'}</div>
+                              <div className="text-[10px] text-slate-500">
+                                {new Date(r.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-black text-indigo-400">{r.score} / {r.totalQuestions}</div>
+                            <div className="text-[10px] text-slate-500">{Math.round((r.score / r.totalQuestions) * 100)}%</div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -989,12 +1201,46 @@ const CourseDetail = () => {
                           <div className="font-bold text-slate-200">{quiz.title}</div>
                           <div className="text-[10px] text-slate-500 mt-1">{quiz.questions.length} questions interactives</div>
                         </div>
-                        <button
-                          onClick={() => handleSelectQuiz(quiz)}
-                          className="px-4 py-1.5 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-400 cursor-pointer transition"
-                        >
-                          Faire le Quiz
-                        </button>
+
+                        {user?.role === 'teacher' ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handlePreviewQuiz(quiz)}
+                              title="Aperçu"
+                              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-xs font-bold text-slate-300 cursor-pointer transition"
+                            >
+                              Aperçu
+                            </button>
+                            <button
+                              onClick={() => handleEditQuiz(quiz)}
+                              title="Modifier"
+                              className="px-3 py-1.5 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-400 cursor-pointer transition"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={() => handleViewResults(quiz)}
+                              title="Voir les résultats"
+                              className="px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-bold text-emerald-400 cursor-pointer transition"
+                            >
+                              Résultats
+                            </button>
+                            <button
+                              onClick={() => handleDeleteQuiz(quiz._id)}
+                              title="Supprimer"
+                              className="p-1.5 bg-red-500/10 border border-red-500/20 hover:bg-red-600 hover:text-white rounded-lg text-red-400 cursor-pointer transition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleSelectQuiz(quiz)}
+                            className="px-4 py-1.5 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-400 cursor-pointer transition"
+                          >
+                            Faire le Quiz
+                          </button>
+                        )}
                       </div>
                     ))
                   )}

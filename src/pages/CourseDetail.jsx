@@ -823,7 +823,7 @@ const CourseDetail = () => {
 
                   {/* Contenu textuel */}
                   {activeLesson.contentType === 'text' && (
-                    <div className="bg-white/5 p-6 rounded-2xl border border-white/5 leading-relaxed text-sm text-slate-300 font-medium whitespace-pre-wrap">
+                    <div className="bg-white/5 p-6 rounded-2xl border border-white/5 leading-relaxed text-sm text-slate-300 font-medium whitespace-pre-wrap break-words">
                       {activeLesson.content}
                     </div>
                   )}

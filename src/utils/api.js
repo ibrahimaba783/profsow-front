@@ -1,4 +1,4 @@
-const BASE_URL = 'https://profsow-back.onrender.com/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://profsow-back.onrender.com/api';
 
 const api = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');

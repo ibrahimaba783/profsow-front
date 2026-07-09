@@ -1,30 +1,43 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
-import { Mail, AlertCircle, MailCheck } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
-const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
+const ResetPassword = () => {
+  const { token } = useParams();
+  const navigate = useNavigate();
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSubmitting(true);
 
+    if (password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Les deux mots de passe ne correspondent pas');
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      await api('/auth/forgot-password', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
+      await api(`/auth/reset-password/${token}`, {
+        method: 'PUT',
+        body: JSON.stringify({ password }),
       });
-      // On affiche toujours le même écran de succès, que l'email existe ou
-      // non côté serveur (le backend ne révèle jamais cette information).
-      setSent(true);
+      setSuccess(true);
+      setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
-      setError(err.message || "Une erreur s'est produite, réessayez.");
+      setError(err.message || 'Ce lien est invalide ou a expiré. Demandez-en un nouveau.');
     } finally {
       setSubmitting(false);
     }
@@ -36,28 +49,20 @@ const ForgotPassword = () => {
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-white/5 relative z-10 slide-in">
-        {sent ? (
+        {success ? (
           <div className="text-center py-4 space-y-5">
-            <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
-              <MailCheck className="w-7 h-7" />
+            <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto animate-bounce">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h2 className="text-xl font-extrabold text-white">Vérifiez votre boîte mail</h2>
-            <p className="text-slate-400 text-sm">
-              Si un compte existe avec l'adresse <strong>{email}</strong>, un lien de réinitialisation
-              vient d'être envoyé. Pensez à vérifier vos spams. Ce lien est valable 30 minutes.
-            </p>
-            <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-semibold underline text-sm inline-block mt-2">
-              Retour à la connexion
-            </Link>
+            <h2 className="text-xl font-extrabold text-white">Mot de passe réinitialisé !</h2>
+            <p className="text-slate-400 text-sm">Redirection vers la page de connexion...</p>
           </div>
         ) : (
           <>
             <div className="text-center mb-8">
               <img src={logo} alt="Aliou Sow Academy" className="h-14 w-auto mx-auto mb-4" />
-              <h2 className="text-2xl font-extrabold text-white tracking-wide">Mot de passe oublié</h2>
-              <p className="text-slate-400 text-sm mt-1">
-                Entrez votre email, on vous envoie un lien pour le réinitialiser.
-              </p>
+              <h2 className="text-2xl font-extrabold text-white tracking-wide">Nouveau mot de passe</h2>
+              <p className="text-slate-400 text-sm mt-1">Choisissez un nouveau mot de passe pour votre compte.</p>
             </div>
 
             {error && (
@@ -67,19 +72,54 @@ const ForgotPassword = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Email</label>
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Nouveau mot de passe</label>
                 <div className="relative">
-                  <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                   <input
-                    type="email"
+                    type={showPassword ? 'text' : 'password'}
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="input-animated pl-10"
-                    placeholder="nom@exemple.com"
+                    minLength={6}
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-animated pl-10 pr-10"
+                    placeholder="Min. 6 caractères"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Confirmer le mot de passe</label>
+                <div className="relative">
+                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="input-animated pl-10 pr-10"
+                    placeholder="Retapez le mot de passe"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
 
@@ -91,7 +131,7 @@ const ForgotPassword = () => {
                 {submitting ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <span>Envoyer le lien de réinitialisation</span>
+                  <span>Réinitialiser le mot de passe</span>
                 )}
               </button>
             </form>
@@ -108,4 +148,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default ResetPassword;

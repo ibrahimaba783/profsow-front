@@ -1,13 +1,14 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { User, Mail, Lock, AlertCircle, Sparkles, MailOpen } from 'lucide-react';
+import { User, Mail, Lock, AlertCircle, Sparkles, MailOpen, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [emailPreview, setEmailPreview] = useState('');
@@ -103,7 +104,7 @@ const Register = () => {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Nom Complet</label>
                 <div className="relative">
-                  <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                   <input
                     type="text"
                     required
@@ -118,7 +119,7 @@ const Register = () => {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Email</label>
                 <div className="relative">
-                  <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                   <input
                     type="email"
                     required
@@ -133,16 +134,24 @@ const Register = () => {
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Mot de passe</label>
                 <div className="relative">
-                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="input-animated pl-10"
+                    className="input-animated pl-10 pr-10"
                     placeholder="Min. 6 caractères"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
 

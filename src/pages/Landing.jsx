@@ -28,29 +28,60 @@ const Landing = () => {
     <div className="min-h-screen gradient-bg pt-24 text-slate-100 flex flex-col items-center">
       {/* Hero Section */}
       <header className="w-full max-w-6xl px-6 py-12 md:py-20 text-center flex flex-col items-center relative">
-        {/* Glow Effects */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-72 h-72 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="absolute top-20 left-1/3 w-60 h-60 bg-purple-600/15 rounded-full blur-[120px] pointer-events-none"></div>
+  {/* Glow Effects */}
+  <div className="absolute top-10 left-1/2 -translate-x-1/2 w-72 h-72 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+  <div className="absolute top-20 left-1/3 w-60 h-60 bg-purple-600/15 rounded-full blur-[120px] pointer-events-none"></div>
 
-        <img src={logoFull} alt="Aliou Sow Academy" className="h-56 md:h-72 w-auto mb-6 slide-in" />
+  {/* Logo */}
+  <img
+    src={logoFull}
+    alt="Aliou Sow Academy"
+    className="h-40 md:h-56 w-auto -mt-16 mb-5 slide-in"
+  />
 
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl slide-in">
-          Maîtrisez les <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Mathématiques</span> & la <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-indigo-400">Physique-Chimie</span>
-        </h1>
+  {/* Titre */}
+  <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl slide-in">
+    Maîtrisez les{" "}
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+      Mathématiques
+    </span>{" "}
+    & la{" "}
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+      Physique-Chimie
+    </span>
+  </h1>
 
-        <p className="text-slate-400 text-base md:text-xl max-w-2xl mb-8 leading-relaxed slide-in">
-          Rejoignez la classe en ligne de <strong>M. Aliou Sow</strong> et accédez à des chapitres structurés, des vidéos YouTube, des documents PDF de cours et des sessions d'accompagnement en direct via Google Meet.
-        </p>
+  {/* Description */}
+  <p className="text-slate-300 text-lg md:text-xl max-w-3xl mb-10 leading-relaxed slide-in">
+    Apprenez les{" "}
+    <strong className="text-white">Mathématiques</strong> et la{" "}
+    <strong className="text-white">Physique-Chimie</strong> grâce à des{" "}
+    <span className="text-indigo-400 font-semibold">cours vidéo</span>, des{" "}
+    <span className="text-purple-400 font-semibold">documents PDF</span>, des{" "}
+    <span className="text-emerald-400 font-semibold">quiz interactifs</span> et
+    des{" "}
+    <span className="text-pink-400 font-semibold">
+      séances en direct avec M. Aliou Sow
+    </span>.
+  </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 slide-in">
-          <Link to="/register" className="btn-neon text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-indigo-500/50 transition">
-            Commencer gratuitement
-          </Link>
-          <a href="#courses" className="glass hover:bg-white/5 border border-white/10 text-slate-200 font-semibold px-8 py-3.5 rounded-xl transition">
-            Découvrir les cours
-          </a>
-        </div>
-      </header>
+  {/* Boutons */}
+  <div className="flex flex-col sm:flex-row gap-4 slide-in">
+    <Link
+      to="/register"
+      className="btn-neon text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-indigo-500/50 transition"
+    >
+      Commencer gratuitement
+    </Link>
+
+    <a
+      href="#courses"
+      className="glass hover:bg-white/5 border border-white/10 text-slate-200 font-semibold px-8 py-3.5 rounded-xl transition"
+    >
+      Découvrir les cours
+    </a>
+  </div>
+</header>
 
       {/* Feature Section */}
       <section className="w-full max-w-6xl px-6 py-16 grid grid-cols-1 md:grid-cols-3 gap-8 relative">

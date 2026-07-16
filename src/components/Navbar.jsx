@@ -1,16 +1,33 @@
 import React, { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LogOut, LayoutDashboard } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
+// Liens d'ancrage vers les sections de la landing page
+const ANCHOR_LINKS = [
+  { id: 'modules', label: 'Modules' },
+  { id: 'courses', label: 'Cours' },
+  { id: 'testimonials', label: 'Témoignages' },
+];
+
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  // Si on est déjà sur la landing page, on scrolle en douceur au lieu de recharger la route
+  const handleAnchorClick = (id) => (e) => {
+    if (location.pathname === '/') {
+      e.preventDefault();
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    }
+    // Sinon on laisse le Link naviguer vers "/#id" ; Landing.jsx gère le scroll au montage
   };
 
   return (
@@ -21,6 +38,32 @@ const Navbar = () => {
           ALIOU SOW ACADEMY
         </span>
       </Link>
+
+      {/* Liens de navigation vers les sections (visibles à partir de md) */}
+      <div className="hidden md:flex items-center gap-8">
+        <Link
+          to="/"
+          className="text-slate-300 hover:text-white transition font-medium text-sm"
+          onClick={(e) => {
+            if (location.pathname === '/') {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+        >
+          Accueil
+        </Link>
+        {ANCHOR_LINKS.map((link) => (
+          <Link
+            key={link.id}
+            to={`/#${link.id}`}
+            onClick={handleAnchorClick(link.id)}
+            className="text-slate-300 hover:text-white transition font-medium text-sm"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
 
       <div className="flex items-center gap-6">
         {user ? (

@@ -10,7 +10,6 @@ import {
   Calculator,
   Atom,
   Quote,
-  Megaphone,
 } from 'lucide-react';
 import logoFull from '../assets/logo-aliou-sow-academy-hero.png';
 import logoEmblem from '../assets/logo-aliou-sow-academy-navbar.png';
@@ -175,17 +174,6 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen gradient-bg pt-24 text-slate-100 flex flex-col items-center">
-      {/* Bandeau d'annonce */}
-      <div className="w-full glass border-b border-white/5 py-2.5 px-6 text-center text-sm font-medium text-slate-200 flex items-center justify-center gap-2">
-        <Megaphone className="w-4 h-4 text-indigo-400 shrink-0" />
-        <span>
-          Nouveau : sessions en direct chaque semaine avec M. Aliou Sow —{' '}
-          <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-bold underline underline-offset-2">
-            je m'inscris
-          </Link>
-        </span>
-      </div>
-
       {/* Hero Section */}
       <header className="w-full max-w-6xl px-6 py-12 md:py-20 text-center flex flex-col items-center relative">
         {/* Glow Effects */}

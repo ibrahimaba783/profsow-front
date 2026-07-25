@@ -18,6 +18,8 @@ const TeacherDashboard = () => {
   const [subject, setSubject] = useState('Mathématiques');
   const [level, setLevel] = useState('TS');
   const [price, setPrice] = useState(6000);
+  const [isFree, setIsFree] = useState(false);
+  const [originalPrice, setOriginalPrice] = useState(6000);
   const [imageFile, setImageFile] = useState(null);
   const [creating, setCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -58,7 +60,11 @@ const TeacherDashboard = () => {
     formData.append('description', description);
     formData.append('subject', subject);
     formData.append('level', level);
-    formData.append('price', price);
+    formData.append('price', isFree ? 0 : price);
+    formData.append('isFree', isFree);
+    if (isFree) {
+      formData.append('originalPrice', originalPrice);
+    }
     if (imageFile) {
       formData.append('image', imageFile);
     }
@@ -73,6 +79,9 @@ const TeacherDashboard = () => {
       setTitle('');
       setDescription('');
       setImageFile(null);
+      setIsFree(false);
+      setPrice(6000);
+      setOriginalPrice(6000);
       setShowCreateModal(false);
       
       // Refresh
@@ -179,9 +188,12 @@ const TeacherDashboard = () => {
                 <div key={course._id} className="glass-card rounded-2xl overflow-hidden flex flex-col justify-between">
                   <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url(${course.image})` }}></div>
                   <div className="p-6">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <span className="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2.5 py-0.5 rounded-full font-semibold">{course.subject}</span>
                       <span className="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2.5 py-0.5 rounded-full font-semibold">{course.level}</span>
+                      {course.isFree && (
+                        <span className="text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-semibold">Gratuit</span>
+                      )}
                     </div>
                     <h3 className="text-xl font-bold mt-4 mb-2">{course.title}</h3>
                     <p className="text-slate-400 text-sm line-clamp-2">{course.description}</p>
@@ -359,17 +371,52 @@ const TeacherDashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Tarif annuel (FCFA)</label>
-                  <input
-                    type="number"
-                    required
-                    value={price}
-                    onChange={(e) => setPrice(parseInt(e.target.value))}
-                    className="input-animated"
-                  />
+              {/* Offre promotionnelle : cours gratuit */}
+              <div
+                onClick={() => setIsFree((prev) => !prev)}
+                className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition ${
+                  isFree ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-slate-900/50 border-white/10'
+                }`}
+              >
+                <div>
+                  <p className="text-sm font-bold text-slate-200">Cours gratuit (offre promotionnelle)</p>
+                  <p className="text-xs text-slate-500">Les élèves y accèdent en un clic, sans paiement.</p>
                 </div>
+                <div
+                  className={`w-11 h-6 rounded-full relative transition-colors ${isFree ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      isFree ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {isFree ? (
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Valeur normale (FCFA)</label>
+                    <input
+                      type="number"
+                      value={originalPrice}
+                      onChange={(e) => setOriginalPrice(parseInt(e.target.value))}
+                      className="input-animated"
+                    />
+                    <p className="text-[11px] text-slate-500">Affichée barrée à côté de « Gratuit » sur les cartes.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Tarif annuel (FCFA)</label>
+                    <input
+                      type="number"
+                      required
+                      value={price}
+                      onChange={(e) => setPrice(parseInt(e.target.value))}
+                      className="input-animated"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Image de couverture</label>

@@ -14,6 +14,8 @@ const CourseDetail = () => {
   const [checkingSub, setCheckingSub] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
   const [openPreviewChapters, setOpenPreviewChapters] = useState({});
+  const [enrollingFree, setEnrollingFree] = useState(false);
+  const [freeEnrollError, setFreeEnrollError] = useState('');
 
   // Leçon active
   const [activeLesson, setActiveLesson] = useState(null);
@@ -433,6 +435,20 @@ const CourseDetail = () => {
     }
   };
 
+  const handleEnrollFree = async () => {
+    setEnrollingFree(true);
+    setFreeEnrollError('');
+    try {
+      await api(`/subscriptions/enroll-free/${id}`, { method: 'POST' });
+      setIsSubscribed(true);
+      await fetchCourseDetails(); // Recharge le cours pour obtenir le contenu complet désormais débloqué
+    } catch (err) {
+      setFreeEnrollError(err.message || "Impossible d'activer ce cours gratuit pour le moment");
+    } finally {
+      setEnrollingFree(false);
+    }
+  };
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setLinkCopied(true);
@@ -456,6 +472,10 @@ const CourseDetail = () => {
       setOpenPreviewChapters((prev) => ({ ...prev, [chapterId]: !prev[chapterId] }));
     };
 
+    // Filet de sécurité : un cours à 0 FCFA est considéré gratuit même si la case
+    // "Cours gratuit" n'a pas été explicitement cochée à la création.
+    const courseIsFree = course.isFree || course.price === 0;
+
     return (
       <div className="min-h-screen gradient-bg pt-28 pb-16 px-4 md:px-8 text-slate-200">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -469,6 +489,11 @@ const CourseDetail = () => {
                 <span className="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2.5 py-1 rounded-full font-semibold">
                   {course.level}
                 </span>
+                {courseIsFree && (
+                  <span className="text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded-full font-semibold">
+                    Gratuit
+                  </span>
+                )}
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-3">{course.title}</h1>
               <p className="text-slate-400 text-sm leading-relaxed">{course.description}</p>
@@ -545,16 +570,66 @@ const CourseDetail = () => {
 
               <div className="p-6 space-y-5">
                 <div>
-                  <span className="text-3xl font-extrabold text-white">{course.price} FCFA</span>
+                  {courseIsFree ? (
+                    <span className="flex items-baseline gap-3">
+                      <span className="text-3xl font-extrabold text-emerald-400">Gratuit</span>
+                      {course.originalPrice > 0 && (
+                        <span className="text-base text-slate-500 line-through">{course.originalPrice} FCFA</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-3xl font-extrabold text-white">{course.price} FCFA</span>
+                  )}
                   <p className="text-xs text-slate-500 mt-1">Accès pendant 1 an</p>
                 </div>
 
-                <Link
-                  to={user ? '/student-dashboard' : '/login'}
-                  className="btn-neon w-full text-white font-bold px-6 py-3 rounded-xl text-sm text-center block"
-                >
-                  {user ? "S'abonner depuis mon espace" : 'Se connecter pour souscrire'}
-                </Link>
+                {freeEnrollError && (
+                  <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                    {freeEnrollError}
+                  </p>
+                )}
+
+                {courseIsFree ? (
+                  user ? (
+                    user.role === 'student' ? (
+                      <button
+                        onClick={handleEnrollFree}
+                        disabled={enrollingFree}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-bold px-6 py-3 rounded-xl text-sm text-center flex items-center justify-center gap-2 cursor-pointer transition"
+                      >
+                        {enrollingFree ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            <span>Accéder gratuitement</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <Link
+                        to="/student-dashboard"
+                        className="btn-neon w-full text-white font-bold px-6 py-3 rounded-xl text-sm text-center block"
+                      >
+                        Retourner au tableau de bord
+                      </Link>
+                    )
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="btn-neon w-full text-white font-bold px-6 py-3 rounded-xl text-sm text-center block"
+                    >
+                      Se connecter pour accéder gratuitement
+                    </Link>
+                  )
+                ) : (
+                  <Link
+                    to={user ? '/student-dashboard' : '/login'}
+                    className="btn-neon w-full text-white font-bold px-6 py-3 rounded-xl text-sm text-center block"
+                  >
+                    {user ? "S'abonner depuis mon espace" : 'Se connecter pour souscrire'}
+                  </Link>
+                )}
 
                 {!user && (
                   <p className="text-xs text-slate-500 text-center">

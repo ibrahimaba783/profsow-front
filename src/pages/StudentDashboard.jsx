@@ -17,6 +17,8 @@ const StudentDashboard = () => {
   const [emailPreviewUrl, setEmailPreviewUrl] = useState('');
   const [paying, setPaying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [enrollingFreeId, setEnrollingFreeId] = useState(null);
+  const [freeEnrollError, setFreeEnrollError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,6 +49,19 @@ const StudentDashboard = () => {
       console.error("Erreur de récupération des données du dashboard", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEnrollFree = async (course) => {
+    setEnrollingFreeId(course._id);
+    setFreeEnrollError('');
+    try {
+      await api(`/subscriptions/enroll-free/${course._id}`, { method: 'POST' });
+      await fetchDashboardData();
+    } catch (err) {
+      setFreeEnrollError(err.message || "Impossible d'activer ce cours gratuit pour le moment");
+    } finally {
+      setEnrollingFreeId(null);
     }
   };
 
@@ -169,12 +184,27 @@ const StudentDashboard = () => {
             <span>Catalogue des modules disponibles ({catalog.length})</span>
           </h2>
 
+          {freeEnrollError && (
+            <div className="mb-4 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2.5">
+              {freeEnrollError}
+            </div>
+          )}
+
           {catalog.length === 0 ? (
             <p className="text-slate-500 text-sm">Tous les cours disponibles sont débloqués dans votre espace !</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {catalog.map((course) => (
-                <div key={course._id} className="glass-card rounded-2xl overflow-hidden opacity-90 hover:opacity-100 transition-opacity flex flex-col justify-between">
+              {catalog.map((course) => {
+                // Filet de sécurité : un cours à 0 FCFA est considéré gratuit même si la case
+                // "Cours gratuit" n'a pas été explicitement cochée à la création.
+                const courseIsFree = course.isFree || course.price === 0;
+                return (
+                <div key={course._id} className="glass-card rounded-2xl overflow-hidden opacity-90 hover:opacity-100 transition-opacity flex flex-col justify-between relative">
+                  {courseIsFree && (
+                    <span className="absolute top-3 right-3 z-10 text-xs bg-emerald-500 text-white px-3 py-1 rounded-full font-bold shadow-lg">
+                      Gratuit
+                    </span>
+                  )}
                   <div>
                     <div className="h-44 bg-cover bg-center grayscale-[30%]" style={{ backgroundImage: `url(${course.image})` }}></div>
                     <div className="p-6">
@@ -190,17 +220,45 @@ const StudentDashboard = () => {
                     </div>
                   </div>
                   <div className="p-6 border-t border-white/5 flex justify-between items-center">
-                    <span className="font-extrabold text-lg">{course.price} FCFA</span>
-                    <button
-                      onClick={() => startPayment(course)}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 cursor-pointer shadow-md transition"
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      <span>S'abonner (1 an)</span>
-                    </button>
+                    {courseIsFree ? (
+                      <>
+                        <span className="flex items-baseline gap-2">
+                          <span className="font-extrabold text-lg text-emerald-400">Gratuit</span>
+                          {course.originalPrice > 0 && (
+                            <span className="text-xs text-slate-500 line-through">{course.originalPrice} FCFA</span>
+                          )}
+                        </span>
+                        <button
+                          onClick={() => handleEnrollFree(course)}
+                          disabled={enrollingFreeId === course._id}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 cursor-pointer shadow-md transition"
+                        >
+                          {enrollingFreeId === course._id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4" />
+                              <span>Accéder gratuitement</span>
+                            </>
+                          )}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-extrabold text-lg">{course.price} FCFA</span>
+                        <button
+                          onClick={() => startPayment(course)}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 cursor-pointer shadow-md transition"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          <span>S'abonner (1 an)</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

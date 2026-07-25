@@ -463,8 +463,17 @@ const Landing = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {filteredCourses.map((course) => (
-              <div key={course._id} className="glass-card rounded-2xl overflow-hidden hover:scale-[1.02] transition">
+            {filteredCourses.map((course) => {
+              // Filet de sécurité : un cours à 0 FCFA est considéré gratuit même si la case
+              // "Cours gratuit" n'a pas été explicitement cochée à la création.
+              const courseIsFree = course.isFree || course.price === 0;
+              return (
+              <div key={course._id} className="glass-card rounded-2xl overflow-hidden hover:scale-[1.02] transition relative">
+                {courseIsFree && (
+                  <span className="absolute top-3 right-3 z-10 text-xs bg-emerald-500 text-white px-3 py-1 rounded-full font-bold shadow-lg">
+                    Gratuit
+                  </span>
+                )}
                 <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url(${course.image})` }}></div>
                 <div className="p-6">
                   <span className="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2.5 py-1 rounded-full font-semibold">
@@ -476,7 +485,16 @@ const Landing = () => {
                   <h3 className="text-xl font-bold mt-4 mb-2">{course.title}</h3>
                   <p className="text-slate-400 text-sm line-clamp-2">{course.description}</p>
                   <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
-                    <span className="font-extrabold text-lg">{course.price} FCFA</span>
+                    {courseIsFree ? (
+                      <span className="flex items-baseline gap-2">
+                        <span className="font-extrabold text-lg text-emerald-400">Gratuit</span>
+                        {course.originalPrice > 0 && (
+                          <span className="text-xs text-slate-500 line-through">{course.originalPrice} FCFA</span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="font-extrabold text-lg">{course.price} FCFA</span>
+                    )}
                     <Link
                       to={`/courses/${course._id}`}
                       className="text-indigo-400 hover:text-indigo-300 text-sm font-bold flex items-center gap-1"
@@ -486,7 +504,8 @@ const Landing = () => {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

@@ -1,99 +1,177 @@
-import React, { useContext } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { LogOut, LayoutDashboard } from 'lucide-react';
-import logo from '../assets/logo-aliou-sow-academy-navbar.png';
+import React, { useContext } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { LayoutDashboard, LogOut } from "lucide-react";
+import logo from "../assets/logo-aliou-sow-academy-navbar.png";
 
-// Liens d'ancrage vers les sections de la landing page
 const ANCHOR_LINKS = [
-  { id: 'modules', label: 'Modules' },
-  { id: 'courses', label: 'Cours' },
-  { id: 'testimonials', label: 'Témoignages' },
+  { id: "modules", label: "Modules" },
+  { id: "courses", label: "Cours" },
+  { id: "testimonials", label: "Témoignages" },
 ];
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
-  // Si on est déjà sur la landing page, on scrolle en douceur au lieu de recharger la route
   const handleAnchorClick = (id) => (e) => {
-    if (location.pathname === '/') {
+    if (location.pathname === "/") {
       e.preventDefault();
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+      });
     }
-    // Sinon on laisse le Link naviguer vers "/#id" ; Landing.jsx gère le scroll au montage
   };
 
   return (
-    <nav className="glass fixed top-0 left-0 w-full z-50 px-6 py-4 flex items-center justify-between border-b border-white/5">
-      <Link to="/" className="flex items-center gap-2">
-        <img src={logo} alt="Aliou Sow Academy" className="h-11 w-auto" />
-        <span className="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 hidden sm:inline">
-          ALIOU SOW ACADEMY
-        </span>
-      </Link>
+    <nav className="navbar-premium fixed top-0 left-0 w-full z-50">
 
-      {/* Liens de navigation vers les sections (visibles à partir de md) */}
-      <div className="hidden md:flex items-center gap-8">
+      <div className="max-w-7xl mx-auto h-[82px] px-8 flex items-center justify-between">
+
+        {/* ================= LOGO ================= */}
+
         <Link
           to="/"
-          className="text-slate-300 hover:text-white transition font-medium text-sm"
-          onClick={(e) => {
-            if (location.pathname === '/') {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-          }}
+          className="flex items-center gap-3 group"
         >
-          Accueil
+          <div className="relative">
+
+            <img
+              src={logo}
+              alt="Aliou Sow Academy"
+              className="h-12 transition duration-300 group-hover:scale-105"
+            />
+
+          </div>
+
+          <div className="hidden sm:block">
+
+            <h2 className="logo-text text-xl">
+              ALIOU SOW
+            </h2>
+
+            <p className="text-[11px] uppercase tracking-[4px] text-slate-300">
+              Academy
+            </p>
+
+          </div>
+
         </Link>
-        {ANCHOR_LINKS.map((link) => (
+
+        {/* ================= MENU ================= */}
+
+        <div className="hidden lg:flex items-center gap-10">
+
           <Link
-            key={link.id}
-            to={`/#${link.id}`}
-            onClick={handleAnchorClick(link.id)}
-            className="text-slate-300 hover:text-white transition font-medium text-sm"
+            to="/"
+            className="nav-link"
+            onClick={(e) => {
+              if (location.pathname === "/") {
+                e.preventDefault();
+
+                window.scrollTo({
+                  top: 0,
+                  behavior: "smooth",
+                });
+              }
+            }}
           >
-            {link.label}
+            Accueil
           </Link>
-        ))}
+
+          {ANCHOR_LINKS.map((item) => (
+            <Link
+              key={item.id}
+              to={`/#${item.id}`}
+              onClick={handleAnchorClick(item.id)}
+              className="nav-link"
+            >
+              {item.label}
+            </Link>
+          ))}
+
+        </div>
+
+        {/* ================= ACTIONS ================= */}
+
+        <div className="flex items-center gap-4">
+
+          {user ? (
+            <>
+
+              <Link
+                to={
+                  user.role === "teacher"
+                    ? "/teacher-dashboard"
+                    : "/student-dashboard"
+                }
+                className="dashboard-btn"
+              >
+                <LayoutDashboard size={18} />
+
+                <span className="hidden md:inline">
+                  Mon espace
+                </span>
+              </Link>
+
+              <Link
+                to="/profile"
+                className="profile-btn"
+              >
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+
+                <span className="hidden md:block">
+                  {user.name}
+                </span>
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="logout-btn"
+              >
+                <LogOut size={18} />
+
+                <span className="hidden md:inline">
+                  Déconnexion
+                </span>
+              </button>
+
+            </>
+          ) : (
+            <>
+
+              <Link
+                to="/login"
+                className="login-link"
+              >
+                Connexion
+              </Link>
+
+              <Link
+                to="/register"
+                className="btn-register"
+              >
+                S'inscrire
+              </Link>
+
+            </>
+          )}
+
+        </div>
+
       </div>
 
-      <div className="flex items-center gap-6">
-        {user ? (
-          <>
-            <Link to={user.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard'} className="flex items-center gap-1 text-slate-300 hover:text-white transition font-medium text-sm md:text-base">
-              <LayoutDashboard className="w-4 h-4" />
-              <span>Mon Espace</span>
-            </Link>
-
-            <Link to="/profile" className="flex items-center gap-2 hover:opacity-85 transition bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-              <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover border border-indigo-500/50" />
-              <span className="text-sm font-medium text-slate-200 hidden md:inline">{user.name}</span>
-            </Link>
-
-            <button onClick={handleLogout} className="flex items-center gap-1 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-3 py-1.5 rounded-lg border border-red-500/20 text-sm font-medium transition cursor-pointer">
-              <LogOut className="w-4 h-4" />
-              <span className="hidden md:inline">Déconnexion</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" className="text-slate-300 hover:text-white transition font-medium text-sm md:text-base">
-              Connexion
-            </Link>
-            <Link to="/register" className="btn-neon text-white font-semibold px-5 py-2 rounded-lg text-sm transition">
-              S'inscrire
-            </Link>
-          </>
-        )}
-      </div>
     </nav>
   );
 };

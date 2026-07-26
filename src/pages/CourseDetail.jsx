@@ -477,63 +477,63 @@ const CourseDetail = () => {
     const courseIsFree = course.isFree || course.price === 0;
 
     return (
-      <div className="min-h-screen gradient-bg pt-28 pb-16 px-4 md:px-8 text-slate-200">
+      <div className="min-h-screen gradient-bg pt-28 pb-16 px-4 md:px-8 text-slate-800">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Colonne principale : infos + sommaire verrouillé */}
           <div className="lg:col-span-2 space-y-6">
             <div>
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2.5 py-1 rounded-full font-semibold">
+                <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full font-semibold">
                   {course.subject}
                 </span>
-                <span className="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2.5 py-1 rounded-full font-semibold">
+                <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-1 rounded-full font-semibold">
                   {course.level}
                 </span>
                 {courseIsFree && (
-                  <span className="text-xs bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded-full font-semibold">
+                  <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full font-semibold">
                     Gratuit
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-3">{course.title}</h1>
-              <p className="text-slate-400 text-sm leading-relaxed">{course.description}</p>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3">{course.title}</h1>
+              <p className="text-slate-500 text-sm leading-relaxed">{course.description}</p>
 
-              <div className="flex items-center gap-3 mt-6 pt-6 border-t border-white/5">
+              <div className="flex items-center gap-3 mt-6 pt-6 border-t border-slate-100">
                 <img
                   src={course.teacher?.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (course.teacher?.name || 'Prof')}
                   alt={course.teacher?.name || 'Professeur'}
-                  className="w-10 h-10 rounded-full object-cover border border-white/10"
+                  className="w-10 h-10 rounded-full object-cover border border-slate-200"
                 />
                 <div>
-                  <div className="text-sm font-bold text-slate-200">Prof. {course.teacher?.name || 'Non renseigné'}</div>
-                  <div className="text-xs text-slate-500">Auteur du cours</div>
+                  <div className="text-sm font-bold text-slate-800">Prof. {course.teacher?.name || 'Non renseigné'}</div>
+                  <div className="text-xs text-slate-400">Auteur du cours</div>
                 </div>
               </div>
             </div>
 
             {/* Sommaire du cours — titres visibles, contenu verrouillé */}
-            <div className="glass-card rounded-2xl border border-white/5 overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400">Contenu du cours</h3>
-                <span className="text-xs text-slate-500">
+            <div className="glass-card rounded-2xl border border-slate-100 overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-600">Contenu du cours</h3>
+                <span className="text-xs text-slate-400">
                   {course.chaptersCount || 0} chapitre{(course.chaptersCount || 0) > 1 ? 's' : ''} • {course.lessonsCount || 0} leçon{(course.lessonsCount || 0) > 1 ? 's' : ''}
                 </span>
               </div>
 
               {!course.chapters || course.chapters.length === 0 ? (
-                <p className="text-sm text-slate-500 py-10 text-center">Le contenu de ce module sera bientôt disponible.</p>
+                <p className="text-sm text-slate-400 py-10 text-center">Le contenu de ce module sera bientôt disponible.</p>
               ) : (
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-slate-100">
                   {course.chapters.map((chapter, idx) => {
                     const isOpen = openPreviewChapters[chapter._id] ?? idx === 0;
                     return (
                       <div key={chapter._id}>
                         <button
                           onClick={() => toggleChapter(chapter._id)}
-                          className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-white/[0.02] transition cursor-pointer"
+                          className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-50 transition cursor-pointer"
                         >
-                          <span className="font-bold text-sm text-slate-200">{chapter.title}</span>
-                          <span className="text-xs text-slate-500">{chapter.lessons?.length || 0} leçon(s)</span>
+                          <span className="font-bold text-sm text-slate-800">{chapter.title}</span>
+                          <span className="text-xs text-slate-400">{chapter.lessons?.length || 0} leçon(s)</span>
                         </button>
                         {isOpen && (
                           <div className="pb-2">
@@ -542,10 +542,10 @@ const CourseDetail = () => {
                               return (
                                 <div
                                   key={lesson._id}
-                                  className="flex items-center gap-3 px-6 py-2.5 text-sm text-slate-400"
+                                  className="flex items-center gap-3 px-6 py-2.5 text-sm text-slate-500"
                                 >
-                                  <Lock className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                                  <LessonIcon className="w-4 h-4 text-slate-600 shrink-0" />
+                                  <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <LessonIcon className="w-4 h-4 text-slate-400 shrink-0" />
                                   <span className="truncate">{lesson.title}</span>
                                 </div>
                               );
@@ -562,7 +562,7 @@ const CourseDetail = () => {
 
           {/* Colonne latérale : image, prix, achat, partage */}
           <div className="lg:col-span-1">
-            <div className="glass-card rounded-2xl border border-white/5 overflow-hidden sticky top-24">
+            <div className="glass-card rounded-2xl border border-slate-100 overflow-hidden sticky top-24">
               <div
                 className="h-44 bg-cover bg-center"
                 style={{ backgroundImage: `url(${course.image})` }}
@@ -572,19 +572,19 @@ const CourseDetail = () => {
                 <div>
                   {courseIsFree ? (
                     <span className="flex items-baseline gap-3">
-                      <span className="text-3xl font-extrabold text-emerald-400">Gratuit</span>
+                      <span className="text-3xl font-extrabold text-emerald-600">Gratuit</span>
                       {course.originalPrice > 0 && (
-                        <span className="text-base text-slate-500 line-through">{course.originalPrice} FCFA</span>
+                        <span className="text-base text-slate-400 line-through">{course.originalPrice} FCFA</span>
                       )}
                     </span>
                   ) : (
-                    <span className="text-3xl font-extrabold text-white">{course.price} FCFA</span>
+                    <span className="text-3xl font-extrabold text-slate-900">{course.price} FCFA</span>
                   )}
-                  <p className="text-xs text-slate-500 mt-1">Accès pendant 1 an</p>
+                  <p className="text-xs text-slate-400 mt-1">Accès pendant 1 an</p>
                 </div>
 
                 {freeEnrollError && (
-                  <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                  <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
                     {freeEnrollError}
                   </p>
                 )}
@@ -632,31 +632,31 @@ const CourseDetail = () => {
                 )}
 
                 {!user && (
-                  <p className="text-xs text-slate-500 text-center">
+                  <p className="text-xs text-slate-400 text-center">
                     Pas encore de compte ?{' '}
-                    <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-semibold">
+                    <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-semibold">
                       Inscrivez-vous
                     </Link>
                   </p>
                 )}
 
-                <div className="border-t border-white/5 pt-5">
+                <div className="border-t border-slate-100 pt-5">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Ce qui est inclus</h4>
-                  <ul className="space-y-2.5 text-sm text-slate-300">
+                  <ul className="space-y-2.5 text-sm text-slate-600">
                     <li className="flex items-center gap-2">
-                      <Video className="w-4 h-4 text-indigo-400 shrink-0" />
+                      <Video className="w-4 h-4 text-indigo-600 shrink-0" />
                       <span>Cours vidéo & séances en direct</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-purple-400 shrink-0" />
+                      <FileText className="w-4 h-4 text-purple-600 shrink-0" />
                       <span>Fiches et documents PDF</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <HelpCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <HelpCircle className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>Quiz et évaluations corrigés</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-pink-400 shrink-0" />
+                      <MessageSquare className="w-4 h-4 text-pink-600 shrink-0" />
                       <span>Salon de discussion avec le professeur</span>
                     </li>
                   </ul>
@@ -664,12 +664,12 @@ const CourseDetail = () => {
 
                 <button
                   onClick={handleCopyLink}
-                  className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 border border-white/10 rounded-lg py-2.5 transition cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg py-2.5 transition cursor-pointer"
                 >
                   {linkCopied ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Lien copié !</span>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-600">Lien copié !</span>
                     </>
                   ) : (
                     <>
@@ -687,47 +687,47 @@ const CourseDetail = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-bg pt-28 pb-12 px-4 md:px-8 text-slate-200">
+    <div className="min-h-screen gradient-bg pt-28 pb-12 px-4 md:px-8 text-slate-800">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Barre latérale gauche - Infos & Chapitres */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="glass-card p-6 rounded-2xl border border-white/5">
-            <span className="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded font-semibold uppercase">
+          <div className="glass-card p-6 rounded-2xl border border-slate-100">
+            <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded font-semibold uppercase">
               {course.subject} • {course.level}
             </span>
-            <h2 className="text-xl font-extrabold text-white mt-3 mb-2">{course.title}</h2>
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">{course.description}</p>
-            <div className="flex items-center gap-3 border-t border-white/5 pt-4">
+            <h2 className="text-xl font-extrabold text-slate-900 mt-3 mb-2">{course.title}</h2>
+            <p className="text-xs text-slate-500 leading-relaxed mb-4">{course.description}</p>
+            <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
               <img
                 src={course.teacher?.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (course.teacher?.name || 'Prof')}
                 alt={course.teacher?.name || 'Professeur'}
-                className="w-9 h-9 rounded-full object-cover border border-white/10"
+                className="w-9 h-9 rounded-full object-cover border border-slate-200"
               />
               <div>
-                <div className="text-xs font-bold text-slate-300">Prof. {course.teacher?.name || 'Non renseigné'}</div>
-                <div className="text-[10px] text-slate-500">Auteur du cours</div>
+                <div className="text-xs font-bold text-slate-700">Prof. {course.teacher?.name || 'Non renseigné'}</div>
+                <div className="text-[10px] text-slate-400">Auteur du cours</div>
               </div>
             </div>
           </div>
 
           {/* Onglets */}
-          <div className="grid grid-cols-3 gap-2 bg-slate-950/60 p-1 rounded-xl border border-white/5 text-center text-xs font-bold">
+          <div className="grid grid-cols-3 gap-2 bg-slate-50 p-1 rounded-xl border border-slate-100 text-center text-xs font-bold">
             <button
               onClick={() => setActiveTab('content')}
-              className={`py-2 rounded-lg cursor-pointer transition ${activeTab === 'content' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`py-2 rounded-lg cursor-pointer transition ${activeTab === 'content' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Leçons
             </button>
             <button
               onClick={() => setActiveTab('discussion')}
-              className={`py-2 rounded-lg cursor-pointer transition flex items-center justify-center gap-1 ${activeTab === 'discussion' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`py-2 rounded-lg cursor-pointer transition flex items-center justify-center gap-1 ${activeTab === 'discussion' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-800'}`}
             >
               <span>Salon</span>
             </button>
             <button
               onClick={() => setActiveTab('quizzes')}
-              className={`py-2 rounded-lg cursor-pointer transition ${activeTab === 'quizzes' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`py-2 rounded-lg cursor-pointer transition ${activeTab === 'quizzes' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Quiz
             </button>
@@ -735,13 +735,13 @@ const CourseDetail = () => {
 
           {/* Liste des Chapitres / Leçons si onglet Leçons */}
           {activeTab === 'content' && (
-            <div className="glass-card p-4 rounded-2xl border border-white/5 space-y-4 max-h-[50vh] overflow-y-auto pr-1">
-              <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">Sommaire</span>
+            <div className="glass-card p-4 rounded-2xl border border-slate-100 space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Sommaire</span>
                 {user?.role === 'teacher' && (
                   <button
                     onClick={() => setShowAddChapter(!showAddChapter)}
-                    className="p-1 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded hover:bg-indigo-600 hover:text-white"
+                    className="p-1 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded hover:bg-indigo-600 hover:text-white"
                   >
                     <Plus className="w-3 h-3" />
                   </button>
@@ -764,25 +764,25 @@ const CourseDetail = () => {
               )}
 
               {course.chapters?.length === 0 ? (
-                <p className="text-xs text-slate-500 py-4 text-center">Aucun chapitre créé.</p>
+                <p className="text-xs text-slate-400 py-4 text-center">Aucun chapitre créé.</p>
               ) : (
                 course.chapters.map((chapter) => (
                   <div key={chapter._id} className="space-y-2">
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-300 bg-white/5 px-2 py-1.5 rounded">
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-700 bg-slate-50 px-2 py-1.5 rounded">
                       <span className="truncate">{chapter.title}</span>
                       <div className="flex gap-1">
                         {user?.role === 'teacher' && (
                           <>
                             <button
                               onClick={() => setSelectedChapterId(chapter._id)}
-                              className="p-0.5 text-indigo-400 hover:text-white"
+                              className="p-0.5 text-indigo-600 hover:text-indigo-800"
                               title="Ajouter leçon"
                             >
                               <Plus className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteChapter(chapter._id)}
-                              className="p-0.5 text-red-400 hover:text-white"
+                              className="p-0.5 text-red-500 hover:text-red-700"
                               title="Supprimer chapitre"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -798,8 +798,8 @@ const CourseDetail = () => {
                           key={lesson._id}
                           className={`flex items-center justify-between p-2 rounded-lg text-xs transition cursor-pointer ${
                             activeLesson?._id === lesson._id
-                              ? 'bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 font-semibold'
-                              : 'hover:bg-white/5 border border-transparent text-slate-400'
+                              ? 'bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold'
+                              : 'hover:bg-slate-50 border border-transparent text-slate-500'
                           }`}
                           onClick={() => {
                             setActiveLesson(lesson);
@@ -824,7 +824,7 @@ const CourseDetail = () => {
                                 e.stopPropagation();
                                 handleDeleteLesson(chapter._id, lesson._id);
                               }}
-                              className="p-0.5 text-red-500/50 hover:text-red-400"
+                              className="p-0.5 text-red-400 hover:text-red-600"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -844,15 +844,15 @@ const CourseDetail = () => {
           
           {/* LEÇONS */}
           {activeTab === 'content' && (
-            <div className="glass-card p-6 rounded-3xl border border-white/5 min-h-[60vh] flex flex-col justify-between">
+            <div className="glass-card p-6 rounded-3xl border border-slate-100 min-h-[60vh] flex flex-col justify-between">
               {/* Module de création de Leçon */}
               {selectedChapterId && user?.role === 'teacher' && (
-                <div className="bg-slate-900 border border-white/10 p-4 rounded-xl mb-6 slide-in">
-                  <h4 className="text-sm font-bold text-white mb-4">Créer une Leçon</h4>
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl mb-6 slide-in">
+                  <h4 className="text-sm font-bold text-slate-900 mb-4">Créer une Leçon</h4>
                   <form onSubmit={handleAddLesson} className="space-y-3 text-xs">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-slate-400 mb-1">Titre de la leçon</label>
+                        <label className="block text-slate-500 mb-1">Titre de la leçon</label>
                         <input
                           type="text"
                           required
@@ -863,11 +863,11 @@ const CourseDetail = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-slate-400 mb-1">Type de contenu</label>
+                        <label className="block text-slate-500 mb-1">Type de contenu</label>
                         <select
                           value={newLessonType}
                           onChange={(e) => setNewLessonType(e.target.value)}
-                          className="input-animated p-1.5 bg-slate-900 border border-white/10 text-white rounded"
+                          className="input-animated p-1.5 bg-white border border-slate-200 text-slate-800 rounded"
                         >
                           <option value="video">Vidéo YouTube</option>
                           <option value="pdf">Document PDF</option>
@@ -880,7 +880,7 @@ const CourseDetail = () => {
 
                     {newLessonType === 'video' && (
                       <div>
-                        <label className="block text-slate-400 mb-1">Lien de la vidéo YouTube</label>
+                        <label className="block text-slate-500 mb-1">Lien de la vidéo YouTube</label>
                         <input
                           type="url"
                           required
@@ -893,9 +893,9 @@ const CourseDetail = () => {
                     )}
 
                     {newLessonType === 'jitsi' && (
-                      <div className="flex items-center gap-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3">
+                      <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-lg p-3">
                         <img src="https://cdn.jsdelivr.net/npm/@thesvg/icons/icons/jitsi.svg" alt="Jitsi" className="w-6 h-6 shrink-0" />
-                        <p className="text-slate-400 text-[11px] leading-relaxed">
+                        <p className="text-slate-500 text-[11px] leading-relaxed">
                           Une salle de classe virtuelle sera créée automatiquement pour cette leçon.
                           Aucun lien à saisir : les élèves rejoignent le direct directement depuis la
                           page du cours, sans quitter la plateforme.
@@ -905,7 +905,7 @@ const CourseDetail = () => {
 
                     {newLessonType === 'meet' && (
                       <div>
-                        <label className="block text-slate-400 mb-1">Lien Google Meet</label>
+                        <label className="block text-slate-500 mb-1">Lien Google Meet</label>
                         <input
                           type="url"
                           required
@@ -919,7 +919,7 @@ const CourseDetail = () => {
 
                     {newLessonType === 'text' && (
                       <div>
-                        <label className="block text-slate-400 mb-1">Contenu texte</label>
+                        <label className="block text-slate-500 mb-1">Contenu texte</label>
                         <textarea
                           required
                           value={newLessonContent}
@@ -932,13 +932,13 @@ const CourseDetail = () => {
 
                     {newLessonType === 'pdf' && (
                       <div>
-                        <label className="block text-slate-400 mb-1">Fichier PDF (Téléverser vers Cloudinary)</label>
+                        <label className="block text-slate-500 mb-1">Fichier PDF (Téléverser vers Cloudinary)</label>
                         <input
                           type="file"
                           required
                           accept="application/pdf"
                           onChange={(e) => setNewLessonPdf(e.target.files[0])}
-                          className="input-animated text-xs text-slate-400 p-1.5"
+                          className="input-animated text-xs text-slate-500 p-1.5"
                         />
                       </div>
                     )}
@@ -947,7 +947,7 @@ const CourseDetail = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedChapterId(null)}
-                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs"
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs"
                       >
                         Annuler
                       </button>
@@ -965,16 +965,16 @@ const CourseDetail = () => {
 
               {activeLesson ? (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                    <h3 className="text-xl font-bold text-white">{activeLesson.title}</h3>
-                    <span className="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-3 py-1 rounded font-bold capitalize">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <h3 className="text-xl font-bold text-slate-900">{activeLesson.title}</h3>
+                    <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-1 rounded font-bold capitalize">
                       {activeLesson.contentType}
                     </span>
                   </div>
 
                   {/* Lecteur Vidéo */}
                   {activeLesson.contentType === 'video' && activeLesson.youtubeUrl && (
-                    <div className="aspect-video w-full rounded-2xl overflow-hidden border border-white/5 bg-black shadow-lg">
+                    <div className="aspect-video w-full rounded-2xl overflow-hidden border border-slate-100 bg-black shadow-lg">
                       {extractYoutubeId(activeLesson.youtubeUrl) ? (
                         <iframe
                           className="w-full h-full"
@@ -983,7 +983,7 @@ const CourseDetail = () => {
                           allowFullScreen
                         ></iframe>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">
+                        <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
                           Lien de la vidéo YouTube non valide.
                         </div>
                       )}
@@ -993,10 +993,10 @@ const CourseDetail = () => {
                   {/* Visionneuse PDF */}
                   {activeLesson.contentType === 'pdf' && activeLesson.pdfPath && (
                     <div className="w-full space-y-4">
-                      <div className="p-8 bg-white/5 border border-white/5 rounded-2xl flex flex-col items-center justify-center text-center">
-                        <FileText className="w-16 h-16 text-indigo-400 mb-4" />
-                        <h4 className="text-base font-bold text-white mb-2">Fiche de cours PDF</h4>
-                        <p className="text-slate-400 text-xs mb-6">
+                      <div className="p-8 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center text-center">
+                        <FileText className="w-16 h-16 text-indigo-600 mb-4" />
+                        <h4 className="text-base font-bold text-slate-900 mb-2">Fiche de cours PDF</h4>
+                        <p className="text-slate-500 text-xs mb-6">
                           Téléchargez et visualisez le document PDF associé à cette leçon (hébergé de manière sécurisée).
                         </p>
                         <a
@@ -1010,7 +1010,7 @@ const CourseDetail = () => {
                       </div>
                       
                       {/* Embed Option for desktop */}
-                      <div className="hidden md:block w-full h-[500px] rounded-2xl overflow-hidden border border-white/5">
+                      <div className="hidden md:block w-full h-[500px] rounded-2xl overflow-hidden border border-slate-100">
                         <embed src={getInlinePdfUrl(activeLesson.pdfPath)} type="application/pdf" width="100%" height="100%" />
                       </div>
                     </div>
@@ -1019,11 +1019,11 @@ const CourseDetail = () => {
                   {/* Salle de classe en direct intégrée (Jitsi) */}
                   {activeLesson.contentType === 'jitsi' && (
                     <div className="w-full space-y-3">
-                      <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-lg p-3 text-xs text-slate-300">
+                      <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-xs text-slate-600">
                         <img src="https://cdn.jsdelivr.net/npm/@thesvg/icons/icons/jitsi.svg" alt="Jitsi" className="w-5 h-5 shrink-0" />
                         <span>Salle de classe en direct — activez votre caméra/micro dans la fenêtre ci-dessous pour rejoindre.</span>
                       </div>
-                      <div className="w-full h-[600px] rounded-2xl overflow-hidden border border-white/5 bg-black">
+                      <div className="w-full h-[600px] rounded-2xl overflow-hidden border border-slate-100 bg-black">
                         <iframe
                           src={`https://meet.jit.si/profsow-${course._id}-${activeLesson._id}`}
                           title={activeLesson.title}
@@ -1036,12 +1036,12 @@ const CourseDetail = () => {
 
                   {/* Google Meet Link */}
                   {activeLesson.contentType === 'meet' && activeLesson.meetLink && (
-                    <div className="p-8 bg-white/5 border border-white/5 rounded-2xl text-center flex flex-col items-center">
-                      <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-6">
+                    <div className="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center flex flex-col items-center">
+                      <div className="w-16 h-16 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
                         <Video className="w-8 h-8" />
                       </div>
-                      <h4 className="text-base font-bold text-white mb-2">Cours en direct avec M. Sow</h4>
-                      <p className="text-slate-400 text-xs mb-6 max-w-sm">
+                      <h4 className="text-base font-bold text-slate-900 mb-2">Cours en direct avec M. Sow</h4>
+                      <p className="text-slate-500 text-xs mb-6 max-w-sm">
                         Rejoignez la réunion virtuelle en cours pour assister au live ou poser vos questions.
                       </p>
                       <a
@@ -1057,14 +1057,14 @@ const CourseDetail = () => {
 
                   {/* Contenu textuel */}
                   {activeLesson.contentType === 'text' && (
-                    <div className="bg-white/5 p-6 rounded-2xl border border-white/5 leading-relaxed text-sm text-slate-300 font-medium whitespace-pre-wrap break-words">
+                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 leading-relaxed text-sm text-slate-700 font-medium whitespace-pre-wrap break-words">
                       {activeLesson.content}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 py-20 text-center">
-                  <Info className="w-12 h-12 text-slate-600 mb-4" />
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-20 text-center">
+                  <Info className="w-12 h-12 text-slate-300 mb-4" />
                   <p className="text-sm">Aucune leçon active sélectionnée.</p>
                   <p className="text-xs mt-1">Veuillez sélectionner ou ajouter une leçon dans le menu.</p>
                 </div>
@@ -1074,8 +1074,8 @@ const CourseDetail = () => {
 
           {/* FORUM DE DISCUSSION */}
           {activeTab === 'discussion' && (
-            <div className="glass-card p-6 rounded-3xl border border-white/5 min-h-[60vh] flex flex-col justify-between">
-              <h3 className="text-lg font-bold text-indigo-400 border-b border-white/5 pb-3 flex items-center gap-2">
+            <div className="glass-card p-6 rounded-3xl border border-slate-100 min-h-[60vh] flex flex-col justify-between">
+              <h3 className="text-lg font-bold text-indigo-600 border-b border-slate-100 pb-3 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" />
                 <span>Discussion & Soutien en Direct</span>
               </h3>
@@ -1083,21 +1083,21 @@ const CourseDetail = () => {
               {/* Chat messages */}
               <div className="flex-1 overflow-y-auto max-h-96 my-4 space-y-4 pr-1">
                 {messages.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-10 text-center">Aucun message. Lancez la discussion !</p>
+                  <p className="text-xs text-slate-400 py-10 text-center">Aucun message. Lancez la discussion !</p>
                 ) : (
                   messages.map((msg) => (
                     <div key={msg._id} className={`flex items-start gap-3 text-xs max-w-[80%] ${msg.sender?._id === user?._id ? 'ml-auto flex-row-reverse' : ''}`}>
-                      <img src={msg.sender?.avatar} alt={msg.sender?.name} className="w-7 h-7 rounded-full object-cover border border-white/10" />
+                      <img src={msg.sender?.avatar} alt={msg.sender?.name} className="w-7 h-7 rounded-full object-cover border border-slate-200" />
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`font-bold ${msg.sender?.role === 'teacher' ? 'text-indigo-400' : 'text-slate-300'}`}>
+                          <span className={`font-bold ${msg.sender?.role === 'teacher' ? 'text-indigo-600' : 'text-slate-700'}`}>
                             {msg.sender?.name}
                           </span>
-                          <span className="text-[9px] text-slate-500">
+                          <span className="text-[9px] text-slate-400">
                             {new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <div className={`p-3 rounded-2xl leading-relaxed text-slate-200 ${msg.sender?._id === user?._id ? 'bg-indigo-600 rounded-tr-none' : 'bg-slate-900 rounded-tl-none'}`}>
+                        <div className={`p-3 rounded-2xl leading-relaxed ${msg.sender?._id === user?._id ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-100 text-slate-800 rounded-tl-none'}`}>
                           {msg.message}
                         </div>
                       </div>
@@ -1108,7 +1108,7 @@ const CourseDetail = () => {
               </div>
 
               {/* Chat Input */}
-              <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-white/5 pt-4">
+              <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-slate-100 pt-4">
                 <input
                   type="text"
                   required
@@ -1130,11 +1130,11 @@ const CourseDetail = () => {
 
           {/* QUIZZES */}
           {activeTab === 'quizzes' && (
-            <div className="glass-card p-6 rounded-3xl border border-white/5 min-h-[60vh] flex flex-col justify-between">
+            <div className="glass-card p-6 rounded-3xl border border-slate-100 min-h-[60vh] flex flex-col justify-between">
               
               {/* Header Quiz */}
-              <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-4">
-                <h3 className="text-lg font-bold text-purple-400 flex items-center gap-2">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                <h3 className="text-lg font-bold text-purple-600 flex items-center gap-2">
                   <Award className="w-5 h-5" />
                   <span>Exercices d'Évaluation</span>
                 </h3>
@@ -1161,13 +1161,13 @@ const CourseDetail = () => {
 
               {/* FORMULAIRE DE CRÉATION DE QUIZ (PROF) */}
               {showAddQuiz && user?.role === 'teacher' && (
-                <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl space-y-4 mb-6 text-xs slide-in">
-                  <h4 className="text-sm font-bold text-white border-b border-white/5 pb-2">
+                <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl space-y-4 mb-6 text-xs slide-in">
+                  <h4 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-2">
                     {editingQuizId ? 'Modifier le Quiz' : 'Nouveau Quiz'}
                   </h4>
                   <form onSubmit={handleSaveQuiz} className="space-y-4">
                     <div className="space-y-1">
-                      <label className="block text-slate-400">Titre du Quiz</label>
+                      <label className="block text-slate-500">Titre du Quiz</label>
                       <input
                         type="text"
                         required
@@ -1179,9 +1179,9 @@ const CourseDetail = () => {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="block text-slate-300 font-bold uppercase tracking-wider">Questions :</label>
+                      <label className="block text-slate-700 font-bold uppercase tracking-wider">Questions :</label>
                       {quizQuestions.map((question, qIdx) => (
-                        <div key={qIdx} className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-3 relative">
+                        <div key={qIdx} className="bg-white p-4 rounded-xl border border-slate-200 space-y-3 relative">
                           <button
                             type="button"
                             onClick={() => removeQuestionField(qIdx)}
@@ -1191,7 +1191,7 @@ const CourseDetail = () => {
                           </button>
                           
                           <div className="space-y-1">
-                            <label className="block text-slate-400 font-semibold">Question {qIdx + 1}</label>
+                            <label className="block text-slate-500 font-semibold">Question {qIdx + 1}</label>
                             <input
                               type="text"
                               required
@@ -1203,7 +1203,7 @@ const CourseDetail = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="block text-slate-400 font-semibold">Options de réponse & Bonne réponse</label>
+                            <label className="block text-slate-500 font-semibold">Options de réponse & Bonne réponse</label>
                             {question.options.map((opt, oIdx) => (
                               <div key={oIdx} className="flex gap-2 items-center">
                                 <input
@@ -1234,7 +1234,7 @@ const CourseDetail = () => {
                             <button
                               type="button"
                               onClick={() => addOptionField(qIdx)}
-                              className="text-indigo-400 font-bold hover:underline"
+                              className="text-indigo-600 font-bold hover:underline"
                             >
                               + Ajouter option
                             </button>
@@ -1243,11 +1243,11 @@ const CourseDetail = () => {
                       ))}
                     </div>
 
-                    <div className="flex justify-between border-t border-white/5 pt-4">
+                    <div className="flex justify-between border-t border-slate-200 pt-4">
                       <button
                         type="button"
                         onClick={addQuestionField}
-                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded text-slate-300"
+                        className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded text-slate-700"
                       >
                         + Ajouter une question
                       </button>
@@ -1255,7 +1255,7 @@ const CourseDetail = () => {
                         <button
                           type="button"
                           onClick={resetQuizForm}
-                          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded text-white"
+                          className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded text-slate-700"
                         >
                           Annuler
                         </button>
@@ -1276,18 +1276,18 @@ const CourseDetail = () => {
               {activeQuiz ? (
                 /* QUIZ ACTIF (RÉALISATION ÉLÈVE OU APERÇU PROF) */
                 <div className="space-y-6">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-base font-bold text-white">{activeQuiz.title}</h4>
+                      <h4 className="text-base font-bold text-slate-900">{activeQuiz.title}</h4>
                       {isPreviewMode && (
-                        <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                           Mode aperçu — non enregistré
                         </span>
                       )}
                     </div>
                     <button
                       onClick={() => { setActiveQuiz(null); setIsPreviewMode(false); }}
-                      className="text-slate-400 hover:text-white text-xs font-bold"
+                      className="text-slate-500 hover:text-slate-800 text-xs font-bold"
                     >
                       Retour
                     </button>
@@ -1295,28 +1295,28 @@ const CourseDetail = () => {
 
                   {quizScore ? (
                     <div className="text-center py-8 space-y-6 slide-in">
-                      <div className="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <div className="w-16 h-16 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2">
                         <Award className="w-10 h-10" />
                       </div>
-                      <h4 className="text-2xl font-bold text-white">Résultats</h4>
-                      <p className="text-slate-400 text-sm">
+                      <h4 className="text-2xl font-bold text-slate-900">Résultats</h4>
+                      <p className="text-slate-500 text-sm">
                         {isPreviewMode ? 'Aperçu du score obtenu avec ces réponses :' : 'Vous avez terminé le quiz avec le score de :'}
                       </p>
-                      <div className="text-4xl font-black text-indigo-400">{quizScore.score} / {quizScore.total}</div>
-                      <p className="text-slate-500 text-xs">Pourcentage d'exactitude : {quizScore.percentage}%</p>
+                      <div className="text-4xl font-black text-indigo-600">{quizScore.score} / {quizScore.total}</div>
+                      <p className="text-slate-400 text-xs">Pourcentage d'exactitude : {quizScore.percentage}%</p>
                       {isPreviewMode && (
-                        <p className="text-amber-400 text-xs">Cette tentative n'a pas été enregistrée (mode aperçu).</p>
+                        <p className="text-amber-600 text-xs">Cette tentative n'a pas été enregistrée (mode aperçu).</p>
                       )}
                       
                       {/* Correction recap */}
-                      <div className="bg-slate-900 border border-white/5 rounded-2xl p-6 text-left space-y-4 max-w-xl mx-auto text-xs max-h-60 overflow-y-auto">
-                        <h5 className="font-bold text-slate-300">Correction :</h5>
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-left space-y-4 max-w-xl mx-auto text-xs max-h-60 overflow-y-auto">
+                        <h5 className="font-bold text-slate-700">Correction :</h5>
                         {activeQuiz.questions.map((q, idx) => (
-                          <div key={idx} className="border-b border-white/5 pb-2">
-                            <p className="font-semibold text-slate-200">{idx+1}. {q.questionText}</p>
-                            <p className="text-emerald-400 mt-1">Bonne réponse : {q.options[q.correctAnswerIndex]}</p>
+                          <div key={idx} className="border-b border-slate-200 pb-2">
+                            <p className="font-semibold text-slate-800">{idx+1}. {q.questionText}</p>
+                            <p className="text-emerald-600 mt-1">Bonne réponse : {q.options[q.correctAnswerIndex]}</p>
                             {quizAnswers[idx] !== q.correctAnswerIndex && (
-                              <p className="text-red-400">Votre choix : {q.options[quizAnswers[idx]] || 'Aucun'}</p>
+                              <p className="text-red-600">Votre choix : {q.options[quizAnswers[idx]] || 'Aucun'}</p>
                             )}
                           </div>
                         ))}
@@ -1332,8 +1332,8 @@ const CourseDetail = () => {
                   ) : (
                     <div className="space-y-6">
                       {activeQuiz.questions.map((q, idx) => (
-                        <div key={idx} className="glass-card p-6 rounded-2xl border border-white/5 space-y-4 slide-in">
-                          <h5 className="font-bold text-slate-200 text-sm">{idx + 1}. {q.questionText}</h5>
+                        <div key={idx} className="glass-card p-6 rounded-2xl border border-slate-100 space-y-4 slide-in">
+                          <h5 className="font-bold text-slate-800 text-sm">{idx + 1}. {q.questionText}</h5>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                             {q.options.map((opt, oIdx) => (
                               <button
@@ -1342,8 +1342,8 @@ const CourseDetail = () => {
                                 onClick={() => handleSelectQuizAnswer(idx, oIdx)}
                                 className={`p-3 rounded-xl text-left border transition font-medium cursor-pointer ${
                                   quizAnswers[idx] === oIdx
-                                    ? 'bg-indigo-600/20 border-indigo-500 text-white'
-                                    : 'bg-slate-900/60 border-white/5 hover:border-slate-500 text-slate-400'
+                                    ? 'bg-indigo-50 border-indigo-400 text-slate-900'
+                                    : 'bg-white border-slate-200 hover:border-slate-400 text-slate-500'
                                 }`}
                               >
                                 {opt}
@@ -1370,13 +1370,13 @@ const CourseDetail = () => {
               ) : viewingResultsQuiz ? (
                 /* RÉSULTATS DES ÉLÈVES POUR CE QUIZ (PROF) */
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                    <h4 className="text-base font-bold text-white">
-                      Résultats — <span className="text-purple-400">{viewingResultsQuiz.title}</span>
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h4 className="text-base font-bold text-slate-900">
+                      Résultats — <span className="text-purple-600">{viewingResultsQuiz.title}</span>
                     </h4>
                     <button
                       onClick={() => { setViewingResultsQuiz(null); setQuizResults([]); }}
-                      className="text-slate-400 hover:text-white text-xs font-bold"
+                      className="text-slate-500 hover:text-slate-800 text-xs font-bold"
                     >
                       Retour
                     </button>
@@ -1387,8 +1387,8 @@ const CourseDetail = () => {
                       <div className="loader-spinner"></div>
                     </div>
                   ) : quizResults.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">
-                      <GraduationCap className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                    <div className="text-center py-12 text-slate-400">
+                      <GraduationCap className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                       <p className="text-sm">Aucun élève n'a encore soumis ce quiz.</p>
                     </div>
                   ) : (
@@ -1397,23 +1397,23 @@ const CourseDetail = () => {
                         .slice()
                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                         .map((r) => (
-                        <div key={r._id} className="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-xl text-sm">
+                        <div key={r._id} className="flex justify-between items-center bg-slate-50 border border-slate-100 p-4 rounded-xl text-sm">
                           <div className="flex items-center gap-3">
                             <img
                               src={r.student?.avatar}
                               alt={r.student?.name}
-                              className="w-8 h-8 rounded-full object-cover border border-white/10"
+                              className="w-8 h-8 rounded-full object-cover border border-slate-200"
                             />
                             <div>
-                              <div className="font-bold text-slate-200">{r.student?.name || 'Élève'}</div>
-                              <div className="text-[10px] text-slate-500">
+                              <div className="font-bold text-slate-800">{r.student?.name || 'Élève'}</div>
+                              <div className="text-[10px] text-slate-400">
                                 {new Date(r.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-black text-indigo-400">{r.score} / {r.totalQuestions}</div>
-                            <div className="text-[10px] text-slate-500">{Math.round((r.score / r.totalQuestions) * 100)}%</div>
+                            <div className="font-black text-indigo-600">{r.score} / {r.totalQuestions}</div>
+                            <div className="text-[10px] text-slate-400">{Math.round((r.score / r.totalQuestions) * 100)}%</div>
                           </div>
                         </div>
                       ))}
@@ -1424,16 +1424,16 @@ const CourseDetail = () => {
                 /* LISTE DES QUIZZES DISPONIBLES */
                 <div className="space-y-4">
                   {quizzes.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">
-                      <GraduationCap className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                    <div className="text-center py-12 text-slate-400">
+                      <GraduationCap className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                       <p className="text-sm">Aucune évaluation programmée.</p>
                     </div>
                   ) : (
                     quizzes.map((quiz) => (
-                      <div key={quiz._id} className="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-xl text-sm hover:border-indigo-500/35 transition">
+                      <div key={quiz._id} className="flex justify-between items-center bg-slate-50 border border-slate-100 p-4 rounded-xl text-sm hover:border-indigo-300 transition">
                         <div>
-                          <div className="font-bold text-slate-200">{quiz.title}</div>
-                          <div className="text-[10px] text-slate-500 mt-1">{quiz.questions.length} questions interactives</div>
+                          <div className="font-bold text-slate-800">{quiz.title}</div>
+                          <div className="text-[10px] text-slate-400 mt-1">{quiz.questions.length} questions interactives</div>
                         </div>
 
                         {user?.role === 'teacher' ? (
@@ -1441,28 +1441,28 @@ const CourseDetail = () => {
                             <button
                               onClick={() => handlePreviewQuiz(quiz)}
                               title="Aperçu"
-                              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-lg text-xs font-bold text-slate-300 cursor-pointer transition"
+                              className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 cursor-pointer transition"
                             >
                               Aperçu
                             </button>
                             <button
                               onClick={() => handleEditQuiz(quiz)}
                               title="Modifier"
-                              className="px-3 py-1.5 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-400 cursor-pointer transition"
+                              className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-600 cursor-pointer transition"
                             >
                               Modifier
                             </button>
                             <button
                               onClick={() => handleViewResults(quiz)}
                               title="Voir les résultats"
-                              className="px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-bold text-emerald-400 cursor-pointer transition"
+                              className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-bold text-emerald-600 cursor-pointer transition"
                             >
                               Résultats
                             </button>
                             <button
                               onClick={() => handleDeleteQuiz(quiz._id)}
                               title="Supprimer"
-                              className="p-1.5 bg-red-500/10 border border-red-500/20 hover:bg-red-600 hover:text-white rounded-lg text-red-400 cursor-pointer transition"
+                              className="p-1.5 bg-red-50 border border-red-100 hover:bg-red-600 hover:text-white rounded-lg text-red-600 cursor-pointer transition"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1470,7 +1470,7 @@ const CourseDetail = () => {
                         ) : (
                           <button
                             onClick={() => handleSelectQuiz(quiz)}
-                            className="px-4 py-1.5 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-400 cursor-pointer transition"
+                            className="px-4 py-1.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-600 cursor-pointer transition"
                           >
                             Faire le Quiz
                           </button>

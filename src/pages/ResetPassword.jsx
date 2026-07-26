@@ -45,28 +45,28 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center px-4 pt-16 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-indigo-200/40 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-200/40 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-white/5 relative z-10 slide-in">
+      <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-slate-100 relative z-10 slide-in">
         {success ? (
           <div className="text-center py-4 space-y-5">
-            <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto animate-bounce">
+            <div className="w-14 h-14 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
               <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h2 className="text-xl font-extrabold text-white">Mot de passe réinitialisé !</h2>
-            <p className="text-slate-400 text-sm">Redirection vers la page de connexion...</p>
+            <h2 className="text-xl font-extrabold text-slate-900">Mot de passe réinitialisé !</h2>
+            <p className="text-slate-500 text-sm">Redirection vers la page de connexion...</p>
           </div>
         ) : (
           <>
             <div className="text-center mb-8">
               <img src={logo} alt="Aliou Sow Academy" className="h-14 w-auto mx-auto mb-4" />
-              <h2 className="text-2xl font-extrabold text-white tracking-wide">Nouveau mot de passe</h2>
-              <p className="text-slate-400 text-sm mt-1">Choisissez un nouveau mot de passe pour votre compte.</p>
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-wide">Nouveau mot de passe</h2>
+              <p className="text-slate-500 text-sm mt-1">Choisissez un nouveau mot de passe pour votre compte.</p>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-6">
+              <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-sm mb-6">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -74,9 +74,9 @@ const ResetPassword = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Nouveau mot de passe</label>
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Nouveau mot de passe</label>
                 <div className="relative">
-                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -90,7 +90,7 @@ const ResetPassword = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -99,9 +99,9 @@ const ResetPassword = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Confirmer le mot de passe</label>
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Confirmer le mot de passe</label>
                 <div className="relative">
-                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
@@ -115,7 +115,7 @@ const ResetPassword = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     tabIndex={-1}
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -136,8 +136,8 @@ const ResetPassword = () => {
               </button>
             </form>
 
-            <p className="text-center text-slate-400 text-sm mt-8">
-              <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-semibold underline">
+            <p className="text-center text-slate-500 text-sm mt-8">
+              <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-semibold underline">
                 Retour à la connexion
               </Link>
             </p>

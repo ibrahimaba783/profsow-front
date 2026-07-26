@@ -88,15 +88,15 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen gradient-bg pt-28 pb-12 px-4 flex justify-center">
-      <div className="w-full max-w-2xl glass-card rounded-2xl p-6 md:p-10 border border-white/5 relative z-10 slide-in h-fit">
+      <div className="w-full max-w-2xl glass-card rounded-2xl p-6 md:p-10 border border-slate-100 relative z-10 slide-in h-fit">
         
         <div className="flex flex-col items-center mb-8 relative">
           {/* Avatar upload container */}
           <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-            <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-indigo-500/50 shadow-lg relative">
+            <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-indigo-200 shadow-lg relative">
               <img src={avatarPreview} alt={user.name} className="w-full h-full object-cover" />
             </div>
-            <div className="absolute inset-0 bg-slate-950/70 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <Camera className="w-6 h-6 text-white" />
             </div>
             <input
@@ -107,21 +107,21 @@ const Profile = () => {
               className="hidden"
             />
           </div>
-          <h2 className="text-xl font-bold mt-4">{user.name}</h2>
-          <span className="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-3 py-1 rounded-full font-semibold mt-2 uppercase tracking-widest">
+          <h2 className="text-xl font-bold mt-4 text-slate-900">{user.name}</h2>
+          <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-1 rounded-full font-semibold mt-2 uppercase tracking-widest">
             {user.role === 'teacher' ? 'Professeur' : 'Étudiant'}
           </span>
         </div>
 
         {success && (
-          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-lg text-sm mb-6">
+          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-600 p-3 rounded-lg text-sm mb-6">
             <Check className="w-4 h-4" />
             <span>{success}</span>
           </div>
         )}
 
         {error && (
-          <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-6">
+          <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-sm mb-6">
             <AlertCircle className="w-4 h-4" />
             <span>{error}</span>
           </div>
@@ -130,9 +130,9 @@ const Profile = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Nom Complet</label>
+              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Nom Complet</label>
               <div className="relative">
-                <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   required
@@ -144,9 +144,9 @@ const Profile = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Email</label>
+              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</label>
               <div className="relative">
-                <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="email"
                   required
@@ -159,9 +159,9 @@ const Profile = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Biographie / Description</label>
+            <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Biographie / Description</label>
             <div className="relative">
-              <FileText className="w-5 h-5 absolute left-3 top-3 text-slate-500" />
+              <FileText className="w-5 h-5 absolute left-3 top-3 text-slate-400" />
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
@@ -172,9 +172,9 @@ const Profile = () => {
           </div>
 
           {user.role === 'teacher' && (
-            <div className="space-y-4 border-t border-white/5 pt-4">
+            <div className="space-y-4 border-t border-slate-100 pt-4">
               <div>
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block mb-2">Matières Enseignées</label>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">Matières Enseignées</label>
                 <div className="flex gap-2">
                   {availableSubjects.map((sub) => (
                     <button
@@ -183,8 +183,8 @@ const Profile = () => {
                       onClick={() => toggleSubject(sub)}
                       className={`px-4 py-2 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                         subjects.includes(sub)
-                          ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500'
-                          : 'bg-transparent text-slate-400 border-white/10 hover:border-slate-500'
+                          ? 'bg-indigo-50 text-indigo-700 border-indigo-300'
+                          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'
                       }`}
                     >
                       {sub}
@@ -194,7 +194,7 @@ const Profile = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block mb-2">Niveaux d'Enseignement</label>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">Niveaux d'Enseignement</label>
                 <div className="flex flex-wrap gap-2">
                   {availableLevels.map((lvl) => (
                     <button
@@ -203,8 +203,8 @@ const Profile = () => {
                       onClick={() => toggleLevel(lvl)}
                       className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                         levels.includes(lvl)
-                          ? 'bg-purple-600/20 text-purple-300 border-purple-500'
-                          : 'bg-transparent text-slate-400 border-white/10 hover:border-slate-500'
+                          ? 'bg-purple-50 text-purple-700 border-purple-300'
+                          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'
                       }`}
                     >
                       {lvl}
@@ -215,8 +215,8 @@ const Profile = () => {
             </div>
           )}
 
-          <div className="space-y-1 border-t border-white/5 pt-4">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Changer le mot de passe (Optionnel)</label>
+          <div className="space-y-1 border-t border-slate-100 pt-4">
+            <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Changer le mot de passe (Optionnel)</label>
             <input
               type="password"
               value={password}

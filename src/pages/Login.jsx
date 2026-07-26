@@ -34,18 +34,18 @@ const Login = () => {
 
   return (
     <div className="min-h-screen gradient-bg flex items-center justify-center px-4 pt-16 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-indigo-200/40 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-200/40 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-white/5 relative z-10 slide-in">
+      <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-slate-100 relative z-10 slide-in">
         <div className="text-center mb-8">
           <img src={logo} alt="Aliou Sow Academy" className="h-16 w-auto mx-auto mb-4" />
-          <h2 className="text-2xl font-extrabold text-white tracking-wide">Bienvenue</h2>
-          <p className="text-slate-400 text-sm mt-1">Connectez-vous pour accéder à vos cours</p>
+          <h2 className="text-2xl font-extrabold text-slate-900 tracking-wide">Bienvenue</h2>
+          <p className="text-slate-500 text-sm mt-1">Connectez-vous pour accéder à vos cours</p>
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-6">
+          <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-sm mb-6">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -53,9 +53,9 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Email</label>
+            <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</label>
             <div className="relative">
-              <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+              <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type="email"
                 required
@@ -70,13 +70,13 @@ const Login = () => {
 
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Mot de passe</label>
-              <Link to="/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300 font-medium">
+              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Mot de passe</label>
+              <Link to="/forgot-password" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
                 Mot de passe oublié ?
               </Link>
             </div>
             <div className="relative">
-              <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+              <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
@@ -89,7 +89,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -110,9 +110,9 @@ const Login = () => {
           </button>
         </form>
 
-        <p className="text-center text-slate-400 text-sm mt-8">
+        <p className="text-center text-slate-500 text-sm mt-8">
           Pas encore de compte ?{' '}
-          <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-semibold underline">
+          <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-semibold underline">
             S'inscrire
           </Link>
         </p>

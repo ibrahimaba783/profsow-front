@@ -742,7 +742,7 @@ const Landing = () => {
             </p>
             <p className="text-sm text-slate-500 mb-4">
               Mail:{' '}
-              <a href="mailto:contact@aliousowacademy.com" className="hover:text-indigo-600">
+              <a href="Sowaliou2504@gmail.com" className="hover:text-indigo-600">
                 Sowaliou2504@gmail.com
               </a>
             </p>

@@ -93,7 +93,12 @@ body {
 }
 .input-animated {
   width: 100%;
-  padding: 0.8rem 1rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  /* padding-left/right retirés : gérés par les classes Tailwind (pl-10, pr-10)
+     dans le JSX pour laisser la place aux icônes. Ne pas remettre un
+     padding-left/right ici, sinon ça écrase pl-10/pr-10 et colle le texte
+     à l'icône. */
   font-size: 1rem;
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 8px;
@@ -203,3 +208,96 @@ body {
 /* PREMIUM NAVBAR */
 .navbar-premium{position:fixed;top:0;left:0;width:100%;background:linear-gradient(135deg,#0b1f49,#273d8f,#6c4df6);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 10px 30px rgba(0,0,0,.15)}
 .logo-text{background:linear-gradient(90deg,#fff,#e8d8a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800}.nav-link{color:#e5e7eb;font-weight:600;position:relative;transition:.3s}.nav-link:hover{color:#fff}.nav-link:after{content:'';position:absolute;left:0;bottom:-8px;width:0;height:2px;background:#d6a74a;transition:.3s}.nav-link:hover:after{width:100%}.login-link{color:#fff;font-weight:600}.btn-register{background:linear-gradient(90deg,#6c4df6,#8b5cf6);padding:.7rem 1.2rem;border-radius:.7rem;color:#fff;font-weight:700;box-shadow:0 8px 20px rgba(108,77,246,.35)}.dashboard-btn,.profile-btn,.logout-btn{display:flex;align-items:center;gap:.5rem;border-radius:.75rem;padding:.6rem .9rem;transition:.3s}.dashboard-btn{color:#fff}.profile-btn{background:rgba(255,255,255,.12);color:#fff}.logout-btn{background:#fff1f2;color:#dc2626}
+
+
+/* ===== Animations & styles pour le modal "Créer un cours" ===== */
+
+@keyframes modalBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-backdrop-anim {
+  animation: modalBackdropIn 0.25s ease forwards;
+}
+
+@keyframes modalPopIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-pop {
+  animation: modalPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fieldFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.form-field {
+  opacity: 0;
+  animation: fieldFadeUp 0.4s ease forwards;
+}
+.form-field:nth-child(1) { animation-delay: 0.05s; }
+.form-field:nth-child(2) { animation-delay: 0.1s; }
+.form-field:nth-child(3) { animation-delay: 0.15s; }
+.form-field:nth-child(4) { animation-delay: 0.2s; }
+.form-field:nth-child(5) { animation-delay: 0.25s; }
+.form-field:nth-child(6) { animation-delay: 0.3s; }
+.form-field:nth-child(7) { animation-delay: 0.35s; }
+
+.modal-close-btn {
+  transition: all 0.25s ease;
+}
+.modal-close-btn:hover {
+  transform: rotate(90deg);
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.file-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+.file-input-wrapper input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-input-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1.5px dashed rgba(99, 102, 241, 0.4);
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.04);
+  color: #6366f1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.file-input-wrapper:hover .file-input-label {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: #6366f1;
+}
+
+.select-animated {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.25rem;
+  cursor: pointer;
+}
+
+.toggle-free-card {
+  transition: all 0.25s ease;
+}
+.toggle-free-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+

@@ -12,6 +12,13 @@ import {
   Edit,
   ExternalLink,
   ShieldCheck,
+  X,
+  AlignLeft,
+  Layers,
+  GraduationCap,
+  Clock,
+  ImagePlus,
+  Sparkles,
 } from 'lucide-react';
 
 const TeacherDashboard = () => {
@@ -164,10 +171,10 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-bg pt-28 pb-12 px-6 text-slate-800">
+    <div className="min-h-screen gradient-bg pt-28 pb-12 px-6 text-slate-800 page-fade-in">
       <div className="max-w-6xl mx-auto space-y-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-6">
-          <div>
+          <div className="header-slide-in">
             <h1 className="text-3xl font-extrabold text-slate-900">Espace Enseignant</h1>
             <p className="text-slate-500 mt-1">
               Gérez vos modules de cours, suivez vos élèves et analysez les scores.
@@ -175,16 +182,16 @@ const TeacherDashboard = () => {
           </div>
           <button
             onClick={openCreateModal}
-            className="btn-neon text-white font-bold px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md mt-4 md:mt-0"
+            className="btn-neon text-white font-bold px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md mt-4 md:mt-0 btn-fade-in"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-5 h-5 icon-rotate" />
             <span>Nouveau Cours</span>
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-card p-6 rounded-2xl flex items-center gap-4">
-            <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl text-indigo-600">
+          <div className="glass-card p-6 rounded-2xl flex items-center gap-4 stat-card">
+            <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl text-indigo-600 stat-icon-wrap">
               <BookOpen className="w-6 h-6" />
             </div>
             <div>
@@ -195,8 +202,8 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
-          <div className="glass-card p-6 rounded-2xl flex items-center gap-4">
-            <div className="bg-purple-50 border border-purple-100 p-3 rounded-xl text-purple-600">
+          <div className="glass-card p-6 rounded-2xl flex items-center gap-4 stat-card">
+            <div className="bg-purple-50 border border-purple-100 p-3 rounded-xl text-purple-600 stat-icon-wrap">
               <Users className="w-6 h-6" />
             </div>
             <div>
@@ -207,8 +214,8 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
-          <div className="glass-card p-6 rounded-2xl flex items-center gap-4">
-            <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl text-emerald-600">
+          <div className="glass-card p-6 rounded-2xl flex items-center gap-4 stat-card">
+            <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl text-emerald-600 stat-icon-wrap">
               <BarChart3 className="w-6 h-6" />
             </div>
             <div>
@@ -221,13 +228,14 @@ const TeacherDashboard = () => {
         </div>
 
         <div>
-          <h2 className="text-2xl font-bold mb-6 text-indigo-600 flex items-center gap-2">
-            <BookOpen className="w-6 h-6" />
+          <h2 className="text-2xl font-bold mb-6 text-indigo-600 flex items-center gap-2 section-title">
+            <BookOpen className="w-6 h-6 section-title-icon" />
             <span>Gestion des Modules de Cours</span>
           </h2>
 
           {courses.length === 0 ? (
-            <div className="glass-card rounded-2xl p-8 text-center text-slate-500 border border-dashed border-slate-200">
+            <div className="glass-card rounded-2xl p-8 text-center text-slate-500 border border-dashed border-slate-200 empty-state-box">
+              <BookOpen className="w-10 h-10 text-indigo-300 mx-auto mb-3 empty-state-icon" />
               <p>Vous n'avez créé aucun module de cours.</p>
               <button
                 onClick={openCreateModal}
@@ -241,7 +249,7 @@ const TeacherDashboard = () => {
               {courses.map((course) => (
                 <div
                   key={course._id}
-                  className="glass-card rounded-2xl overflow-hidden flex flex-col justify-between hover:shadow-lg transition-shadow duration-300"
+                  className="glass-card rounded-2xl overflow-hidden flex flex-col justify-between hover:shadow-lg transition-shadow duration-300 course-card"
                 >
                   <Link to={`/courses/${course._id}`} className="block">
                     <div
@@ -308,10 +316,10 @@ const TeacherDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
+          <div className="glass-card p-6 rounded-2xl flex flex-col justify-between panel-slide-up">
             <div>
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-purple-600 border-b border-slate-100 pb-3">
-                <Users className="w-5 h-5" />
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-purple-600 border-b border-slate-100 pb-3 section-title">
+                <Users className="w-5 h-5 section-title-icon" />
                 <span>Élèves Inscrits & Paiements</span>
               </h3>
               {students.length === 0 ? (
@@ -323,7 +331,7 @@ const TeacherDashboard = () => {
                   {students.map((sub) => (
                     <div
                       key={sub._id}
-                      className="flex justify-between items-center bg-slate-50 border border-slate-100 p-3 rounded-xl text-sm"
+                      className="flex justify-between items-center bg-slate-50 border border-slate-100 p-3 rounded-xl text-sm list-row"
                     >
                       <div className="flex items-center gap-3">
                         <img
@@ -351,10 +359,10 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
-          <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
+          <div className="glass-card p-6 rounded-2xl flex flex-col justify-between panel-slide-up panel-2">
             <div>
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-emerald-600 border-b border-slate-100 pb-3">
-                <ShieldCheck className="w-5 h-5" />
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-emerald-600 border-b border-slate-100 pb-3 section-title">
+                <ShieldCheck className="w-5 h-5 section-title-icon" />
                 <span>Notes des Exercices</span>
               </h3>
               {quizResults.length === 0 ? (
@@ -366,7 +374,7 @@ const TeacherDashboard = () => {
                   {quizResults.map((res) => (
                     <div
                       key={res._id}
-                      className="flex justify-between items-center bg-slate-50 border border-slate-100 p-3 rounded-xl text-sm"
+                      className="flex justify-between items-center bg-slate-50 border border-slate-100 p-3 rounded-xl text-sm list-row"
                     >
                       <div className="flex items-center gap-3">
                         <img
@@ -397,21 +405,26 @@ const TeacherDashboard = () => {
       </div>
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg glass-card rounded-3xl p-6 border border-slate-100 relative flex flex-col slide-in max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-backdrop-anim">
+          <div className="w-full max-w-lg glass-card rounded-3xl p-6 border border-slate-100 relative flex flex-col modal-pop max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => {
                 setShowCreateModal(false);
                 resetForm();
               }}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold cursor-pointer"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-slate-400 modal-close-btn cursor-pointer"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-bold text-slate-900 mb-6">
-              {editingCourse ? 'Modifier le cours' : 'Créer un nouveau module'}
-            </h3>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="bg-indigo-50 border border-indigo-100 p-2 rounded-xl text-indigo-600">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">
+                {editingCourse ? 'Modifier le cours' : 'Créer un nouveau module'}
+              </h3>
+            </div>
 
             {errorMsg && (
               <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-sm mb-4">
@@ -421,8 +434,9 @@ const TeacherDashboard = () => {
             )}
 
             <form onSubmit={handleSubmitCourse} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              <div className="space-y-1 form-field">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
                   Titre du cours
                 </label>
                 <input
@@ -430,33 +444,35 @@ const TeacherDashboard = () => {
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="input-animated"
+                  className="input-animated pl-4"
                   placeholder="ex: Mécanique de Newton et Forces"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              <div className="space-y-1 form-field">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                  <AlignLeft className="w-3.5 h-3.5 text-indigo-500" />
                   Description
                 </label>
                 <textarea
                   required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="input-animated h-20 resize-none"
+                  className="input-animated h-20 resize-none pl-4"
                   placeholder="Détaillez le programme de ce cours..."
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 form-field">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-indigo-500" />
                     Matière
                   </label>
                   <select
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="input-animated bg-white border-slate-200 text-slate-800 rounded-lg p-2"
+                    className="input-animated select-animated bg-white border-slate-200 text-slate-800 rounded-lg pl-4"
                   >
                     <option value="Mathématiques">Mathématiques</option>
                     <option value="Physique-Chimie">Physique-Chimie</option>
@@ -464,13 +480,14 @@ const TeacherDashboard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />
                     Niveau
                   </label>
                   <select
                     value={level}
                     onChange={(e) => setLevel(e.target.value)}
-                    className="input-animated bg-white border-slate-200 text-slate-800 rounded-lg p-2"
+                    className="input-animated select-animated bg-white border-slate-200 text-slate-800 rounded-lg pl-4"
                   >
                     <option value="4ème">4ème</option>
                     <option value="3ème">3ème</option>
@@ -481,8 +498,9 @@ const TeacherDashboard = () => {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              <div className="space-y-1 form-field">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-indigo-500" />
                   Durée de la formation
                 </label>
                 <input
@@ -490,7 +508,7 @@ const TeacherDashboard = () => {
                   required
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  className="input-animated"
+                  className="input-animated pl-4"
                   placeholder="ex: 3 mois, 1 an, 10h"
                 />
                 <p className="text-[11px] text-slate-400">
@@ -500,7 +518,7 @@ const TeacherDashboard = () => {
 
               <div
                 onClick={() => setIsFree((prev) => !prev)}
-                className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition ${
+                className={`form-field toggle-free-card flex items-center justify-between p-4 rounded-xl border cursor-pointer transition ${
                   isFree ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'
                 }`}
               >
@@ -513,19 +531,19 @@ const TeacherDashboard = () => {
                   </p>
                 </div>
                 <div
-                  className={`w-11 h-6 rounded-full relative transition-colors ${
+                  className={`w-11 h-6 rounded-full relative transition-colors duration-300 ${
                     isFree ? 'bg-emerald-500' : 'bg-slate-300'
                   }`}
                 >
                   <div
-                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
                       isFree ? 'translate-x-5' : 'translate-x-0.5'
                     }`}
                   ></div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 form-field">
                 {isFree ? (
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
@@ -535,7 +553,7 @@ const TeacherDashboard = () => {
                       type="number"
                       value={originalPrice}
                       onChange={(e) => setOriginalPrice(parseInt(e.target.value))}
-                      className="input-animated"
+                      className="input-animated pl-4"
                     />
                     <p className="text-[11px] text-slate-400">
                       Affichée barrée à côté de « Gratuit » sur les cartes.
@@ -551,28 +569,36 @@ const TeacherDashboard = () => {
                       required
                       value={price}
                       onChange={(e) => setPrice(parseInt(e.target.value))}
-                      className="input-animated"
+                      className="input-animated pl-4"
                     />
                   </div>
                 )}
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <ImagePlus className="w-3.5 h-3.5 text-indigo-500" />
                     Image de couverture
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files[0])}
-                    className="input-animated text-xs text-slate-500"
-                  />
+                  <div className="file-input-wrapper">
+                    <div className="file-input-label">
+                      <ImagePlus className="w-4 h-4 shrink-0" />
+                      <span className="truncate">
+                        {imageFile ? imageFile.name : 'Choisir une image...'}
+                      </span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files[0])}
+                    />
+                  </div>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full btn-neon text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer mt-6"
+                className="w-full btn-neon text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer mt-6 form-field"
               >
                 {creating ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

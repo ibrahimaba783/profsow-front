@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
-import { Play, FileText, Video, HelpCircle, Send, Plus, Trash2, Check, AlertCircle, Sparkles, MessageSquare, Info, Award, GraduationCap, Lock, Share2, Copy, MessageCircle as MeetIcon } from 'lucide-react';
+import { Play, FileText, Video, HelpCircle, Send, Plus, Trash2, Check, AlertCircle, Sparkles, MessageSquare, Info, Award, GraduationCap, Lock, Share2, Copy, MessageCircle as MeetIcon, CreditCard, Smartphone, Phone, CheckCircle2 } from 'lucide-react';
 
 const CourseDetail = () => {
   const { id } = useParams();

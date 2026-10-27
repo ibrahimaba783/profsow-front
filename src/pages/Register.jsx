@@ -12,6 +12,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -208,6 +209,14 @@ const Register = () => {
                 )}
               </button>
             </form>
+
+            <div className="flex items-center gap-3 my-6">
+              <div className="flex-1 border-t border-slate-200"></div>
+              <span className="text-xs text-slate-400 uppercase">ou</span>
+              <div className="flex-1 border-t border-slate-200"></div>
+            </div>
+
+            <GoogleLoginButton onError={setError} />
 
             <p className="text-center text-slate-500 text-sm mt-8">
               Déjà un compte ?{' '}

@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { AuthContext } from '../context/AuthContext';
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
@@ -10,8 +11,16 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const { login } = useContext(AuthContext);
+  const { login, googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const redirectByRole = (role) => {
+    if (role === 'teacher') {
+      navigate('/teacher-dashboard');
+    } else {
+      navigate('/student-dashboard');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,14 +28,24 @@ const Login = () => {
     setSubmitting(true);
 
     try {
-      const data = await login(email, password);
-      if (data.role === 'teacher') {
-        navigate('/teacher-dashboard');
-      } else {
-        navigate('/student-dashboard');
-      }
+      const data = await login(email.trim(), password);
+      redirectByRole(data.role);
     } catch (err) {
       setError(err.message || 'Identifiants invalides');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setSubmitting(true);
+
+    try {
+      const data = await googleLogin(credentialResponse.credential);
+      redirectByRole(data.role);
+    } catch (err) {
+      setError(err.message || 'Connexion Google impossible');
     } finally {
       setSubmitting(false);
     }
@@ -109,6 +128,24 @@ const Login = () => {
             )}
           </button>
         </form>
+
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 border-t border-slate-200"></div>
+          <span className="text-xs text-slate-400 font-medium">OU</span>
+          <div className="flex-1 border-t border-slate-200"></div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('La connexion avec Google a échoué. Veuillez réessayer.')}
+            text="signin_with"
+            shape="rectangular"
+            theme="outline"
+            size="large"
+            locale="fr"
+          />
+        </div>
 
         <p className="text-center text-slate-500 text-sm mt-8">
           Pas encore de compte ?{' '}

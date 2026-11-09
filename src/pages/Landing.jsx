@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState, useRef, useContext } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import {
   Video,
@@ -15,28 +16,35 @@ import {
   BookOpen,
   GraduationCap,
   Clock,
+  Zap,
+  WifiOff,
+  Bell,
+  Smartphone,
 } from 'lucide-react';
-import logoFull from '../assets/logo-aliou-sow-academy-hero.png';
-import logoEmblem from '../assets/logo-aliou-sow-academy-navbar.png';
+import profPhoto from '../assets/prof-aliou-sow.jpg';
 
-// --- Icônes de réseaux sociaux (lucide-react n'exporte plus les icônes de marques) ---
-const FacebookIcon = (props) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z" />
-  </svg>
-);
-const InstagramIcon = (props) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-    <rect x="3" y="3" width="18" height="18" rx="5" />
-    <circle cx="12" cy="12" r="4" />
-    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-  </svg>
-);
-const YoutubeIcon = (props) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <path d="M23 12s0-3.6-.46-5.32a2.94 2.94 0 0 0-2.07-2.08C18.75 4.14 12 4.14 12 4.14s-6.75 0-8.47.46A2.94 2.94 0 0 0 1.46 6.68C1 8.4 1 12 1 12s0 3.6.46 5.32a2.94 2.94 0 0 0 2.07 2.08C5.25 19.86 12 19.86 12 19.86s6.75 0 8.47-.46a2.94 2.94 0 0 0 2.07-2.08C23 15.6 23 12 23 12ZM9.75 15.02V8.98L15.5 12l-5.75 3.02Z" />
-  </svg>
-);
+// --- Matières et niveaux (valeurs identiques à celles du modèle Course) ---
+const SUBJECTS = ['Mathématiques', 'Physique-Chimie'];
+const LEVELS = [
+  { value: '4ème', label: '4ème' },
+  { value: '3ème', label: '3ème' },
+  { value: '2nde S', label: '2nde S' },
+  { value: '1ère S', label: '1ère S' },
+  { value: 'TS', label: 'Terminale S' },
+];
+
+// Dans la base, la Terminale S est enregistrée sous la valeur "TS"
+const formatLevel = (level) => (level === 'TS' ? 'Terminale S' : level);
+const getInitials = (name) =>
+  (name || 'Aliou Sow')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
+
+// Nombre de cours affichés avant de cliquer sur "Tout afficher"
+const COURSES_PREVIEW_COUNT = 8;
 
 // --- Contenu des modules proposés (uniquement Maths & Physique-Chimie) ---
 const MODULES = [
@@ -57,6 +65,28 @@ const MODULES = [
       "Mécanique, électricité, chimie organique et thermodynamique. Comprenez les phénomènes physiques à travers des cours clairs, appliqués et illustrés.",
     banner: 'bg-gradient-to-br from-emerald-500 to-teal-600',
     badge: 'text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full font-semibold',
+  },
+];
+
+// --- Atouts de la plateforme (bandeau sous la bannière) ---
+const BENEFITS = [
+  {
+    icon: Video,
+    color: 'bg-indigo-50 text-indigo-600',
+    title: 'Cours vidéo & directs',
+    text: 'Vidéos structurées et lives interactifs pour poser vos questions en direct.',
+  },
+  {
+    icon: FileText,
+    color: 'bg-purple-50 text-purple-600',
+    title: 'Fiches & devoirs PDF',
+    text: 'Résumés de cours, séries d’exercices et corrigés détaillés à télécharger.',
+  },
+  {
+    icon: ShieldCheck,
+    color: 'bg-emerald-50 text-emerald-600',
+    title: 'Suivi & évaluations',
+    text: 'QCM et quiz interactifs avec correction automatique.',
   },
 ];
 
@@ -106,6 +136,48 @@ const FAQS = [
   },
 ];
 
+// --- Section "Apprenez partout, même hors ligne" (comme sur Bakeli) ---
+const INSTALL_FEATURES = [
+  {
+    icon: Zap,
+    title: 'Accès ultra-rapide',
+    text: "Lancez l'application en un clic depuis votre écran d'accueil",
+  },
+  {
+    icon: WifiOff,
+    title: 'Mode hors ligne',
+    text: 'Consultez vos cours même sans connexion internet',
+  },
+  {
+    icon: Bell,
+    title: 'Notifications',
+    text: 'Recevez des alertes pour vos nouveaux cours et séances en direct',
+  },
+  {
+    icon: Smartphone,
+    title: 'Expérience native',
+    text: 'Interface optimisée comme une vraie application mobile',
+  },
+];
+
+const INSTALL_STEPS = [
+  {
+    emoji: '🌐',
+    title: 'Chrome / Edge',
+    text: 'Cliquez sur "Installer" dans la barre d\'adresse ou utilisez le bouton ci-dessus',
+  },
+  {
+    emoji: '🍎',
+    title: 'Safari (iOS)',
+    text: 'Appuyez sur le bouton Partager puis "Sur l\'écran d\'accueil"',
+  },
+  {
+    emoji: '🤖',
+    title: 'Android',
+    text: 'Appuyez sur "Ajouter à l\'écran d\'accueil" dans le menu du navigateur',
+  },
+];
+
 // --- Hook de compteur animé, démarre uniquement quand `start` devient vrai ---
 const useCountUp = (target, start, duration = 1500) => {
   const [value, setValue] = useState(0);
@@ -132,7 +204,7 @@ const useCountUp = (target, start, duration = 1500) => {
 const StatCard = ({ icon: Icon, target, suffix, label, start }) => {
   const value = useCountUp(target, start);
   return (
-    <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
       <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
         <Icon className="w-7 h-7" />
       </div>
@@ -145,20 +217,120 @@ const StatCard = ({ icon: Icon, target, suffix, label, start }) => {
   );
 };
 
+// Carte de cours, style Bakeli : image, matière (bleu) + niveau (orange), titre,
+// chapitres à droite, durée et professeur (aucun prix affiché sur la page d'accueil)
+const CourseCardItem = ({ course }) => {
+  const teacherName = course.teacher?.name || 'Aliou Sow';
+  const chaptersCount = course.chaptersCount ?? course.chapters?.length;
+
+  return (
+    <Link
+      to={`/courses/${course._id}`}
+      className="group flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition"
+    >
+      <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+        <img
+          src={course.image}
+          alt={course.title}
+          loading="lazy"
+          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+        />
+      </div>
+
+      <div className="flex flex-col flex-1 p-4">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <span className="text-[11px] font-semibold bg-blue-50 text-blue-600 rounded-full px-2.5 py-0.5 truncate">
+            {course.subject}
+          </span>
+          <span className="text-[11px] font-semibold bg-orange-50 text-orange-500 rounded-full px-2.5 py-0.5 shrink-0">
+            {formatLevel(course.level)}
+          </span>
+        </div>
+
+        <h3 className="text-[15px] font-bold text-slate-900 leading-snug line-clamp-3 min-h-[3.9rem]">
+          {course.title}
+        </h3>
+
+        <div className="mt-3 text-right text-xs text-slate-500 min-h-[1rem]">
+          {typeof chaptersCount === 'number' && (
+            <>
+              <span className="font-bold text-slate-900">{chaptersCount}</span> chapitre
+              {chaptersCount > 1 ? 's' : ''}
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+          {course.duration && (
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-red-400" />
+              {course.duration}
+            </span>
+          )}
+          {typeof chaptersCount === 'number' && (
+            <span className="flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+              {chaptersCount} sections
+            </span>
+          )}
+        </div>
+
+        <div className="mt-auto pt-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-7 h-7 rounded bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+              {getInitials(teacherName)}
+            </span>
+            <span className="text-xs text-slate-700 truncate">{teacherName}</span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+// Squelette affiché pendant le chargement des cours
+const CourseSkeletonRow = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    {[1, 2, 3, 4].map((i) => (
+      <div
+        key={i}
+        className="rounded-xl border border-slate-200 overflow-hidden animate-pulse"
+      >
+        <div className="aspect-video bg-slate-100"></div>
+        <div className="p-4 space-y-3">
+          <div className="h-4 bg-slate-100 rounded w-5/6"></div>
+          <div className="h-3 bg-slate-100 rounded w-1/2"></div>
+          <div className="h-5 bg-slate-100 rounded w-1/3"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 const Landing = () => {
+  const { user, loading: authLoading } = useContext(AuthContext);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('Tous');
+  const [activeSubject, setActiveSubject] = useState('Tous');
+  const [activeLevel, setActiveLevel] = useState('Tous');
+  const [showAllCourses, setShowAllCourses] = useState(false);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [statsVisible, setStatsVisible] = useState(false);
   const [platformStats, setPlatformStats] = useState({ studentsCount: 0, coursesCount: 0, modulesCount: 0 });
   const [openFaq, setOpenFaq] = useState(0);
+  const [installPrompt, setInstallPrompt] = useState(null);
   const statsRef = useRef(null);
-  const navigate = useNavigate();
   const location = useLocation();
 
-  // Scrolle vers la section ciblée par le hash de l'URL (ex: venu du Navbar depuis une autre page)
+  const isLoggedIn = !authLoading && !!user;
+  const firstName = user?.name ? user.name.trim().split(' ')[0] : '';
+  const dashboardPath = user?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
+
+  // Filtres éventuels transmis par le footer (matière / niveau) + défilement vers la section du hash
   useEffect(() => {
+    if (location.state?.subject) setActiveSubject(location.state.subject);
+    if (location.state?.level) setActiveLevel(location.state.level);
+
     if (location.hash) {
       const id = location.hash.replace('#', '');
       const timer = setTimeout(() => {
@@ -216,128 +388,197 @@ const Landing = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Récupère l'invite d'installation du navigateur (bouton "Installer l'application")
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    setInstallPrompt(null);
+  };
+
   const goToModule = (subjectKey) => {
-    setActiveFilter(subjectKey);
+    setActiveSubject(subjectKey);
+    setActiveLevel('Tous');
     document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const filteredCourses =
-    activeFilter === 'Tous' ? courses : courses.filter((c) => c.subject === activeFilter);
+  const resetFilters = () => {
+    setActiveSubject('Tous');
+    setActiveLevel('Tous');
+  };
+
+  const filteredCourses = courses.filter(
+    (c) =>
+      (activeSubject === 'Tous' || c.subject === activeSubject) &&
+      (activeLevel === 'Tous' || c.level === activeLevel)
+  );
+
+  const visibleCourses = showAllCourses ? filteredCourses : filteredCourses.slice(0, COURSES_PREVIEW_COUNT);
+  const canToggleCourses = filteredCourses.length > COURSES_PREVIEW_COUNT;
+
 
   return (
-    <div className="min-h-screen bg-white pt-24 text-slate-900 flex flex-col items-center">
-      {/* Hero Section */}
-      <header className="w-full bg-gradient-to-b from-indigo-50 via-white to-white">
-        <div className="max-w-6xl mx-auto px-6 py-12 md:py-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+    <div className="min-h-screen bg-white pt-16 text-slate-900 flex flex-col items-center">
+      {/* Bannière d'accueil : texte à gauche, photo du professeur avec formes colorées à droite */}
+      <header className="w-full bg-white border-b border-slate-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-8 items-center">
+          {/* Texte */}
           <div>
-            <span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-4 py-1.5 rounded-full mb-6">
-              Mathématiques &amp; Physique-Chimie
-            </span>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight text-slate-900">
-              Maîtrisez les <span className="text-indigo-600">Mathématiques</span> &amp; la{' '}
-              <span className="text-emerald-600">Physique-Chimie</span>
-            </h1>
-            <p className="text-slate-600 text-lg mb-10 leading-relaxed">
-              Apprenez les <strong className="text-slate-900">Mathématiques</strong> et la{' '}
-              <strong className="text-slate-900">Physique-Chimie</strong> grâce à des{' '}
-              <span className="text-indigo-600 font-semibold">cours vidéo</span>, des{' '}
-              <span className="text-purple-600 font-semibold">documents PDF</span>, des{' '}
-              <span className="text-emerald-600 font-semibold">quiz interactifs</span> et des{' '}
-              <span className="text-pink-600 font-semibold">séances en direct avec M. Aliou Sow</span>.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                to="/register"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-indigo-600/20 transition text-center"
-              >
-                Commencer gratuitement
-              </Link>
-              <a
-                href="#courses"
-                className="border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-700 font-semibold px-8 py-3.5 rounded-xl transition text-center"
-              >
-                Découvrir les cours
-              </a>
-            </div>
+            <div className="w-16 h-1.5 rounded-full bg-[#d6a74a] mb-6"></div>
+
+            {isLoggedIn ? (
+              <>
+                <h1 className="font-black uppercase tracking-tight leading-[1.05] text-[#0b1f49] text-4xl sm:text-5xl mb-6">
+                  Ravi de vous retrouver{firstName ? ', ' : ' !'}
+                  {firstName && <span className="text-[#2f4fd8]">{firstName} !</span>}
+                </h1>
+                <p className="text-slate-600 text-lg leading-relaxed max-w-xl mb-8">
+                  Reprenez là où vous vous êtes arrêté ou découvrez de nouveaux cours de Mathématiques et de
+                  Physique-Chimie avec M. Aliou Sow.
+                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <Link
+                    to={dashboardPath}
+                    className="text-center border-2 border-[#0b1f49] bg-[#0b1f49] text-white hover:bg-white hover:text-[#0b1f49] font-bold px-8 py-3.5 rounded-lg transition"
+                  >
+                    Aller à mon espace
+                  </Link>
+                  <a
+                    href="#courses"
+                    className="text-center text-[#0b1f49] hover:text-[#2f4fd8] font-bold px-2 py-3.5 transition"
+                  >
+                    Découvrir les cours &rarr;
+                  </a>
+                </div>
+              </>
+            ) : (
+              <>
+                <h1 className="font-black uppercase tracking-tight leading-[1.05] text-[#0b1f49] text-4xl sm:text-5xl mb-6">
+                  Maîtrisez les <span className="text-[#2f4fd8]">Mathématiques</span> &amp; la{' '}
+                  <span className="text-[#b8862b]">Physique-Chimie</span>
+                </h1>
+                <p className="text-slate-600 text-lg leading-relaxed max-w-xl mb-8">
+                  Accédez à des cours vidéo, des documents PDF, des quiz interactifs et des séances en direct avec
+                  M. Aliou Sow. Du collège à la Terminale S, avancez à votre rythme et préparez sereinement le
+                  BFEM et le Baccalauréat.
+                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <Link
+                    to="/register"
+                    className="text-center border-2 border-[#0b1f49] text-[#0b1f49] hover:bg-[#0b1f49] hover:text-white font-bold px-8 py-3.5 rounded-lg transition"
+                  >
+                    Inscrivez-vous dès maintenant !
+                  </Link>
+                  <a
+                    href="#courses"
+                    className="text-center text-[#0b1f49] hover:text-[#2f4fd8] font-bold px-2 py-3.5 transition"
+                  >
+                    Découvrir les cours &rarr;
+                  </a>
+                </div>
+              </>
+            )}
           </div>
 
-          <div className="relative flex justify-center items-center">
-            <div className="absolute w-40 h-40 bg-indigo-200 rounded-full blur-2xl -top-4 -left-4 opacity-70"></div>
-            <div className="absolute w-32 h-32 bg-purple-200 rounded-full blur-2xl bottom-0 right-2 opacity-70"></div>
-            <div className="absolute w-14 h-14 bg-emerald-300 rounded-full top-6 right-10 opacity-70"></div>
-            <img
-              src={logoFull}
-              alt="Aliou Sow Academy"
-              className="relative z-10 w-56 md:w-80 drop-shadow-xl"
-            />
+          {/* Photo du professeur + formes décoratives */}
+          <div className="flex justify-center lg:justify-end lg:pr-6">
+            <div className="relative w-[280px] sm:w-[340px] lg:w-[380px]">
+              {/* Formes en arrière-plan */}
+              <div className="absolute -top-8 -left-10 w-3/5 h-3/5 rounded-[58%_42%_52%_48%/45%_55%_45%_55%] bg-gradient-to-b from-[#f6d58a] to-[#d6a74a] -rotate-12"></div>
+              <div className="absolute -bottom-8 -right-8 w-3/5 h-3/5 rounded-[45%_55%_40%_60%/55%_45%_55%_45%] bg-gradient-to-b from-[#2f4fd8] to-[#0b1f49] rotate-6"></div>
+              <div className="absolute bottom-16 -left-12 w-24 h-24 rounded-full bg-[#efe6d3]"></div>
+              <div className="absolute -top-5 right-10 w-10 h-10 rounded-full bg-gradient-to-b from-[#d6a74a] to-[#2f4fd8]"></div>
+              <div className="absolute top-1/3 -right-10 w-16 h-8 rounded-[0_100%_0_100%] bg-gradient-to-r from-[#d6a74a] to-[#2f4fd8] -rotate-[25deg]"></div>
+              <div className="absolute bottom-6 right-1/4 w-4 h-4 rounded-full bg-[#d6a74a]"></div>
+
+              {/* Photo */}
+              <div className="relative z-10 aspect-[4/5] overflow-hidden border-4 border-white shadow-2xl rounded-tl-[110px] rounded-br-[110px] rounded-tr-[28px] rounded-bl-[28px] bg-slate-100">
+                <img
+                  src={profPhoto}
+                  alt="M. Aliou Sow, professeur de Mathématiques et de Physique-Chimie"
+                  className="w-full h-full object-cover object-[50%_8%]"
+                />
+              </div>
+
+              {/* Carte d'identification */}
+              <div className="absolute z-20 -bottom-6 left-4 sm:-left-8 bg-white rounded-xl shadow-xl px-4 py-3 flex items-center gap-3 max-w-[260px]">
+                <span className="w-1.5 self-stretch rounded-full bg-[#d6a74a]"></span>
+                <div className="leading-tight">
+                  <p className="text-sm font-extrabold text-[#0b1f49]">M. Aliou Sow</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Professeur de Mathématiques &amp; Physique-Chimie</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Feature Section */}
-      <section className="w-full max-w-6xl px-6 py-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="bg-white border border-slate-100 shadow-sm p-8 rounded-2xl flex flex-col items-center text-center">
-          <div className="bg-indigo-50 p-4 rounded-xl text-indigo-600 mb-6">
-            <Video className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-bold mb-2">Cours Vidéos &amp; Directs</h3>
-          <p className="text-slate-500 text-sm">
-            Visionnez les cours structurés sur YouTube et rejoignez des lives interactifs sur Google Meet pour poser vos questions en direct.
-          </p>
-        </div>
-
-        <div className="bg-white border border-slate-100 shadow-sm p-8 rounded-2xl flex flex-col items-center text-center">
-          <div className="bg-purple-50 p-4 rounded-xl text-purple-600 mb-6">
-            <FileText className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-bold mb-2">Fiches &amp; Devoirs PDF</h3>
-          <p className="text-slate-500 text-sm">
-            Téléchargez des fiches de résumé de cours, des séries d'exercices et des corrigés détaillés au format PDF hébergés de manière sécurisée.
-          </p>
-        </div>
-
-        <div className="bg-white border border-slate-100 shadow-sm p-8 rounded-2xl flex flex-col items-center text-center">
-          <div className="bg-emerald-50 p-4 rounded-xl text-emerald-600 mb-6">
-            <ShieldCheck className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-bold mb-2">Suivi &amp; Évaluations</h3>
-          <p className="text-slate-500 text-sm">
-            Testez vos connaissances en temps réel via des QCM et quiz interactifs avec corrections automatiques fournies par M. Sow.
-          </p>
+      {/* Atouts de la plateforme */}
+      <section className="w-full border-b border-slate-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {BENEFITS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.title} className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${item.color}`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">{item.title}</h3>
+                  <p className="text-sm text-slate-500 mt-0.5">{item.text}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* Modules Section — équivalent des "modules tendance" de Bakeli */}
-      <section id="modules" className="w-full max-w-6xl px-6 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-extrabold mb-3 text-slate-900">
-            Formez-vous aux matières clés du Bac &amp; du BFEM !
-          </h2>
-          <p className="text-slate-500 max-w-2xl mx-auto">
-            Choisissez votre module et progressez à votre rythme grâce à un accompagnement structuré par chapitres.
-          </p>
+      {/* Nos modules : titre à gauche, "Tout afficher" à droite, cartes compactes */}
+      <section id="modules" className="w-full max-w-7xl px-4 sm:px-6 py-14 scroll-mt-20">
+        <div className="flex items-end justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Nos Modules</h2>
+            <p className="text-slate-500 mt-1">Deux matières clés pour réussir le BFEM et le Baccalauréat.</p>
+          </div>
+          <button
+            onClick={() => goToModule('Tous')}
+            className="text-[#2f4fd8] font-bold hover:underline shrink-0 cursor-pointer"
+          >
+            Tout afficher
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {MODULES.map((mod) => {
             const Icon = mod.icon;
+            const count = courses.filter((c) => c.subject === mod.key).length;
             return (
               <div
                 key={mod.key}
-                className="bg-white border border-slate-100 shadow-sm rounded-2xl overflow-hidden hover:shadow-lg transition"
+                className="flex items-start gap-5 bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg transition"
               >
-                <div className={`h-32 flex items-center justify-center ${mod.banner}`}>
-                  <Icon className="w-12 h-12 text-white" />
+                <div className={`w-16 h-16 rounded-xl shrink-0 flex items-center justify-center ${mod.banner}`}>
+                  <Icon className="w-8 h-8 text-white" />
                 </div>
-                <div className="p-8">
-                  <span className={mod.badge}>{mod.key}</span>
-                  <h3 className="text-xl font-bold mt-4 mb-3 text-slate-900">{mod.title}</h3>
-                  <p className="text-slate-500 text-sm mb-6 leading-relaxed">{mod.description}</p>
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                    <span className="text-xs text-slate-400 font-medium">M. Aliou Sow</span>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-slate-900">{mod.title}</h3>
+                  <p className="text-sm text-slate-500 mt-1 leading-relaxed line-clamp-3">{mod.description}</p>
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-xs font-semibold text-slate-500">
+                      {loading ? '' : `${count} cours`}
+                    </span>
                     <button
                       onClick={() => goToModule(mod.key)}
-                      className="text-indigo-600 hover:text-indigo-700 text-sm font-bold flex items-center gap-1 cursor-pointer"
+                      className="text-sm font-bold text-[#2f4fd8] hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       Voir les cours <ChevronRight className="w-4 h-4" />
                     </button>
@@ -349,32 +590,163 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Pricing / Information Card */}
-      <section className="w-full max-w-3xl mx-6 my-4 p-8 md:p-12 rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div>
-          <h3 className="text-2xl font-bold text-indigo-700 mb-2">Abonnement Annuel Unique</h3>
-          <p className="text-slate-600 text-sm max-w-md">
-            Accès complet à toutes les leçons d'un module, aux visioconférences Google Meet et au chat de soutien pendant un an.
-          </p>
+      {/* Nos cours : filtres, grille de cartes, "Tout afficher" */}
+      <section id="courses" className="w-full max-w-7xl px-4 sm:px-6 py-14 scroll-mt-20">
+        <div className="flex items-end justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Nos Cours</h2>
+            <p className="text-slate-500 mt-1">Choisissez une matière et un niveau pour trouver votre cours.</p>
+          </div>
+          {canToggleCourses && (
+            <button
+              onClick={() => setShowAllCourses((v) => !v)}
+              className="text-[#2f4fd8] font-bold hover:underline shrink-0 cursor-pointer"
+            >
+              {showAllCourses ? 'Réduire' : 'Tout afficher'}
+            </button>
+          )}
         </div>
-        <div className="text-center flex flex-col items-center md:items-end">
-          <span className="text-4xl font-extrabold text-slate-900 tracking-tight">6 000 FCFA</span>
-          <span className="text-indigo-600 text-sm font-medium mb-4">Par module &amp; par an</span>
-          <Link
-            to="/register"
-            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-bold text-white shadow-md"
-          >
-            S'inscrire Maintenant
-          </Link>
+
+        {/* Filtres */}
+        <div className="flex flex-wrap items-center gap-2 mb-8">
+          {['Tous', ...SUBJECTS].map((subject) => (
+            <button
+              key={subject}
+              onClick={() => setActiveSubject(subject)}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition cursor-pointer ${
+                activeSubject === subject
+                  ? 'bg-[#0b1f49] border-[#0b1f49] text-white'
+                  : 'bg-white border-slate-300 text-slate-600 hover:border-[#0b1f49]'
+              }`}
+            >
+              {subject === 'Tous' ? 'Toutes les matières' : subject}
+            </button>
+          ))}
+          <span className="hidden sm:block w-px h-6 bg-slate-200 mx-1"></span>
+          {[{ value: 'Tous', label: 'Tous les niveaux' }, ...LEVELS].map((level) => (
+            <button
+              key={level.value}
+              onClick={() => setActiveLevel(level.value)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                activeLevel === level.value
+                  ? 'bg-[#2f4fd8] border-[#2f4fd8] text-white'
+                  : 'bg-white border-slate-300 text-slate-600 hover:border-[#2f4fd8]'
+              }`}
+            >
+              {level.label}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <CourseSkeletonRow />
+        ) : courses.length === 0 ? (
+          <div className="border border-dashed border-slate-300 rounded-xl py-16 px-6 text-center">
+            <p className="text-slate-700 font-semibold mb-1">Les premiers cours arrivent bientôt.</p>
+            <p className="text-slate-400 text-sm">Revenez très prochainement sur Aliou Sow Academy.</p>
+          </div>
+        ) : filteredCourses.length === 0 ? (
+          <div className="border border-slate-200 rounded-xl py-16 px-6 text-center">
+            <p className="text-slate-700 font-semibold mb-1">Aucun cours ne correspond à cette sélection.</p>
+            <button
+              onClick={resetFilters}
+              className="mt-3 text-[#2f4fd8] hover:underline text-sm font-bold cursor-pointer"
+            >
+              Réinitialiser les filtres
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {visibleCourses.map((course) => (
+              <CourseCardItem key={course._id} course={course} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Abonnement */}
+      <section className="w-full max-w-4xl px-4 sm:px-6 py-6">
+        <div className="p-8 md:p-12 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div>
+            <h3 className="text-2xl font-bold text-indigo-700 mb-2">Abonnement Annuel Unique</h3>
+            <p className="text-slate-600 text-sm max-w-md">
+              Accès complet à toutes les leçons d'un module, aux visioconférences Google Meet et au chat de soutien
+              pendant un an.
+            </p>
+          </div>
+          <div className="text-center flex flex-col items-center md:items-end">
+            <span className="text-indigo-600 text-sm font-medium mb-4">Accès par module, valable un an</span>
+            {!isLoggedIn && (
+              <Link
+                to="/register"
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-bold text-white"
+              >
+                S'inscrire maintenant
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* Stats Section — chiffres RÉELS calculés depuis la base de données */}
-      <section ref={statsRef} className="w-full max-w-5xl px-6 py-16">
+      {/* Apprenez partout, même hors ligne */}
+      <section id="install" className="w-full max-w-5xl px-4 sm:px-6 py-14 scroll-mt-20">
+        <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 max-w-xl leading-tight">
+          Apprenez partout, même hors ligne
+        </h2>
+        <p className="text-slate-500 text-lg mt-4 max-w-xl leading-relaxed">
+          Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez à vos cours
+          rapidement, même sans connexion internet.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-5">
+          {INSTALL_FEATURES.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.title} className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">{item.title}</h3>
+                  <p className="text-sm text-slate-500">{item.text}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {installPrompt && (
+          <button
+            onClick={handleInstall}
+            className="mt-8 bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold px-6 py-3 rounded-lg transition cursor-pointer"
+          >
+            Installer l'application
+          </button>
+        )}
+
+        <div className="mt-12 pt-10 border-t border-amber-200">
+          <h3 className="text-center font-bold text-slate-900 mb-8">Comment installer ?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {INSTALL_STEPS.map((step) => (
+              <div
+                key={step.title}
+                className="bg-white border border-slate-100 rounded-xl shadow-sm p-6 text-center"
+              >
+                <div className="text-3xl mb-3">{step.emoji}</div>
+                <h4 className="font-bold text-slate-900 mb-2">{step.title}</h4>
+                <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Statistiques — chiffres RÉELS calculés depuis la base de données */}
+      <section ref={statsRef} className="w-full max-w-5xl px-4 sm:px-6 py-14">
         <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-10 text-slate-900">
           Découvrez les chiffres des élèves ayant suivi nos cours
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <StatCard
             icon={Users}
             target={platformStats.studentsCount}
@@ -399,229 +771,14 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Courses Section */}
-      <section id="courses" className="w-full max-w-6xl px-6 py-16">
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold mb-2 text-slate-900">Nos Modules Disponibles</h2>
-            <p className="text-slate-500">Sélectionnez une matière pour explorer les cours structurés par chapitres.</p>
-          </div>
-        </div>
-
-        {/* Filtres par matière */}
-        <div className="flex flex-wrap gap-3 mb-10">
-          {['Tous', 'Mathématiques', 'Physique-Chimie'].map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-5 py-2 rounded-full text-sm font-semibold border transition cursor-pointer ${
-                activeFilter === filter
-                  ? 'bg-indigo-600 border-indigo-600 text-white'
-                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-          </div>
-        ) : courses.length === 0 ? (
-          /* Placeholders Premium en l'absence totale de données réelles en base */
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div
-              onClick={() => navigate('/login')}
-              className="bg-white border border-slate-100 shadow-sm rounded-2xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition cursor-pointer"
-            >
-              <div
-                className="h-48 bg-cover bg-center"
-                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=800')` }}
-              ></div>
-              <div className="p-6">
-                <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full font-semibold">
-                  Mathématiques
-                </span>
-                <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-1 rounded-full font-semibold ml-2">
-                  TS (Terminales S)
-                </span>
-                <h3 className="text-xl font-bold mt-4 mb-2 text-slate-900">Algèbre &amp; Analyse Mathématique</h3>
-                <p className="text-slate-500 text-sm line-clamp-2">
-                  Limites de fonctions, suites numériques, fonctions exponentielles et logarithmes de Terminale S.
-                </p>
-                <div className="flex items-center justify-between mt-4 text-xs text-slate-400">
-                  <span className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">AS</span>
-                    M. Aliou Sow
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    3 mois
-                  </span>
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-                  <span className="font-extrabold text-lg text-slate-900">6 000 FCFA</span>
-                  <span className="text-indigo-600 text-sm font-bold flex items-center gap-1">
-                    Accéder au cours <ChevronRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div
-              onClick={() => navigate('/login')}
-              className="bg-white border border-slate-100 shadow-sm rounded-2xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition cursor-pointer"
-            >
-              <div
-                className="h-48 bg-cover bg-center"
-                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&q=80&w=800')` }}
-              ></div>
-              <div className="p-6">
-                <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full font-semibold">
-                  Physique-Chimie
-                </span>
-                <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-1 rounded-full font-semibold ml-2">
-                  1ère S
-                </span>
-                <h3 className="text-xl font-bold mt-4 mb-2 text-slate-900">Mécanique &amp; Cinématique du Point</h3>
-                <p className="text-slate-500 text-sm line-clamp-2">
-                  Lois de Newton, énergie mécanique, travail d'une force et mouvements rectilignes uniformes.
-                </p>
-                <div className="flex items-center justify-between mt-4 text-xs text-slate-400">
-                  <span className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">AS</span>
-                    M. Aliou Sow
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    2 mois
-                  </span>
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-                  <span className="font-extrabold text-lg text-slate-900">6 000 FCFA</span>
-                  <span className="text-indigo-600 text-sm font-bold flex items-center gap-1">
-                    Accéder au cours <ChevronRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div
-              onClick={() => navigate('/login')}
-              className="bg-white border border-slate-100 shadow-sm rounded-2xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition cursor-pointer"
-            >
-              <div
-                className="h-48 bg-cover bg-center"
-                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?auto=format&fit=crop&q=80&w=800')` }}
-              ></div>
-              <div className="p-6">
-                <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full font-semibold">
-                  Mathématiques
-                </span>
-                <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-1 rounded-full font-semibold ml-2">
-                  3ème
-                </span>
-                <h3 className="text-xl font-bold mt-4 mb-2 text-slate-900">Théorème de Thalès &amp; Trigonométrie</h3>
-                <p className="text-slate-500 text-sm line-clamp-2">
-                  Préparation complète aux épreuves de géométrie pour le brevet/BFEM.
-                </p>
-                <div className="flex items-center justify-between mt-4 text-xs text-slate-400">
-                  <span className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">AS</span>
-                    M. Aliou Sow
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    1 mois
-                  </span>
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-                  <span className="font-extrabold text-lg text-slate-900">6 000 FCFA</span>
-                  <span className="text-indigo-600 text-sm font-bold flex items-center gap-1">
-                    Accéder au cours <ChevronRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : filteredCourses.length === 0 ? (
-          /* Il existe de vrais cours, mais aucun ne correspond au filtre sélectionné */
-          <div className="bg-white border border-slate-100 rounded-2xl py-16 px-6 text-center">
-            <p className="text-slate-700 font-semibold mb-1">Aucun cours disponible pour le moment dans « {activeFilter} ».</p>
-            <p className="text-slate-400 text-sm">Reviens bientôt ou choisis une autre matière.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {filteredCourses.map((course) => {
-              // Filet de sécurité : un cours à 0 FCFA est considéré gratuit même si la case
-              // "Cours gratuit" n'a pas été explicitement cochée à la création.
-              const courseIsFree = course.isFree || course.price === 0;
-              return (
-                <Link
-                  key={course._id}
-                  to={`/courses/${course._id}`}
-                  className="block bg-white border border-slate-100 shadow-sm rounded-2xl overflow-hidden hover:shadow-lg hover:border-indigo-200 transition relative"
-                >
-                  {courseIsFree && (
-                    <span className="absolute top-3 right-3 z-10 text-xs bg-emerald-500 text-white px-3 py-1 rounded-full font-bold shadow-lg">
-                      Gratuit
-                    </span>
-                  )}
-                  <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url(${course.image})` }}></div>
-                  <div className="p-6">
-                    <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full font-semibold">
-                      {course.subject}
-                    </span>
-                    <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-1 rounded-full font-semibold ml-2">
-                      {course.level}
-                    </span>
-                    <h3 className="text-xl font-bold mt-4 mb-2 text-slate-900">{course.title}</h3>
-                    <p className="text-slate-500 text-sm line-clamp-2">{course.description}</p>
-                    <div className="flex items-center justify-between mt-4 text-xs text-slate-400">
-                      <span className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">AS</span>
-                        M. Aliou Sow
-                      </span>
-                      {course.duration && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {course.duration}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-                      {courseIsFree ? (
-                        <span className="flex items-baseline gap-2">
-                          <span className="font-extrabold text-lg text-emerald-600">Gratuit</span>
-                          {course.originalPrice > 0 && (
-                            <span className="text-xs text-slate-400 line-through">{course.originalPrice} FCFA</span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="font-extrabold text-lg text-slate-900">{course.price} FCFA</span>
-                      )}
-                      <span className="text-indigo-600 text-sm font-bold flex items-center gap-1">
-                        Accéder au cours <ChevronRight className="w-4 h-4" />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
       {/* Témoignages */}
-      <section id="testimonials" className="w-full max-w-4xl px-6 py-16">
+      <section id="testimonials" className="w-full max-w-4xl px-4 sm:px-6 py-14 scroll-mt-20">
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-extrabold mb-2 text-slate-900">Nos élèves témoignent</h2>
           <p className="text-slate-500">Ce qu'ils disent de leur progression avec Aliou Sow Academy.</p>
         </div>
 
-        <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-8 md:p-12 relative">
+        <div className="bg-white border border-slate-200 rounded-xl p-8 md:p-12 relative">
           <Quote className="w-10 h-10 text-indigo-100 mb-4" />
           <p className="text-lg md:text-xl text-slate-700 leading-relaxed mb-6 min-h-[96px]">
             {TESTIMONIALS[testimonialIndex].quote}
@@ -634,14 +791,14 @@ const Landing = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setTestimonialIndex((i) => (i - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)}
-                className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+                className="p-2 rounded-full bg-white hover:bg-slate-50 border border-slate-300 transition cursor-pointer"
                 aria-label="Témoignage précédent"
               >
                 <ChevronLeft className="w-4 h-4 text-slate-600" />
               </button>
               <button
                 onClick={() => setTestimonialIndex((i) => (i + 1) % TESTIMONIALS.length)}
-                className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+                className="p-2 rounded-full bg-white hover:bg-slate-50 border border-slate-300 transition cursor-pointer"
                 aria-label="Témoignage suivant"
               >
                 <ChevronRight className="w-4 h-4 text-slate-600" />
@@ -664,9 +821,9 @@ const Landing = () => {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="w-full max-w-4xl px-6 py-16">
+      <section id="faq" className="w-full max-w-4xl px-4 sm:px-6 py-14 scroll-mt-20">
         <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-10 text-slate-900">Questions fréquentes</h2>
-        <div className="flex flex-col divide-y divide-slate-100 border-t border-b border-slate-100">
+        <div className="flex flex-col divide-y divide-slate-200 border-t border-b border-slate-200">
           {FAQS.map((faq, i) => (
             <div key={faq.question}>
               <button
@@ -688,94 +845,24 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* CTA final */}
-      <section className="w-full max-w-4xl px-6 py-16 text-center">
-        <div className="rounded-3xl p-10 md:p-16 border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 relative overflow-hidden">
-          <h2 className="text-2xl md:text-4xl font-extrabold mb-4 text-slate-900">Prêt à booster tes résultats ?</h2>
-          <p className="text-slate-600 max-w-xl mx-auto mb-8">
-            Rejoins Aliou Sow Academy dès aujourd'hui et accède à tous les cours de Mathématiques et Physique-Chimie.
-          </p>
-          <Link
-            to="/register"
-            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-indigo-600/20 transition"
-          >
-            Je m'inscris maintenant
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="w-full border-t border-slate-100 mt-auto bg-slate-50 pt-14 pb-8">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div>
-            <img src={logoEmblem} alt="Aliou Sow Academy" className="h-10 w-auto mb-4" />
-            <p className="text-slate-500 text-sm leading-relaxed">
-              Aliou Sow Academy est une plateforme d'apprentissage en ligne dédiée aux Mathématiques et à la
-              Physique-Chimie, conçue pour la classe de M. Aliou Sow.
+      {/* Appel à l'action final (visiteurs uniquement) */}
+      {!isLoggedIn && (
+        <section className="w-full max-w-4xl px-4 sm:px-6 py-14 text-center">
+          <div className="rounded-2xl p-10 md:p-16 border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
+            <h2 className="text-2xl md:text-4xl font-extrabold mb-4 text-slate-900">Prêt à booster tes résultats ?</h2>
+            <p className="text-slate-600 max-w-xl mx-auto mb-8">
+              Rejoins Aliou Sow Academy dès aujourd'hui et accède à tous les cours de Mathématiques et
+              Physique-Chimie.
             </p>
+            <Link
+              to="/register"
+              className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3.5 rounded-lg transition"
+            >
+              Je m'inscris maintenant
+            </Link>
           </div>
-
-          <div>
-            <h4 className="font-bold text-slate-900 mb-4">Obtenir de l'aide</h4>
-            <ul className="space-y-2 text-sm text-slate-500">
-              <li><a href="#faq" className="hover:text-indigo-600">FAQ</a></li>
-              <li><a href="#testimonials" className="hover:text-indigo-600">Témoignages</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-slate-900 mb-4">Matières</h4>
-            <ul className="space-y-2 text-sm text-slate-500">
-              <li><button onClick={() => goToModule('Mathématiques')} className="hover:text-indigo-600 cursor-pointer">Mathématiques</button></li>
-              <li><button onClick={() => goToModule('Physique-Chimie')} className="hover:text-indigo-600 cursor-pointer">Physique-Chimie</button></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-slate-900 mb-4">Contactez-nous</h4>
-            {/* Remplace ces coordonnées par les vraies informations de contact */}
-            <p className="text-sm text-slate-500 mb-1">
-              Tel:{' '}
-              <a href="tel:+221771023399" className="hover:text-indigo-600">
-                +221 77 102 33 99
-              </a>
-            </p>
-            <p className="text-sm text-slate-500 mb-4">
-              Mail:{' '}
-              <a href="Sowaliou2504@gmail.com" className="hover:text-indigo-600">
-                Sowaliou2504@gmail.com
-              </a>
-            </p>
-            <div className="flex gap-3">
-              <a
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:border-indigo-200 transition"
-              >
-                <FacebookIcon className="w-4 h-4 text-slate-600" />
-              </a>
-              <a
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:border-indigo-200 transition"
-              >
-                <InstagramIcon className="w-4 h-4 text-slate-600" />
-              </a>
-              <a
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:border-indigo-200 transition"
-              >
-                <YoutubeIcon className="w-4 h-4 text-slate-600" />
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-6 mt-10 pt-6 border-t border-slate-200 text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} Aliou Sow Academy - Tous droits réservés.
-        </div>
-      </footer>
+        </section>
+      )}
     </div>
   );
 };

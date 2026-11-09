@@ -1,22 +1,33 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import {
   BookOpen,
-  Award,
   CreditCard,
   ChevronRight,
+  ChevronLeft,
+  ChevronDown,
   Lock,
   Sparkles,
   CheckCircle2,
   AlertCircle,
   Phone,
   Smartphone,
+  LayoutGrid,
+  LayoutDashboard,
+  Search,
+  Settings,
+  LogOut,
+  User,
 } from 'lucide-react';
+import logo from '../assets/logo-aliou-sow-academy-navbar.png';
+
+const SUBJECT_FILTERS = ['Tous', 'Mathématiques', 'Physique-Chimie'];
+const formatLevel = (level) => (level === 'TS' ? 'Terminale S' : level);
 
 const StudentDashboard = () => {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const [myCourses, setMyCourses] = useState([]);
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +41,18 @@ const StudentDashboard = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [enrollingFreeId, setEnrollingFreeId] = useState(null);
   const [freeEnrollError, setFreeEnrollError] = useState('');
+
+  // Interface (menu latéral, recherche, filtres)
+  const location = useLocation();
+  // La page d'un cours peut renvoyer ici avec une vue ("Mes cours") ou une recherche
+  const [view, setView] = useState(location.state?.view || 'all'); // 'all' | 'mine'
+  const [query, setQuery] = useState(location.state?.query || '');
+  const [subjectFilter, setSubjectFilter] = useState('Tous');
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 768
+  );
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -123,198 +146,381 @@ const StudentDashboard = () => {
     navigate(`/courses/${course._id}`);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  // Filtrage par recherche (barre du haut) et par matière
+  const q = query.trim().toLowerCase();
+  const matches = (c) =>
+    (subjectFilter === 'Tous' || c.subject === subjectFilter) &&
+    (!q || `${c.title} ${c.subject} ${c.level}`.toLowerCase().includes(q));
+
+  const filteredMine = myCourses.filter(matches);
+  const filteredCatalog = catalog.filter(matches);
+
+  const firstName = user?.name ? user.name.trim().split(' ')[0] : '';
+
+  // Carte de cours (style Bakeli) : image, matière + niveau, titre, action
+  const renderCard = (course, enrolled) => {
+    const courseIsFree = course.isFree || course.price === 0;
+
+    return (
+      <div
+        onClick={() => handleCardClick(course)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') handleCardClick(course);
+        }}
+        className="group h-full flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition cursor-pointer"
+      >
+        <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+          <img
+            src={course.image}
+            alt={course.title}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+          />
+        </div>
+
+        <div className="flex flex-col flex-1 p-4">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <span className="text-[11px] font-semibold bg-blue-50 text-blue-600 rounded-full px-2.5 py-0.5 truncate">
+              {course.subject}
+            </span>
+            <span className="text-[11px] font-semibold bg-orange-50 text-orange-500 rounded-full px-2.5 py-0.5 shrink-0">
+              {formatLevel(course.level)}
+            </span>
+          </div>
+
+          <h3 className="text-[15px] font-bold text-slate-900 leading-snug line-clamp-2 min-h-[2.6rem] flex items-start justify-between gap-2">
+            <span>{course.title}</span>
+            {!enrolled && <Lock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />}
+          </h3>
+
+          <div className="mt-auto pt-4 border-t border-slate-100 mt-4 flex items-center justify-between gap-2">
+            {enrolled ? (
+              <>
+                <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                  Abonnement actif
+                </span>
+                <span className="text-[#2f4fd8] text-sm font-bold flex items-center gap-1">
+                  Étudier <ChevronRight className="w-4 h-4" />
+                </span>
+              </>
+            ) : courseIsFree ? (
+              <>
+                <span className="text-sm font-extrabold text-emerald-600">Gratuit</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEnrollFree(course);
+                  }}
+                  disabled={enrollingFreeId === course._id}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
+                >
+                  {enrollingFreeId === course._id ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Accéder gratuitement</span>
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-xs text-slate-500">Accès 1 an</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    startPayment(course);
+                  }}
+                  className="px-3 py-1.5 bg-[#0b1f49] hover:bg-[#2f4fd8] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>S'abonner</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="loader-spinner"></div>
       </div>
     );
   }
 
+  const sidebarItems = [
+    { key: 'all', label: 'Tous les cours', icon: LayoutGrid },
+    { key: 'mine', label: 'Mes cours', icon: BookOpen, count: myCourses.length },
+  ];
+
   return (
-    <div className="min-h-screen gradient-bg pt-28 pb-12 px-6">
-      <div className="max-w-6xl mx-auto space-y-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-6">
-          <div>
-            <h1 className="text-3xl font-extrabold text-slate-900">Mon Espace Étudiant</h1>
-            <p className="text-slate-500 mt-1">Bienvenue, {user?.name}. Suivez vos cours et gérez vos abonnements.</p>
-          </div>
-          <Link
-            to="/profile"
-            className="btn-shiny px-5 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-sm font-semibold text-slate-700 mt-4 md:mt-0 shadow-sm"
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      {/* Barre du haut : logo, recherche, menu utilisateur */}
+      <header className="fixed top-0 inset-x-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center justify-between gap-4 px-4 sm:px-6">
+        <Link to="/" className="shrink-0">
+          <img src={logo} alt="Aliou Sow Academy" className="h-10 w-auto" />
+        </Link>
+
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          className="flex-1 max-w-xl flex items-center bg-slate-50 border border-slate-200 rounded-full pl-5 pr-1.5 py-1.5"
+        >
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Qu'est-ce que vous souhaitez apprendre ?"
+            className="flex-1 min-w-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+          />
+          <button
+            type="submit"
+            aria-label="Rechercher"
+            className="w-9 h-9 rounded-full bg-[#d6a74a] hover:bg-[#b8862b] text-white flex items-center justify-center shrink-0 cursor-pointer transition"
           >
-            Gérer mon Profil
-          </Link>
-        </div>
+            <Search className="w-4 h-4" />
+          </button>
+        </form>
 
-        <div>
-          <h2 className="text-2xl font-bold text-indigo-600 flex items-center gap-2 mb-6">
-            <BookOpen className="w-6 h-6" />
-            <span>Mes Cours Débloqués ({myCourses.length})</span>
-          </h2>
+        <div className="relative shrink-0">
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <span className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center">
+              <User className="w-5 h-5" />
+            </span>
+            <span className="hidden sm:block text-sm font-semibold text-slate-800 max-w-[140px] truncate">
+              {user?.name}
+            </span>
+            <ChevronDown className="hidden sm:block w-4 h-4 text-slate-400" />
+          </button>
 
-          {myCourses.length === 0 ? (
-            <div className="glass-card rounded-2xl p-8 text-center text-slate-500 border border-dashed border-slate-200">
-              <p>Vous n'avez aucun cours débloqué pour le moment.</p>
-              <p className="text-sm mt-1">Sélectionnez un cours dans le catalogue ci-dessous et activez votre abonnement.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {myCourses.map((course) => (
-                <div
-                  key={course._id}
-                  onClick={() => handleCardClick(course)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') handleCardClick(course);
-                  }}
-                  className="glass-card rounded-2xl overflow-hidden flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-300"
-                >
-                  <div
-                    className="h-44 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${course.image})` }}
-                  ></div>
-                  <div className="p-6 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex gap-2">
-                        <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-0.5 rounded-full font-semibold">
-                          {course.subject}
-                        </span>
-                        <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-0.5 rounded-full font-semibold">
-                          {course.level}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-bold mt-4 mb-2 text-slate-900">{course.title}</h3>
-                      <p className="text-slate-500 text-sm line-clamp-2">{course.description}</p>
-                    </div>
-                    <div className="mt-6 border-t border-slate-100 pt-4 flex justify-between items-center">
-                      <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                        Abonnement Actif
-                      </span>
-                      <span className="text-indigo-600 hover:text-indigo-700 text-sm font-bold flex items-center gap-1">
-                        Étudier <ChevronRight className="w-4 h-4" />
-                      </span>
-                    </div>
-                  </div>
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
+              <div className="absolute right-0 top-12 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-3 z-50">
+                <div className="px-4 pb-3 border-b border-slate-100">
+                  <p className="text-xs font-semibold text-slate-500">{user?.name}</p>
+                  <p className="text-sm text-slate-800 truncate">{user?.email}</p>
                 </div>
-              ))}
-            </div>
+                <button
+                  onClick={() => {
+                    setView('all');
+                    setMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-slate-50 cursor-pointer"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Tableau de bord
+                </button>
+                <Link
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-slate-50"
+                >
+                  <Settings className="w-4 h-4" />
+                  Paramètres
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Se déconnecter
+                </button>
+              </div>
+            </>
           )}
         </div>
+      </header>
 
-        <div>
-          <h2 className="text-2xl font-bold text-purple-600 flex items-center gap-2 mb-6">
-            <Award className="w-6 h-6" />
-            <span>Catalogue des modules disponibles ({catalog.length})</span>
-          </h2>
+      {/* Menu latéral repliable */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 top-16 bg-black/30 z-20"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+      <aside
+        className={`fixed top-16 bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-30 px-4 py-6 transition-transform duration-300 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <p className="text-[11px] font-bold tracking-wider text-slate-400 px-2 mb-3">MES COURS</p>
+        <nav className="space-y-2">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            const active = view === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => setView(item.key)}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition cursor-pointer ${
+                  active ? 'bg-amber-50 text-[#0b1f49]' : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <span
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                    active ? 'bg-[#d6a74a] text-white' : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                </span>
+                <span className="flex-1 text-left">{item.label}</span>
+                {typeof item.count === 'number' && (
+                  <span className="text-xs text-slate-400">{item.count}</span>
+                )}
+                {active && <ChevronRight className="w-4 h-4 text-[#b8862b]" />}
+              </button>
+            );
+          })}
+
+          <Link
+            to="/profile"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+          >
+            <span className="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center">
+              <User className="w-4 h-4" />
+            </span>
+            <span className="flex-1 text-left">Mon profil</span>
+          </Link>
+        </nav>
+      </aside>
+
+      {/* Bouton pour replier / ouvrir le menu */}
+      <button
+        onClick={() => setSidebarOpen((v) => !v)}
+        aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
+        className={`fixed top-[5.5rem] z-30 w-7 h-7 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center text-slate-600 hover:text-[#0b1f49] cursor-pointer transition-all duration-300 ${
+          sidebarOpen ? 'left-[15.125rem]' : 'left-2'
+        }`}
+      >
+        {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+      </button>
+
+      {/* Contenu principal */}
+      <main className={`pt-16 min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
+        <div className="max-w-7xl mx-auto px-6 py-8 space-y-10">
+          <div>
+            <h1 className="text-2xl font-extrabold text-slate-900">
+              Bonjour{firstName ? `, ${firstName}` : ''} 
+            </h1>
+            <p className="text-slate-500 mt-1">Suivez vos cours et découvrez de nouveaux modules.</p>
+          </div>
+
+          {/* Filtres par matière */}
+          <div className="flex flex-wrap items-center gap-2">
+            {SUBJECT_FILTERS.map((subject) => (
+              <button
+                key={subject}
+                onClick={() => setSubjectFilter(subject)}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition cursor-pointer ${
+                  subjectFilter === subject
+                    ? 'bg-[#0b1f49] border-[#0b1f49] text-white'
+                    : 'bg-white border-slate-300 text-slate-600 hover:border-[#0b1f49]'
+                }`}
+              >
+                {subject === 'Tous' ? 'Toutes les matières' : subject}
+              </button>
+            ))}
+          </div>
 
           {freeEnrollError && (
-            <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-2.5">
+            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-2.5">
               {freeEnrollError}
             </div>
           )}
 
-          {catalog.length === 0 ? (
-            <p className="text-slate-400 text-sm">Tous les cours disponibles sont débloqués dans votre espace !</p>
+          {view === 'mine' ? (
+            <section>
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-5">
+                Mes cours ({filteredMine.length})
+              </h2>
+              {filteredMine.length === 0 ? (
+                <div className="bg-white border border-dashed border-slate-300 rounded-xl p-10 text-center text-slate-500">
+                  <p className="font-semibold text-slate-700">
+                    {myCourses.length === 0
+                      ? "Vous n'avez aucun cours débloqué pour le moment."
+                      : 'Aucun cours ne correspond à votre recherche.'}
+                  </p>
+                  {myCourses.length === 0 && (
+                    <button
+                      onClick={() => setView('all')}
+                      className="mt-3 text-[#2f4fd8] font-bold hover:underline cursor-pointer"
+                    >
+                      Découvrir les cours
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                  {filteredMine.map((course) => (
+                    <div key={course._id}>{renderCard(course, true)}</div>
+                  ))}
+                </div>
+              )}
+            </section>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {catalog.map((course) => {
-                const courseIsFree = course.isFree || course.price === 0;
-
-                return (
-                  <div
-                    key={course._id}
-                    onClick={() => handleCardClick(course)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') handleCardClick(course);
-                    }}
-                    className="glass-card rounded-2xl overflow-hidden opacity-90 hover:opacity-100 transition-opacity flex flex-col justify-between relative cursor-pointer hover:shadow-lg"
-                  >
-                    {courseIsFree && (
-                      <span className="absolute top-3 right-3 z-10 text-xs bg-emerald-500 text-white px-3 py-1 rounded-full font-bold shadow-lg">
-                        Gratuit
-                      </span>
-                    )}
-
-                    <div>
-                      <div
-                        className="h-44 bg-cover bg-center grayscale-[15%]"
-                        style={{ backgroundImage: `url(${course.image})` }}
-                      ></div>
-                      <div className="p-6">
-                        <div className="flex gap-2">
-                          <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-0.5 rounded-full font-semibold">
-                            {course.subject}
-                          </span>
-                          <span className="text-xs bg-purple-50 text-purple-700 border border-purple-100 px-2.5 py-0.5 rounded-full font-semibold">
-                            {course.level}
-                          </span>
-                        </div>
-                        <h3 className="text-xl font-bold mt-4 mb-2 flex items-center justify-between text-slate-900">
-                          <span>{course.title}</span>
-                          <Lock className="w-4 h-4 text-slate-400" />
-                        </h3>
-                        <p className="text-slate-500 text-sm line-clamp-2">{course.description}</p>
-                      </div>
-                    </div>
-
-                    <div className="p-6 border-t border-slate-100 flex justify-between items-center">
-                      {courseIsFree ? (
-                        <>
-                          <span className="flex items-baseline gap-2">
-                            <span className="font-extrabold text-lg text-emerald-600">Gratuit</span>
-                            {course.originalPrice > 0 && (
-                              <span className="text-xs text-slate-400 line-through">
-                                {course.originalPrice} FCFA
-                              </span>
-                            )}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEnrollFree(course);
-                            }}
-                            disabled={enrollingFreeId === course._id}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 cursor-pointer shadow-md transition"
-                          >
-                            {enrollingFreeId === course._id ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <>
-                                <Sparkles className="w-4 h-4" />
-                                <span>Accéder gratuitement</span>
-                              </>
-                            )}
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <span className="font-extrabold text-lg text-slate-900">
-                            {course.price} FCFA
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startPayment(course);
-                            }}
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 cursor-pointer shadow-md transition"
-                          >
-                            <CreditCard className="w-4 h-4" />
-                            <span>S'abonner (1 an)</span>
-                          </button>
-                        </>
-                      )}
-                    </div>
+            <>
+              {filteredMine.length > 0 && (
+                <section>
+                  <div className="flex items-end justify-between mb-5">
+                    <h2 className="text-2xl font-extrabold text-slate-900">Continuer mes cours</h2>
+                    <button
+                      onClick={() => setView('mine')}
+                      className="text-[#2f4fd8] font-bold hover:underline cursor-pointer"
+                    >
+                      Tout afficher
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex gap-5 overflow-x-auto pb-3">
+                    {filteredMine.map((course) => (
+                      <div key={course._id} className="w-[250px] shrink-0">
+                        {renderCard(course, true)}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <section>
+                <h2 className="text-2xl font-extrabold text-slate-900">Nos cours</h2>
+                <p className="text-slate-500 mt-1 mb-5">
+                  Découvrez les modules disponibles ({filteredCatalog.length}).
+                </p>
+
+                {catalog.length === 0 ? (
+                  <p className="text-slate-400 text-sm">
+                    Tous les cours disponibles sont débloqués dans votre espace !
+                  </p>
+                ) : filteredCatalog.length === 0 ? (
+                  <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-slate-500">
+                    Aucun cours ne correspond à votre recherche.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                    {filteredCatalog.map((course) => (
+                      <div key={course._id}>{renderCard(course, false)}</div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
           )}
         </div>
-      </div>
+      </main>
 
       {selectedCourse && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">

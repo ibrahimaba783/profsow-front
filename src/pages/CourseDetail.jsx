@@ -803,14 +803,17 @@ const CourseDetail = () => {
   // (user === null). Le contenu pédagogique réel (vidéos, PDF, liens Meet) reste caché :
   // seuls les titres des chapitres/leçons sont visibles, avec un cadenas.
   if (!isSubscribed && user?.role !== 'teacher') {
-    const toggleChapter = (chapterId) => {
-      setOpenPreviewChapters((prev) => ({ ...prev, [chapterId]: !prev[chapterId] }));
+    // Ouvre / ferme un chapitre (on part de l'état réellement affiché, donc un seul clic suffit)
+    const toggleChapter = (chapterId, currentlyOpen) => {
+      setOpenPreviewChapters((prev) => ({ ...prev, [chapterId]: !currentlyOpen }));
     };
 
     // Filet de sécurité : un cours à 0 FCFA est considéré gratuit même si la case
     // "Cours gratuit" n'a pas été explicitement cochée à la création.
     const courseIsFree = course.isFree || course.price === 0;
 
+    const levelLabel = course.level === 'TS' ? 'Terminale S' : course.level;
+    const teacherName = course.teacher?.name || 'Aliou Sow';
     const chaptersCount = course.chaptersCount ?? course.chapters?.length ?? 0;
     const lessonsCount =
       course.lessonsCount ??
@@ -842,330 +845,359 @@ const CourseDetail = () => {
     ];
 
     const primaryBtn =
-      'w-full bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold px-6 py-3 rounded-lg text-sm text-center block transition';
+      'w-full bg-[#d6a74a] hover:bg-[#b8862b] text-[#0b1f49] font-bold px-6 py-3.5 rounded-lg text-sm text-center block transition';
 
     return (
       <CourseShell>
-      <div className={`min-h-screen bg-slate-50 pb-16 text-slate-800 ${user ? '' : 'pt-16'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          {/* Colonne principale : bannière, onglets, contenu */}
-          <div className="lg:col-span-2">
-            {/* Bannière */}
-            <div className="bg-gradient-to-br from-[#0b1f49] to-[#2f4fd8] rounded-xl p-6 md:p-8 text-white">
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs bg-white/15 px-2.5 py-1 rounded-full font-semibold">{course.subject}</span>
-                <span className="text-xs bg-[#d6a74a] text-[#0b1f49] px-2.5 py-1 rounded-full font-bold">
-                  {course.level === 'TS' ? 'Terminale S' : course.level}
-                </span>
-                {courseIsFree && (
-                  <span className="text-xs bg-emerald-500 px-2.5 py-1 rounded-full font-bold">Gratuit</span>
-                )}
-              </div>
+        <div className={`min-h-screen bg-slate-50 pb-16 text-slate-800 ${user ? '' : 'pt-16'}`}>
+          {/* ===== Bannière pleine largeur : titre, description, chiffres clés ===== */}
+          <section className="relative overflow-hidden bg-gradient-to-r from-[#0b1f49] via-[#1d3a8a] to-[#273d8f] text-white">
+            <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-white/5 pointer-events-none"></div>
+            <div className="absolute -bottom-28 left-1/3 w-64 h-64 rounded-full bg-[#d6a74a]/10 pointer-events-none"></div>
 
-              <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">{course.title}</h1>
-              {course.description && (
-                <p className="mt-3 text-white/80 text-sm leading-relaxed line-clamp-2">{course.description}</p>
-              )}
-
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 text-sm text-white/90">
-                <span className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  {chaptersCount} chapitre{chaptersCount > 1 ? 's' : ''}
-                </span>
-                <span className="flex items-center gap-2">
-                  <Play className="w-4 h-4" />
-                  {lessonsCount} leçon{lessonsCount > 1 ? 's' : ''}
-                </span>
-                {course.duration && (
-                  <span className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    {course.duration}
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-24 lg:pb-28">
+              <div className="lg:w-2/3 lg:pr-10">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="text-xs bg-white/15 px-3 py-1 rounded-full font-semibold">{course.subject}</span>
+                  <span className="text-xs bg-[#d6a74a] text-[#0b1f49] px-3 py-1 rounded-full font-bold">
+                    {levelLabel}
                   </span>
-                )}
-                <span className="flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4" />
-                  Prof. {course.teacher?.name || 'Aliou Sow'}
-                </span>
-              </div>
-            </div>
-
-            {/* Onglets */}
-            <div className="mt-6 bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="flex border-b border-slate-200 px-2 overflow-x-auto">
-                {previewTabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setPreviewTab(tab.key)}
-                    className={`px-4 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition cursor-pointer ${
-                      previewTab === tab.key
-                        ? 'border-[#d6a74a] text-[#0b1f49]'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Contenu : chapitres repliables, leçons verrouillées */}
-              {previewTab === 'content' && (
-                <div className="px-4 sm:px-6 py-2">
-                  {!course.chapters || course.chapters.length === 0 ? (
-                    <p className="text-sm text-slate-400 py-10 text-center">
-                      Le contenu de ce module sera bientôt disponible.
-                    </p>
-                  ) : (
-                    <div className="divide-y divide-slate-200">
-                      {course.chapters.map((chapter, idx) => {
-                        const isOpen = openPreviewChapters[chapter._id] ?? idx === 0;
-                        return (
-                          <div key={chapter._id} className="py-1">
-                            <button
-                              onClick={() => toggleChapter(chapter._id)}
-                              className="w-full flex items-center justify-between py-3 text-left cursor-pointer"
-                            >
-                              <span className="font-bold text-sm text-slate-900">{chapter.title}</span>
-                              <ChevronDown
-                                className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                              />
-                            </button>
-                            {isOpen && (
-                              <div className="pb-2 space-y-1">
-                                {(chapter.lessons || []).map((lesson) => (
-                                  <div
-                                    key={lesson._id}
-                                    className="flex items-center gap-3 px-2 py-2 text-sm text-slate-600"
-                                  >
-                                    <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                                    <span className="truncate">{lesson.title}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                  {courseIsFree && (
+                    <span className="text-xs bg-emerald-500 px-3 py-1 rounded-full font-bold">Gratuit</span>
                   )}
                 </div>
-              )}
 
-              {/* Informations de base */}
-              {previewTab === 'info' && (
-                <div className="p-4 sm:p-6 space-y-5 text-sm">
-                  {course.description && (
-                    <div>
-                      <h3 className="font-bold text-slate-900 mb-1">Description</h3>
-                      <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{course.description}</p>
-                    </div>
+                <h1 className="text-2xl md:text-4xl font-extrabold leading-tight">{course.title}</h1>
+
+                {course.description && (
+                  <p className="mt-4 text-white/85 leading-relaxed whitespace-pre-line">{course.description}</p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-6 text-sm text-white/90">
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-[#d6a74a]" />
+                    {chaptersCount} section{chaptersCount > 1 ? 's' : ''}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Play className="w-4 h-4 text-[#d6a74a]" />
+                    {lessonsCount} leçon{lessonsCount > 1 ? 's' : ''}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4 text-[#d6a74a]" />
+                    {levelLabel}
+                  </span>
+                  {course.duration && (
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[#d6a74a]" />
+                      {course.duration}
+                    </span>
                   )}
+                </div>
 
-                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">Matière</dt>
-                      <dd className="font-semibold text-slate-800 mt-0.5">{course.subject}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">Niveau</dt>
-                      <dd className="font-semibold text-slate-800 mt-0.5">
-                        {course.level === 'TS' ? 'Terminale S' : course.level}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">Contenu</dt>
-                      <dd className="font-semibold text-slate-800 mt-0.5">
-                        {chaptersCount} chapitre{chaptersCount > 1 ? 's' : ''} • {lessonsCount} leçon
-                        {lessonsCount > 1 ? 's' : ''}
-                      </dd>
-                    </div>
-                    {course.duration && (
+                <p className="mt-5 text-sm text-white/75">
+                  Par <span className="font-semibold text-white">{teacherName}</span>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* ===== Corps : onglets à gauche, carte d'accès à droite (elle chevauche la bannière) ===== */}
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 -mt-16 lg:-mt-20 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Colonne principale */}
+            <div className="order-2 lg:order-1 lg:col-span-2">
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div role="tablist" className="flex border-b border-slate-200 px-2 overflow-x-auto">
+                  {previewTabs.map((tab) => (
+                    <button
+                      key={tab.key}
+                      role="tab"
+                      aria-selected={previewTab === tab.key}
+                      onClick={() => setPreviewTab(tab.key)}
+                      className={`px-5 py-4 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition cursor-pointer ${
+                        previewTab === tab.key
+                          ? 'border-[#d6a74a] text-[#0b1f49]'
+                          : 'border-transparent text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* --- Contenu : sections repliables, leçons verrouillées --- */}
+                {previewTab === 'content' && (
+                  <div className="p-4 sm:p-6">
+                    {!course.chapters || course.chapters.length === 0 ? (
+                      <p className="text-sm text-slate-400 py-10 text-center">
+                        Le contenu de ce module sera bientôt disponible.
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-sm text-slate-500 mb-4">
+                          {chaptersCount} section{chaptersCount > 1 ? 's' : ''} • {lessonsCount} leçon
+                          {lessonsCount > 1 ? 's' : ''}
+                        </p>
+                        <div className="border border-slate-200 rounded-lg divide-y divide-slate-200 overflow-hidden">
+                          {course.chapters.map((chapter, idx) => {
+                            const isOpen = openPreviewChapters[chapter._id] ?? idx === 0;
+                            const lessons = chapter.lessons || [];
+                            return (
+                              <div key={chapter._id}>
+                                <button
+                                  onClick={() => toggleChapter(chapter._id, isOpen)}
+                                  className="w-full flex items-center justify-between gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 text-left cursor-pointer transition"
+                                >
+                                  <span className="font-bold text-sm text-slate-900">{chapter.title}</span>
+                                  <span className="flex items-center gap-3 shrink-0">
+                                    <span className="text-xs text-slate-500">
+                                      {lessons.length} leçon{lessons.length > 1 ? 's' : ''}
+                                    </span>
+                                    <ChevronDown
+                                      className={`w-4 h-4 text-slate-500 transition-transform ${
+                                        isOpen ? 'rotate-180' : ''
+                                      }`}
+                                    />
+                                  </span>
+                                </button>
+
+                                {isOpen && (
+                                  <ul className="bg-white">
+                                    {lessons.length === 0 ? (
+                                      <li className="px-4 py-3 text-sm text-slate-400">
+                                        Aucune leçon pour le moment.
+                                      </li>
+                                    ) : (
+                                      lessons.map((lesson) => {
+                                        const LessonIcon = getLessonTypeIcon(lesson.contentType);
+                                        return (
+                                          <li
+                                            key={lesson._id}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 border-t border-slate-100 first:border-t-0"
+                                          >
+                                            <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                            <LessonIcon className="w-4 h-4 text-slate-400 shrink-0" />
+                                            <span className="truncate">{lesson.title}</span>
+                                          </li>
+                                        );
+                                      })
+                                    )}
+                                  </ul>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* --- Informations de base --- */}
+                {previewTab === 'info' && (
+                  <div className="p-4 sm:p-6 space-y-6 text-sm">
+                    {course.description && (
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">Durée</dt>
-                        <dd className="font-semibold text-slate-800 mt-0.5">{course.duration}</dd>
+                        <h3 className="font-bold text-slate-900 mb-2">Description</h3>
+                        <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{course.description}</p>
                       </div>
                     )}
-                  </dl>
 
-                  <div className="flex items-center gap-3 pt-5 border-t border-slate-100">
-                    <img
-                      src={course.teacher?.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (course.teacher?.name || 'Prof')}
-                      alt={course.teacher?.name || 'Professeur'}
-                      className="w-10 h-10 rounded-full object-cover border border-slate-200"
-                    />
-                    <div>
-                      <div className="text-sm font-bold text-slate-800">Prof. {course.teacher?.name || 'Non renseigné'}</div>
-                      <div className="text-xs text-slate-400">Auteur du cours</div>
-                    </div>
+                    <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {[
+                        { label: 'Matière', value: course.subject },
+                        { label: 'Niveau', value: levelLabel },
+                        {
+                          label: 'Contenu',
+                          value: `${chaptersCount} section${chaptersCount > 1 ? 's' : ''} • ${lessonsCount} leçon${
+                            lessonsCount > 1 ? 's' : ''
+                          }`,
+                        },
+                        { label: 'Durée', value: course.duration },
+                      ]
+                        .filter((item) => item.value)
+                        .map((item) => (
+                          <div key={item.label} className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                            <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                              {item.label}
+                            </dt>
+                            <dd className="font-bold text-slate-900 mt-1">{item.value}</dd>
+                          </div>
+                        ))}
+                    </dl>
                   </div>
-                </div>
-              )}
-
-              {/* Questions / Réponses : réservé aux élèves abonnés */}
-              {previewTab === 'qa' && (
-                <div className="p-8 text-center">
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
-                    <MessageSquare className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 mb-1">Salon de discussion</h3>
-                  <p className="text-sm text-slate-500 max-w-md mx-auto">
-                    Les élèves abonnés peuvent poser leurs questions à M. Aliou Sow et échanger avec les autres
-                    élèves dans le salon de ce cours.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Colonne latérale : image, accès, partage, contenu inclus */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-              <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
-                <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
-              </div>
-
-              <div className="p-5 space-y-4">
-                <div>
-                  <p className="text-lg font-extrabold text-slate-900">
-                    {courseIsFree ? 'Cours gratuit' : 'Accès complet au module'}
-                  </p>
-                  <p className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    Accès pendant 1 an
-                  </p>
-                </div>
-
-                {freeEnrollError && (
-                  <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                    {freeEnrollError}
-                  </p>
                 )}
 
-                {courseIsFree ? (
-                  user ? (
-                    user.role === 'student' ? (
-                      <button
-                        onClick={handleEnrollFree}
-                        disabled={enrollingFree}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-bold px-6 py-3 rounded-lg text-sm text-center flex items-center justify-center gap-2 cursor-pointer transition"
-                      >
-                        {enrollingFree ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <>
-                            <Sparkles className="w-4 h-4" />
-                            <span>Accéder gratuitement</span>
-                          </>
-                        )}
-                      </button>
+                {/* --- Questions / Réponses : réservé aux élèves abonnés --- */}
+                {previewTab === 'qa' && (
+                  <div className="p-8 text-center">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+                      <MessageSquare className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 mb-1">Salon de discussion</h3>
+                    <p className="text-sm text-slate-500 max-w-md mx-auto">
+                      Les élèves abonnés peuvent poser leurs questions à M. Aliou Sow et échanger avec les autres
+                      élèves dans le salon de ce cours.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Colonne latérale : sur téléphone elle passe AVANT le contenu pour que le bouton d'accès soit visible */}
+            <aside className="order-1 lg:order-2 lg:col-span-1 space-y-4 lg:sticky lg:top-20">
+              {/* Carte d'accès */}
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg">
+                <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                  <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                </div>
+
+                <div className="p-5 space-y-4">
+                  <div>
+                    <p className="text-xl font-extrabold text-slate-900">
+                      {courseIsFree ? 'Cours gratuit' : 'Accès complet au module'}
+                    </p>
+                    <p className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      Accès pendant 1 an
+                    </p>
+                  </div>
+
+                  {freeEnrollError && (
+                    <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                      {freeEnrollError}
+                    </p>
+                  )}
+
+                  {courseIsFree ? (
+                    user ? (
+                      user.role === 'student' ? (
+                        <button
+                          onClick={handleEnrollFree}
+                          disabled={enrollingFree}
+                          className="w-full bg-[#d6a74a] hover:bg-[#b8862b] disabled:opacity-60 text-[#0b1f49] font-bold px-6 py-3.5 rounded-lg text-sm text-center flex items-center justify-center gap-2 cursor-pointer transition"
+                        >
+                          {enrollingFree ? (
+                            <div className="w-4 h-4 border-2 border-[#0b1f49] border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4" />
+                              <span>Explorez maintenant !</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <Link to="/student-dashboard" className={primaryBtn}>
+                          Retourner au tableau de bord
+                        </Link>
+                      )
                     ) : (
-                      <Link to="/student-dashboard" className={primaryBtn}>
-                        Retourner au tableau de bord
+                      <Link to="/login" className={primaryBtn}>
+                        Se connecter pour accéder gratuitement
                       </Link>
                     )
                   ) : (
-                    <Link to="/login" className={primaryBtn}>
-                      Se connecter pour accéder gratuitement
+                    <Link to={user ? '/student-dashboard' : '/login'} className={primaryBtn}>
+                      {user ? "S'abonner depuis mon espace" : 'Se connecter pour souscrire'}
                     </Link>
-                  )
-                ) : (
-                  <Link to={user ? '/student-dashboard' : '/login'} className={primaryBtn}>
-                    {user ? "S'abonner depuis mon espace" : 'Se connecter pour souscrire'}
-                  </Link>
-                )}
-
-                {!user && (
-                  <p className="text-xs text-slate-400 text-center">
-                    Pas encore de compte ?{' '}
-                    <Link to="/register" className="text-[#2f4fd8] hover:underline font-semibold">
-                      Inscrivez-vous
-                    </Link>
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Partager */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <h4 className="font-bold text-slate-900 mb-3">Partager</h4>
-              <div className="flex flex-wrap items-center gap-2">
-                {shareLinks.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`px-3.5 py-2 rounded-lg text-xs font-bold transition ${s.className}`}
-                  >
-                    {s.label}
-                  </a>
-                ))}
-                <button
-                  onClick={handleCopyLink}
-                  className="px-3.5 py-2 rounded-lg text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer transition"
-                >
-                  {linkCopied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="text-emerald-600">Lien copié !</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span>Copier le lien</span>
-                    </>
                   )}
-                </button>
-              </div>
-            </div>
 
-            {/* Instructeur */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <h4 className="font-bold text-slate-900 mb-3">Instructeur</h4>
-              <div className="flex items-center gap-3">
-                <img
-                  src={course.teacher?.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (course.teacher?.name || 'Prof')}
-                  alt={course.teacher?.name || 'Professeur'}
-                  className="w-11 h-11 rounded-full object-cover border border-slate-200"
-                />
-                <div>
-                  <div className="text-sm font-bold text-slate-900">{course.teacher?.name || 'Aliou Sow'}</div>
-                  <div className="text-xs text-slate-400">Professeur de Mathématiques &amp; Physique-Chimie</div>
+                  {!user && (
+                    <p className="text-xs text-slate-400 text-center">
+                      Pas encore de compte ?{' '}
+                      <Link to="/register" className="text-[#2f4fd8] hover:underline font-semibold">
+                        Inscrivez-vous
+                      </Link>
+                    </p>
+                  )}
                 </div>
               </div>
-              <p className="text-xs text-slate-500 mt-3 leading-relaxed">
-                {course.teacher?.bio || 'Aucune biographie disponible pour le moment.'}
-              </p>
-            </div>
 
-            {/* Ce qui est inclus */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <h4 className="font-bold text-slate-900 mb-3">Ce qui est inclus</h4>
-              <ul className="space-y-3 text-sm text-slate-600">
-                <li className="flex items-center gap-3">
-                  <Video className="w-4 h-4 text-[#2f4fd8] shrink-0" />
-                  <span>Cours vidéo et séances en direct</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <FileText className="w-4 h-4 text-purple-600 shrink-0" />
-                  <span>Fiches et documents PDF</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <HelpCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Quiz et évaluations corrigés</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <MessageSquare className="w-4 h-4 text-pink-600 shrink-0" />
-                  <span>Salon de discussion avec le professeur</span>
-                </li>
-              </ul>
-            </div>
+              {/* Partager */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <h4 className="font-bold text-slate-900 mb-3">Partager</h4>
+                <div className="flex flex-wrap items-center gap-2">
+                  {shareLinks.map((s) => (
+                    <a
+                      key={s.label}
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`px-3.5 py-2 rounded-lg text-xs font-bold transition ${s.className}`}
+                    >
+                      {s.label}
+                    </a>
+                  ))}
+                  <button
+                    onClick={handleCopyLink}
+                    className="px-3.5 py-2 rounded-lg text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer transition"
+                  >
+                    {linkCopied ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-600">Lien copié !</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>Copier le lien</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Instructeur */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <h4 className="font-bold text-slate-900 mb-3">Instructeur</h4>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={
+                      course.teacher?.avatar ||
+                      'https://api.dicebear.com/7.x/initials/svg?seed=' + (course.teacher?.name || 'Prof')
+                    }
+                    alt={teacherName}
+                    className="w-11 h-11 rounded-full object-cover border border-slate-200"
+                  />
+                  <div>
+                    <div className="text-sm font-bold text-slate-900">{teacherName}</div>
+                    <div className="text-xs text-slate-400">Professeur de Mathématiques &amp; Physique-Chimie</div>
+                  </div>
+                </div>
+                {course.teacher?.bio && (
+                  <p className="text-xs text-slate-500 mt-3 leading-relaxed">{course.teacher.bio}</p>
+                )}
+              </div>
+
+              {/* Ce qui est inclus */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <h4 className="font-bold text-slate-900 mb-3">Ce qui est inclus</h4>
+                <ul className="space-y-3 text-sm text-slate-600">
+                  <li className="flex items-center gap-3">
+                    <Video className="w-4 h-4 text-[#2f4fd8] shrink-0" />
+                    <span>Cours vidéo et séances en direct</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <FileText className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span>Fiches et documents PDF</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <HelpCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Quiz et évaluations corrigés</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <MessageSquare className="w-4 h-4 text-pink-600 shrink-0" />
+                    <span>Salon de discussion avec le professeur</span>
+                  </li>
+                </ul>
+              </div>
+            </aside>
+          </div>
+
+          {/* ===== Avis des élèves ===== */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+            <CourseReviews courseId={id} canReview={user?.role === 'student' && isSubscribed} />
           </div>
         </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
-          <CourseReviews courseId={id} canReview={user?.role === 'student' && isSubscribed} />
-        </div>
-      </div>
       </CourseShell>
     );
   }

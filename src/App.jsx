@@ -14,7 +14,7 @@ import ResetPassword from './pages/ResetPassword';
 import Footer from './components/Footer';
 
 // Pages qui ont leur propre barre du haut : on masque la barre et le pied de page publics
-const PAGES_WITHOUT_LAYOUT = ['/student-dashboard'];
+const PAGES_WITHOUT_LAYOUT = ['/student-dashboard', '/profile'];
 
 function AppContent() {
   const { pathname } = useLocation();

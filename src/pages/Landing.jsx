@@ -3,11 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import {
-  Video,
-  FileText,
-  ShieldCheck,
   ChevronRight,
-  ChevronLeft,
   ChevronDown,
   Calculator,
   Atom,
@@ -16,11 +12,13 @@ import {
   BookOpen,
   GraduationCap,
   Clock,
+  Smartphone,
+  Check,
   Zap,
   WifiOff,
   Bell,
-  Smartphone,
 } from 'lucide-react';
+import logoFull from '../assets/logo-aliou-sow-academy-hero.png';
 import profPhoto from '../assets/prof-aliou-sow.jpg';
 
 // --- Matières et niveaux (valeurs identiques à celles du modèle Course) ---
@@ -55,7 +53,6 @@ const MODULES = [
     description:
       "Algèbre, analyse, géométrie et probabilités du collège à la Terminale S. Des cours structurés par chapitres, avec exercices et corrigés détaillés.",
     banner: 'bg-gradient-to-br from-indigo-500 to-indigo-700',
-    badge: 'text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-full font-semibold',
   },
   {
     key: 'Physique-Chimie',
@@ -64,30 +61,57 @@ const MODULES = [
     description:
       "Mécanique, électricité, chimie organique et thermodynamique. Comprenez les phénomènes physiques à travers des cours clairs, appliqués et illustrés.",
     banner: 'bg-gradient-to-br from-emerald-500 to-teal-600',
-    badge: 'text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full font-semibold',
   },
 ];
 
-// --- Atouts de la plateforme (bandeau sous la bannière) ---
-const BENEFITS = [
+// --- Section "Apprenez partout, même hors ligne" ---
+const INSTALL_FEATURES = [
   {
-    icon: Video,
-    color: 'bg-indigo-50 text-indigo-600',
-    title: 'Cours vidéo & directs',
-    text: 'Vidéos structurées et lives interactifs pour poser vos questions en direct.',
+    icon: Zap,
+    title: 'Accès ultra-rapide',
+    text: "Lancez l'application en un clic depuis votre écran d'accueil",
   },
   {
-    icon: FileText,
-    color: 'bg-purple-50 text-purple-600',
-    title: 'Fiches & devoirs PDF',
-    text: 'Résumés de cours, séries d’exercices et corrigés détaillés à télécharger.',
+    icon: WifiOff,
+    title: 'Mode hors ligne',
+    text: 'Consultez vos cours même sans connexion internet',
   },
   {
-    icon: ShieldCheck,
-    color: 'bg-emerald-50 text-emerald-600',
-    title: 'Suivi & évaluations',
-    text: 'QCM et quiz interactifs avec correction automatique.',
+    icon: Bell,
+    title: 'Notifications',
+    text: 'Recevez des alertes pour vos nouveaux cours et séances en direct',
   },
+  {
+    icon: Smartphone,
+    title: 'Expérience native',
+    text: 'Interface optimisée comme une vraie application mobile',
+  },
+];
+
+const INSTALL_STEPS = [
+  {
+    emoji: '🌐',
+    title: 'Chrome / Edge',
+    text: "Cliquez sur \"Installer\" dans la barre d'adresse ou utilisez le bouton ci-dessus",
+  },
+  {
+    emoji: '🍎',
+    title: 'Safari (iOS)',
+    text: "Appuyez sur le bouton Partager puis \"Sur l'écran d'accueil\"",
+  },
+  {
+    emoji: '🤖',
+    title: 'Android',
+    text: "Appuyez sur \"Ajouter à l'écran d'accueil\" dans le menu du navigateur",
+  },
+];
+
+// --- Étapes (section "Développer vos compétences") ---
+const STEPS = [
+  "S'inscrire",
+  'Choisir un module',
+  'Suivre les cours en vidéo et en direct',
+  'Tester vos connaissances avec les quiz',
 ];
 
 // --- Témoignages (contenu à personnaliser avec de vrais retours d'élèves) ---
@@ -136,48 +160,6 @@ const FAQS = [
   },
 ];
 
-// --- Section "Apprenez partout, même hors ligne" (comme sur Bakeli) ---
-const INSTALL_FEATURES = [
-  {
-    icon: Zap,
-    title: 'Accès ultra-rapide',
-    text: "Lancez l'application en un clic depuis votre écran d'accueil",
-  },
-  {
-    icon: WifiOff,
-    title: 'Mode hors ligne',
-    text: 'Consultez vos cours même sans connexion internet',
-  },
-  {
-    icon: Bell,
-    title: 'Notifications',
-    text: 'Recevez des alertes pour vos nouveaux cours et séances en direct',
-  },
-  {
-    icon: Smartphone,
-    title: 'Expérience native',
-    text: 'Interface optimisée comme une vraie application mobile',
-  },
-];
-
-const INSTALL_STEPS = [
-  {
-    emoji: '🌐',
-    title: 'Chrome / Edge',
-    text: 'Cliquez sur "Installer" dans la barre d\'adresse ou utilisez le bouton ci-dessus',
-  },
-  {
-    emoji: '🍎',
-    title: 'Safari (iOS)',
-    text: 'Appuyez sur le bouton Partager puis "Sur l\'écran d\'accueil"',
-  },
-  {
-    emoji: '🤖',
-    title: 'Android',
-    text: 'Appuyez sur "Ajouter à l\'écran d\'accueil" dans le menu du navigateur',
-  },
-];
-
 // --- Hook de compteur animé, démarre uniquement quand `start` devient vrai ---
 const useCountUp = (target, start, duration = 1500) => {
   const [value, setValue] = useState(0);
@@ -201,32 +183,27 @@ const useCountUp = (target, start, duration = 1500) => {
   return value;
 };
 
-const StatCard = ({ icon: Icon, target, suffix, label, start }) => {
+const StatCard = ({ icon: Icon, target, label, start }) => {
   const value = useCountUp(target, start);
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
-      <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-        <Icon className="w-7 h-7" />
-      </div>
-      <div className="text-3xl md:text-4xl font-extrabold text-slate-900">
-        {value}
-        {suffix}
-      </div>
-      <p className="text-slate-500 text-sm mt-2">{label}</p>
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8 text-center">
+      <Icon className="w-12 h-12 mx-auto mb-4 text-[#d6a74a]" strokeWidth={1.5} />
+      <div className="text-3xl md:text-4xl font-extrabold text-slate-900">{value}</div>
+      <p className="text-slate-600 mt-2">{label}</p>
     </div>
   );
 };
 
-// Carte de cours, style Bakeli : image, matière (bleu) + niveau (orange), titre,
-// chapitres à droite, durée et professeur (aucun prix affiché sur la page d'accueil)
+// Carte de cours (style Bakeli) : image, matière + niveau, titre, durée, sections, professeur.
+// Aucun prix n'est affiché sur la page d'accueil.
 const CourseCardItem = ({ course }) => {
   const teacherName = course.teacher?.name || 'Aliou Sow';
-  const chaptersCount = course.chaptersCount ?? course.chapters?.length;
+  const sectionsCount = course.chaptersCount ?? course.chapters?.length ?? 0;
 
   return (
     <Link
       to={`/courses/${course._id}`}
-      className="group flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition"
+      className="group flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-slate-300 transition"
     >
       <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
         <img
@@ -242,7 +219,7 @@ const CourseCardItem = ({ course }) => {
           <span className="text-[11px] font-semibold bg-blue-50 text-blue-600 rounded-full px-2.5 py-0.5 truncate">
             {course.subject}
           </span>
-          <span className="text-[11px] font-semibold bg-orange-50 text-orange-500 rounded-full px-2.5 py-0.5 shrink-0">
+          <span className="text-[11px] font-semibold bg-amber-50 text-amber-700 rounded-full px-2.5 py-0.5 shrink-0">
             {formatLevel(course.level)}
           </span>
         </div>
@@ -251,36 +228,32 @@ const CourseCardItem = ({ course }) => {
           {course.title}
         </h3>
 
-        <div className="mt-3 text-right text-xs text-slate-500 min-h-[1rem]">
-          {typeof chaptersCount === 'number' && (
-            <>
-              <span className="font-bold text-slate-900">{chaptersCount}</span> chapitre
-              {chaptersCount > 1 ? 's' : ''}
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+        <div className="flex items-center gap-4 mt-4 text-xs text-slate-500 min-h-[1.25rem]">
           {course.duration && (
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-red-400" />
               {course.duration}
             </span>
           )}
-          {typeof chaptersCount === 'number' && (
+          {sectionsCount > 0 && (
             <span className="flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-amber-500" />
-              {chaptersCount} sections
+              {sectionsCount} section{sectionsCount > 1 ? 's' : ''}
             </span>
           )}
         </div>
 
         <div className="mt-auto pt-4">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="w-7 h-7 rounded bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
-              {getInitials(teacherName)}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="w-7 h-7 rounded bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+                {getInitials(teacherName)}
+              </span>
+              <span className="text-xs text-slate-700 truncate">{teacherName}</span>
             </span>
-            <span className="text-xs text-slate-700 truncate">{teacherName}</span>
+            <span className="text-xs font-bold text-[#2f4fd8] flex items-center gap-0.5 shrink-0 group-hover:underline">
+              Voir le cours <ChevronRight className="w-3.5 h-3.5" />
+            </span>
           </div>
         </div>
       </div>
@@ -292,11 +265,8 @@ const CourseCardItem = ({ course }) => {
 const CourseSkeletonRow = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     {[1, 2, 3, 4].map((i) => (
-      <div
-        key={i}
-        className="rounded-xl border border-slate-200 overflow-hidden animate-pulse"
-      >
-        <div className="aspect-video bg-slate-100"></div>
+      <div key={i} className="rounded-xl border border-slate-200 overflow-hidden animate-pulse">
+        <div className="aspect-[16/10] bg-slate-100"></div>
         <div className="p-4 space-y-3">
           <div className="h-4 bg-slate-100 rounded w-5/6"></div>
           <div className="h-3 bg-slate-100 rounded w-1/2"></div>
@@ -314,7 +284,6 @@ const Landing = () => {
   const [activeSubject, setActiveSubject] = useState('Tous');
   const [activeLevel, setActiveLevel] = useState('Tous');
   const [showAllCourses, setShowAllCourses] = useState(false);
-  const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [statsVisible, setStatsVisible] = useState(false);
   const [platformStats, setPlatformStats] = useState({ studentsCount: 0, coursesCount: 0, modulesCount: 0 });
   const [openFaq, setOpenFaq] = useState(0);
@@ -380,14 +349,6 @@ const Landing = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Défilement automatique des témoignages
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTestimonialIndex((i) => (i + 1) % TESTIMONIALS.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
-
   // Récupère l'invite d'installation du navigateur (bouton "Installer l'application")
   useEffect(() => {
     const handler = (e) => {
@@ -424,7 +385,6 @@ const Landing = () => {
 
   const visibleCourses = showAllCourses ? filteredCourses : filteredCourses.slice(0, COURSES_PREVIEW_COUNT);
   const canToggleCourses = filteredCourses.length > COURSES_PREVIEW_COUNT;
-
 
   return (
     <div className="min-h-screen bg-white pt-16 text-slate-900 flex flex-col items-center">
@@ -522,26 +482,6 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Atouts de la plateforme */}
-      <section className="w-full border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {BENEFITS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.title} className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${item.color}`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900">{item.title}</h3>
-                  <p className="text-sm text-slate-500 mt-0.5">{item.text}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       {/* Nos modules : titre à gauche, "Tout afficher" à droite, cartes compactes */}
       <section id="modules" className="w-full max-w-7xl px-4 sm:px-6 py-14 scroll-mt-20">
         <div className="flex items-end justify-between gap-4 mb-8">
@@ -590,52 +530,53 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Nos cours : filtres, grille de cartes, "Tout afficher" */}
-      <section id="courses" className="w-full max-w-7xl px-4 sm:px-6 py-14 scroll-mt-20">
-        <div className="flex items-end justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Nos Cours</h2>
-            <p className="text-slate-500 mt-1">Choisissez une matière et un niveau pour trouver votre cours.</p>
-          </div>
-          {canToggleCourses && (
-            <button
-              onClick={() => setShowAllCourses((v) => !v)}
-              className="text-[#2f4fd8] font-bold hover:underline shrink-0 cursor-pointer"
-            >
-              {showAllCourses ? 'Réduire' : 'Tout afficher'}
-            </button>
-          )}
+      {/* Nos cours : liste déroulante de niveau, pastilles de matières, "Tout afficher", cartes */}
+      <section id="courses" className="w-full max-w-7xl px-4 sm:px-6 pb-14 scroll-mt-20">
+        <div className="mb-6">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Nos Cours</h2>
+          <p className="text-slate-500 mt-1">Choisissez un niveau et une matière pour trouver votre cours.</p>
         </div>
 
-        {/* Filtres */}
-        <div className="flex flex-wrap items-center gap-2 mb-8">
+        <div className="flex flex-wrap items-center gap-3 mb-8">
+          <div className="relative">
+            <select
+              value={activeLevel}
+              onChange={(e) => setActiveLevel(e.target.value)}
+              aria-label="Filtrer par niveau"
+              className="appearance-none h-11 pl-5 pr-11 rounded-full border border-slate-400 bg-white text-sm font-semibold text-slate-800 outline-none focus:border-[#2f4fd8] cursor-pointer"
+            >
+              <option value="Tous">Tous les niveaux</option>
+              {LEVELS.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
           {['Tous', ...SUBJECTS].map((subject) => (
             <button
               key={subject}
               onClick={() => setActiveSubject(subject)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition cursor-pointer ${
+              className={`h-10 px-4 rounded-full border text-sm font-semibold transition cursor-pointer ${
                 activeSubject === subject
                   ? 'bg-[#0b1f49] border-[#0b1f49] text-white'
-                  : 'bg-white border-slate-300 text-slate-600 hover:border-[#0b1f49]'
+                  : 'bg-white border-slate-400 text-slate-700 hover:border-[#0b1f49]'
               }`}
             >
               {subject === 'Tous' ? 'Toutes les matières' : subject}
             </button>
           ))}
-          <span className="hidden sm:block w-px h-6 bg-slate-200 mx-1"></span>
-          {[{ value: 'Tous', label: 'Tous les niveaux' }, ...LEVELS].map((level) => (
+
+          {canToggleCourses && (
             <button
-              key={level.value}
-              onClick={() => setActiveLevel(level.value)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                activeLevel === level.value
-                  ? 'bg-[#2f4fd8] border-[#2f4fd8] text-white'
-                  : 'bg-white border-slate-300 text-slate-600 hover:border-[#2f4fd8]'
-              }`}
+              onClick={() => setShowAllCourses((v) => !v)}
+              className="ml-auto text-[#2f4fd8] font-bold hover:underline cursor-pointer"
             >
-              {level.label}
+              {showAllCourses ? 'Réduire' : 'Tout afficher'}
             </button>
-          ))}
+          )}
         </div>
 
         {loading ? (
@@ -664,205 +605,194 @@ const Landing = () => {
         )}
       </section>
 
-      {/* Abonnement */}
-      <section className="w-full max-w-4xl px-4 sm:px-6 py-6">
-        <div className="p-8 md:p-12 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div>
-            <h3 className="text-2xl font-bold text-indigo-700 mb-2">Abonnement Annuel Unique</h3>
-            <p className="text-slate-600 text-sm max-w-md">
-              Accès complet à toutes les leçons d'un module, aux visioconférences Google Meet et au chat de soutien
-              pendant un an.
-            </p>
-          </div>
-          <div className="text-center flex flex-col items-center md:items-end">
-            <span className="text-indigo-600 text-sm font-medium mb-4">Accès par module, valable un an</span>
-            {!isLoggedIn && (
-              <Link
-                to="/register"
-                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-bold text-white"
-              >
-                S'inscrire maintenant
-              </Link>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Apprenez partout, même hors ligne */}
-      <section id="install" className="w-full max-w-5xl px-4 sm:px-6 py-14 scroll-mt-20">
-        <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 max-w-xl leading-tight">
-          Apprenez partout, même hors ligne
-        </h2>
-        <p className="text-slate-500 text-lg mt-4 max-w-xl leading-relaxed">
-          Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez à vos cours
-          rapidement, même sans connexion internet.
-        </p>
-
-        <div className="mt-8 flex flex-col gap-5">
-          {INSTALL_FEATURES.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.title} className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900">{item.title}</h3>
-                  <p className="text-sm text-slate-500">{item.text}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {installPrompt && (
-          <button
-            onClick={handleInstall}
-            className="mt-8 bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold px-6 py-3 rounded-lg transition cursor-pointer"
-          >
-            Installer l'application
-          </button>
-        )}
-
-        <div className="mt-12 pt-10 border-t border-amber-200">
-          <h3 className="text-center font-bold text-slate-900 mb-8">Comment installer ?</h3>
+      {/* Chiffres clés — valeurs RÉELLES calculées depuis la base de données */}
+      <div className="w-full bg-slate-50">
+        <section ref={statsRef} className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-10 text-slate-900">
+            Découvrez les chiffres des élèves ayant suivi nos cours
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {INSTALL_STEPS.map((step) => (
-              <div
-                key={step.title}
-                className="bg-white border border-slate-100 rounded-xl shadow-sm p-6 text-center"
-              >
-                <div className="text-3xl mb-3">{step.emoji}</div>
-                <h4 className="font-bold text-slate-900 mb-2">{step.title}</h4>
-                <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Statistiques — chiffres RÉELS calculés depuis la base de données */}
-      <section ref={statsRef} className="w-full max-w-5xl px-4 sm:px-6 py-14">
-        <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-10 text-slate-900">
-          Découvrez les chiffres des élèves ayant suivi nos cours
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <StatCard
-            icon={Users}
-            target={platformStats.studentsCount}
-            suffix=""
-            label="Élèves inscrits"
-            start={statsVisible}
-          />
-          <StatCard
-            icon={BookOpen}
-            target={platformStats.coursesCount}
-            suffix=""
-            label="Cours disponibles"
-            start={statsVisible}
-          />
-          <StatCard
-            icon={GraduationCap}
-            target={platformStats.modulesCount}
-            suffix=""
-            label="Modules proposés"
-            start={statsVisible}
-          />
-        </div>
-      </section>
-
-      {/* Témoignages */}
-      <section id="testimonials" className="w-full max-w-4xl px-4 sm:px-6 py-14 scroll-mt-20">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-extrabold mb-2 text-slate-900">Nos élèves témoignent</h2>
-          <p className="text-slate-500">Ce qu'ils disent de leur progression avec Aliou Sow Academy.</p>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-xl p-8 md:p-12 relative">
-          <Quote className="w-10 h-10 text-indigo-100 mb-4" />
-          <p className="text-lg md:text-xl text-slate-700 leading-relaxed mb-6 min-h-[96px]">
-            {TESTIMONIALS[testimonialIndex].quote}
-          </p>
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <p className="font-bold text-slate-900">{TESTIMONIALS[testimonialIndex].name}</p>
-              <p className="text-slate-500 text-sm">{TESTIMONIALS[testimonialIndex].level}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTestimonialIndex((i) => (i - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)}
-                className="p-2 rounded-full bg-white hover:bg-slate-50 border border-slate-300 transition cursor-pointer"
-                aria-label="Témoignage précédent"
-              >
-                <ChevronLeft className="w-4 h-4 text-slate-600" />
-              </button>
-              <button
-                onClick={() => setTestimonialIndex((i) => (i + 1) % TESTIMONIALS.length)}
-                className="p-2 rounded-full bg-white hover:bg-slate-50 border border-slate-300 transition cursor-pointer"
-                aria-label="Témoignage suivant"
-              >
-                <ChevronRight className="w-4 h-4 text-slate-600" />
-              </button>
-            </div>
-          </div>
-          <div className="flex justify-center gap-2 mt-8">
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setTestimonialIndex(i)}
-                aria-label={`Aller au témoignage ${i + 1}`}
-                className={`h-2 rounded-full transition-all cursor-pointer ${
-                  i === testimonialIndex ? 'bg-indigo-600 w-6' : 'bg-slate-200 w-2'
-                }`}
-              ></button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="w-full max-w-4xl px-4 sm:px-6 py-14 scroll-mt-20">
-        <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-10 text-slate-900">Questions fréquentes</h2>
-        <div className="flex flex-col divide-y divide-slate-200 border-t border-b border-slate-200">
-          {FAQS.map((faq, i) => (
-            <div key={faq.question}>
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
-                className="w-full flex items-center justify-between py-5 text-left cursor-pointer"
-              >
-                <span className="font-semibold text-slate-800">{faq.question}</span>
-                <ChevronDown
-                  className={`w-5 h-5 text-indigo-600 flex-shrink-0 transition-transform ${
-                    openFaq === i ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-              {openFaq === i && (
-                <p className="text-slate-500 text-sm pb-5 pr-8 leading-relaxed">{faq.answer}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Appel à l'action final (visiteurs uniquement) */}
-      {!isLoggedIn && (
-        <section className="w-full max-w-4xl px-4 sm:px-6 py-14 text-center">
-          <div className="rounded-2xl p-10 md:p-16 border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50">
-            <h2 className="text-2xl md:text-4xl font-extrabold mb-4 text-slate-900">Prêt à booster tes résultats ?</h2>
-            <p className="text-slate-600 max-w-xl mx-auto mb-8">
-              Rejoins Aliou Sow Academy dès aujourd'hui et accède à tous les cours de Mathématiques et
-              Physique-Chimie.
-            </p>
-            <Link
-              to="/register"
-              className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3.5 rounded-lg transition"
-            >
-              Je m'inscris maintenant
-            </Link>
+            <StatCard icon={Users} target={platformStats.studentsCount} label="Élèves inscrits" start={statsVisible} />
+            <StatCard
+              icon={BookOpen}
+              target={platformStats.coursesCount}
+              label="Cours disponibles"
+              start={statsVisible}
+            />
+            <StatCard
+              icon={GraduationCap}
+              target={platformStats.modulesCount}
+              label="Modules proposés"
+              start={statsVisible}
+            />
           </div>
         </section>
-      )}
+      </div>
+
+      {/* Apprenez partout, même hors ligne */}
+      <div className="w-full bg-white">
+        <section id="install" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 scroll-mt-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            <div>
+              <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 leading-tight">
+                Apprenez partout, même hors ligne
+              </h2>
+              <p className="text-slate-600 text-lg mt-4 leading-relaxed max-w-xl">
+                Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez à vos cours
+                rapidement, même sans connexion internet.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-5">
+                {INSTALL_FEATURES.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.title} className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#b8862b] flex items-center justify-center shrink-0">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900">{item.title}</h3>
+                        <p className="text-sm text-slate-500">{item.text}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {installPrompt && (
+                <button
+                  onClick={handleInstall}
+                  className="mt-8 bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold px-6 py-3 rounded-lg transition cursor-pointer"
+                >
+                  Installer l'application
+                </button>
+              )}
+            </div>
+
+            <div>
+              <h3 className="font-bold text-slate-900 text-lg mb-5">Comment installer ?</h3>
+              <div className="space-y-4">
+                {INSTALL_STEPS.map((step) => (
+                  <div
+                    key={step.title}
+                    className="flex items-start gap-4 bg-slate-50 border border-slate-200 rounded-xl p-5"
+                  >
+                    <span className="text-2xl leading-none">{step.emoji}</span>
+                    <div>
+                      <h4 className="font-bold text-slate-900 mb-1">{step.title}</h4>
+                      <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Ce que disent nos élèves */}
+      <div className="w-full bg-slate-50">
+        <section id="testimonials" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 scroll-mt-20">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-8">Ce que disent nos élèves</h2>
+          <div className="space-y-4">
+            {TESTIMONIALS.map((t) => (
+              <figure
+                key={t.name}
+                className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8"
+              >
+                <Quote className="w-8 h-8 text-[#0b1f49] mb-3" />
+                <blockquote className="text-slate-600 leading-relaxed">{t.quote}</blockquote>
+                <figcaption className="flex items-center gap-4 mt-5">
+                  <span className="w-12 h-12 rounded-full bg-[#0b1f49] text-white font-bold flex items-center justify-center shrink-0">
+                    {getInitials(t.name)}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-bold uppercase text-slate-800">{t.name}</span>
+                    <span className="block text-sm text-slate-500">Élève en {t.level}</span>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* Développer vos compétences */}
+      <div className="w-full bg-white">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-3">
+              Développer vos compétences avec Aliou Sow Academy
+            </h2>
+            <p className="text-slate-600 text-lg leading-relaxed mb-8 max-w-xl">
+              Boostez vos résultats et révélez votre potentiel avec une plateforme claire, structurée et accessible.
+            </p>
+            <ul className="space-y-4 mb-8">
+              {STEPS.map((step) => (
+                <li key={step} className="flex items-center gap-3 font-semibold text-slate-800">
+                  <Check className="w-5 h-5 text-emerald-500 shrink-0" />
+                  {step}
+                </li>
+              ))}
+            </ul>
+            <a
+              href="#courses"
+              className="inline-flex items-center h-12 px-7 rounded-lg bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold transition"
+            >
+              Explorer nos cours
+            </a>
+          </div>
+          <div className="flex justify-center">
+            <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-indigo-50 to-amber-50 flex items-center justify-center p-8">
+              <img src={logoFull} alt="Aliou Sow Academy" className="w-full h-auto" />
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Bandeau d'appel à l'action */}
+      <div className="w-full bg-gradient-to-r from-[#0b1f49] via-[#1d3a8a] to-[#273d8f] text-center">
+        <section className="max-w-4xl mx-auto px-6 py-16">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Commençons avec Aliou Sow Academy</h2>
+          <p className="text-white/90 font-medium max-w-2xl mx-auto mb-8">
+            Des cours clairs et structurés par M. Aliou Sow pour transformer vos difficultés en réussite au BFEM et au
+            Baccalauréat.
+          </p>
+          <a
+            href="#courses"
+            className="inline-flex items-center h-12 px-8 rounded-lg border border-white text-white hover:bg-white hover:text-[#0b1f49] font-bold transition"
+          >
+            Découvrez nos cours
+          </a>
+        </section>
+      </div>
+
+      {/* Questions fréquentes */}
+      <div className="w-full bg-slate-50">
+        <section id="faq" className="max-w-7xl mx-auto px-4 sm:px-6 py-14 scroll-mt-20">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6">Questions fréquentes</h2>
+          <div className="flex flex-col divide-y divide-slate-200">
+            {FAQS.map((faq, i) => (
+              <div key={faq.question}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                  className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer"
+                >
+                  <span className="text-lg text-slate-800">{faq.question}</span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-slate-500 shrink-0 transition-transform ${
+                      openFaq === i ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {openFaq === i && (
+                  <p className="text-slate-500 pb-5 pr-8 leading-relaxed">{faq.answer}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

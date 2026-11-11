@@ -1,33 +1,31 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
 import { AuthContext } from '../context/AuthContext';
-import { AlertCircle, Eye, EyeOff, Check } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
-import profPhoto from '../assets/prof-aliou-sow.jpg';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
-// Atouts affichés à gauche
-const AUTH_POINTS = [
-  'Cours vidéo et séances en direct sur Google Meet',
-  'Fiches de cours et devoirs corrigés en PDF',
-  'Quiz interactifs avec correction automatique',
-  'Du collège à la Terminale S : BFEM et Baccalauréat',
+const STUDENT_AVATARS = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
 ];
 
 const inputClass =
-  'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2f4fd8] focus:ring-2 focus:ring-[#2f4fd8]/20 transition';
+  'w-full h-10 border border-slate-300 rounded-lg px-3.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#ff9800] focus:ring-2 focus:ring-orange-100 transition bg-white';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const { login, googleLogin } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const redirectByRole = (role) => {
-    if (role === 'teacher') {
+    if (role === 'admin' || role === 'teacher') {
       navigate('/teacher-dashboard');
     } else {
       navigate('/student-dashboard');
@@ -40,7 +38,7 @@ const Login = () => {
     setSubmitting(true);
 
     try {
-      const data = await login(email.trim(), password);
+      const data = await login(identifier.trim(), password);
       redirectByRole(data.role);
     } catch (err) {
       setError(err.message || 'Identifiants invalides');
@@ -49,156 +47,165 @@ const Login = () => {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setError('');
-    setSubmitting(true);
-
-    try {
-      const data = await googleLogin(credentialResponse.credential);
-      redirectByRole(data.role);
-    } catch (err) {
-      setError(err.message || 'Connexion Google impossible');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
-    <div className="h-screen bg-white pt-16 overflow-y-auto">
-      <div className="max-w-6xl mx-auto min-h-full px-6 py-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        {/* Côté gauche : présentation + témoignage (masqué sur mobile) */}
-        <div className="hidden lg:block">
-          <h1 className="text-4xl font-extrabold text-slate-900 leading-tight mb-6">
-            Améliorer vos compétences avec Aliou Sow Academy
-          </h1>
-          <p className="text-slate-700 leading-relaxed mb-8">
-            Avec Aliou Sow Academy, suivez des cours de Mathématiques et de Physique-Chimie, regardez les
-            vidéos, téléchargez les fiches PDF, testez-vous avec des quiz et participez aux séances en direct
-            pour réussir le BFEM et le Baccalauréat.
-          </p>
+    <div className="h-screen w-screen bg-white flex flex-col justify-between overflow-x-hidden overflow-y-auto lg:overflow-hidden relative select-none">
+      {/* Lien retour discret en haut à gauche */}
+      <div className="pt-4 px-6 sm:px-10">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#00897b] transition"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Retour à l'accueil</span>
+        </Link>
+      </div>
 
-          <ul className="space-y-3 mb-8">
-            {AUTH_POINTS.map((point) => (
-              <li key={point} className="flex items-start gap-3 text-slate-800 font-medium">
-                <Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
+      <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 my-auto py-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+          {/* ============================================================== */}
+          {/* CÔTÉ GAUCHE : Exactement conforme à la capture Bakeli (Image 3) */}
+          {/* ============================================================== */}
+          <div className="hidden lg:block lg:col-span-6 space-y-5 pr-4">
+            <h1 className="text-3xl lg:text-[40px] font-black text-[#111827] leading-[1.14] tracking-tight">
+              Améliorer vos compétences avec Aliou Sow Academy
+            </h1>
 
-          <div className="flex items-center gap-4">
-            <img
-              src={profPhoto}
-              alt="M. Aliou Sow"
-              className="w-16 h-16 rounded-full object-cover object-[50%_8%] ring-4 ring-[#d6a74a]"
-            />
-            <div className="leading-tight">
-              <p className="font-extrabold text-[#0b1f49]">M. Aliou Sow</p>
-              <p className="text-sm text-slate-500 mt-0.5">Professeur de Mathématiques &amp; Physique-Chimie</p>
-            </div>
-          </div>
-        </div>
+            <p className="text-slate-600 text-sm leading-relaxed font-normal">
+              Avec Aliou Sow Academy, suivez des cours en ligne, obtenez des bases solides en Mathématiques et Physique-Chimie, développez vos compétences scientifiques du collège au lycée, et boostez votre parcours pour décrocher le BFEM et le Baccalauréat avec mention.
+            </p>
 
-        {/* Côté droit : carte de connexion */}
-        <div className="w-full max-w-md mx-auto lg:max-w-none bg-white rounded-2xl shadow-xl border border-slate-100 p-6">
-          <div className="text-center mb-4">
-            <img src={logo} alt="Aliou Sow Academy" className="h-12 w-auto mx-auto mb-2" />
-            <h2 className="text-2xl font-extrabold text-slate-900">Connectez-vous</h2>
-          </div>
+            <div className="pt-1">
+              {/* Grand guillemet orange vif caractéristique Bakeli (Image 3) */}
+              <div className="text-4xl font-serif font-black text-[#ff9800] leading-none mb-1">“</div>
 
-          {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-sm mb-5">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+              {/* Témoignage d'élève */}
+              <p className="text-slate-700 text-sm leading-relaxed font-normal">
+                Aliou Sow Academy a complètement changé ma façon d'apprendre. Les cours sont bien structurés, accessibles à tout moment, et adaptés à mon rythme. Grâce à cette plateforme, j'ai pu combler mes lacunes en sciences et réussir brillamment mes examens.
+              </p>
 
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setError('La connexion avec Google a échoué. Veuillez réessayer.')}
-              text="signin_with"
-              shape="rectangular"
-              theme="outline"
-              size="large"
-              locale="fr"
-            />
-          </div>
+              <p className="mt-2.5 text-sm font-bold text-slate-800 italic">
+                -Youmané Diop (Terminale S)
+              </p>
 
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 border-t border-slate-200"></div>
-            <span className="text-xs text-slate-400 font-medium">OU</span>
-            <div className="flex-1 border-t border-slate-200"></div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-800 mb-1.5">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={inputClass}
-                placeholder="exemple@gmail.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-800 mb-1.5">
-                Mot de passe <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`${inputClass} pr-10`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer"
-                  tabIndex={-1}
-                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+              {/* Les 4 avatars en rond sous le témoignage (Image 3) */}
+              <div className="flex items-center gap-3 mt-3.5">
+                {STUDENT_AVATARS.map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt="Élève"
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
+                  />
+                ))}
               </div>
             </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-            >
-              {submitting ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <span>Connecter</span>
-              )}
-            </button>
-          </form>
-
-          <div className="text-right mt-3">
-            <Link to="/forgot-password" className="text-sm text-slate-500 hover:text-[#2f4fd8]">
-              Mot de passe oublié ?
-            </Link>
           </div>
 
-          <div className="text-center mt-4 text-sm text-slate-500">
-            <p>Vous n'avez pas de compte ?</p>
-            <Link to="/register" className="font-bold text-[#2f4fd8] hover:underline">
-              S'inscrire
-            </Link>
+          {/* ============================================================== */}
+          {/* CÔTÉ DROIT : Carte de connexion Bakeli (Image 3) */}
+          {/* ============================================================== */}
+          <div className="lg:col-span-6 w-full max-w-[430px] mx-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-5 sm:p-7">
+            <div className="text-center mb-3">
+              <Link to="/" title="Retour à l'accueil" className="inline-block">
+                <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto mx-auto mb-1.5" />
+              </Link>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Connectez-vous</h2>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 p-2.5 rounded-xl text-xs font-semibold mb-3">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Bouton Google */}
+            <div className="flex justify-center mb-3">
+              <GoogleLoginButton onError={setError} />
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+              {/* Identifiant : Email ou Téléphone (style Bakeli Screenshot 3) */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Email ou Numéro de téléphone <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  className={inputClass}
+                  placeholder="exemple@gmail.com"
+                />
+                <span className="block text-[10px] text-slate-400 mt-1 font-medium">
+                  Vous pouvez utiliser votre email ou votre numéro de téléphone
+                </span>
+              </div>
+
+              {/* Mot de passe */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Mot de passe <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`${inputClass} pr-10`}
+                    placeholder="••••••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Masquer' : 'Afficher'}
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Bouton Orange Bakeli plein : Connecter (Image 3) */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full h-11 rounded-lg bg-[#ff9800] hover:bg-[#f57c00] text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer mt-3"
+              >
+                {submitting ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <span>Connecter</span>
+                )}
+              </button>
+
+              {/* Mot de passe oublié */}
+              <div className="text-right pt-1">
+                <Link
+                  to="/forgot-password"
+                  className="text-[11px] text-slate-500 hover:text-[#00897b] transition font-medium"
+                >
+                  Mot de passe oublié ?
+                </Link>
+              </div>
+            </form>
+
+            {/* Lien bas de carte : Vous n'avez pas de compte ? S'inscrire (Image 3) */}
+            <div className="text-center mt-3 pt-2.5 border-t border-slate-100 text-xs text-slate-600">
+              <span>Vous n'avez pas de compte ?</span>{' '}
+              <Link to="/register" className="font-bold text-[#00897b] hover:underline">
+                S'inscrire
+              </Link>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div className="pb-3 text-center text-[11px] text-slate-400">
+        &copy; {new Date().getFullYear()} Aliou Sow Academy &bull; Tous droits réservés
       </div>
     </div>
   );

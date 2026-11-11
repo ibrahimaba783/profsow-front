@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 const ForgotPassword = () => {
@@ -18,90 +18,110 @@ const ForgotPassword = () => {
     try {
       await api('/auth/forgot-password', {
         method: 'POST',
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim() }),
       });
       setSuccess(true);
     } catch (err) {
-      setError(err.message || "Une erreur est survenue. Réessayez.");
+      setError(err.message || 'Une erreur est survenue. Réessayez.');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center px-4 pt-16 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-indigo-200/40 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-200/40 rounded-full blur-[100px] pointer-events-none"></div>
+    <div className="h-screen w-screen bg-slate-50 flex flex-col justify-between overflow-hidden relative select-none">
+      <div className="pt-4 px-6 sm:px-10">
+        <Link
+          to="/login"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#00897b] transition"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Retour à la connexion</span>
+        </Link>
+      </div>
 
-      <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-slate-100 relative z-10 slide-in">
-        {success ? (
-          <div className="text-center py-4 space-y-5">
-            <div className="w-14 h-14 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
-              <CheckCircle2 className="w-7 h-7" />
-            </div>
-            <h2 className="text-xl font-extrabold text-slate-900">Email envoyé !</h2>
-            <p className="text-slate-500 text-sm max-w-sm mx-auto">
-              Si un compte existe avec l'adresse <strong className="text-slate-800">{email}</strong>, un lien de réinitialisation vient d'être envoyé.
-            </p>
-            <Link
-              to="/login"
-              className="inline-block btn-neon text-white font-bold px-8 py-3 rounded-xl transition"
-            >
-              Retour à la connexion
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div className="text-center mb-8">
-              <img src={logo} alt="Aliou Sow Academy" className="h-14 w-auto mx-auto mb-4" />
-              <h2 className="text-2xl font-extrabold text-slate-900 tracking-wide">Mot de passe oublié ?</h2>
-              <p className="text-slate-500 text-sm mt-1">Entrez votre email pour recevoir un lien de réinitialisation.</p>
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-sm mb-6">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
+      <div className="w-full max-w-md mx-auto px-4 my-auto">
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-7">
+          {success ? (
+            <div className="text-center py-4 space-y-4">
+              <div className="w-14 h-14 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-7 h-7" />
               </div>
-            )}
+              <h2 className="text-xl font-black text-slate-900">Email envoyé !</h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Si un compte est associé à <strong>{email}</strong>, un lien sécurisé de réinitialisation vous a été envoyé.
+              </p>
+              <div className="pt-2">
+                <Link
+                  to="/login"
+                  className="w-full h-11 inline-flex items-center justify-center rounded-xl bg-[#00897b] hover:bg-[#00796b] text-white font-bold text-xs shadow-md transition"
+                >
+                  Retour à la connexion
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-5">
+                <Link to="/" title="Retour à l'accueil" className="inline-block">
+                  <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto mx-auto mb-2" />
+                </Link>
+                <h2 className="text-xl font-black text-slate-900">Mot de passe oublié</h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Entrez votre adresse email pour recevoir un lien de réinitialisation.
+                </p>
+              </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</label>
-                <div className="relative">
-                  <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                  <input
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="input-animated pl-10"
-                    placeholder="nom@exemple.com"
-                  />
+              {error && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 p-2.5 rounded-xl text-xs font-semibold mb-4">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{error}</span>
                 </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Adresse Email <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="exemple@gmail.com"
+                      className="w-full h-10 border border-slate-300 rounded-lg pl-10 pr-3.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#ff9800] focus:ring-2 focus:ring-orange-100 transition bg-white"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full h-11 rounded-lg bg-[#ff9800] hover:bg-[#f57c00] text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer mt-2"
+                >
+                  {submitting ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <span>Envoyer le lien de réinitialisation</span>
+                  )}
+                </button>
+              </form>
+
+              <div className="text-center mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600">
+                <Link to="/login" className="font-bold text-[#00897b] hover:underline">
+                  &larr; Retour à la connexion
+                </Link>
               </div>
+            </>
+          )}
+        </div>
+      </div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full btn-neon text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <span>Envoyer le lien</span>
-                )}
-              </button>
-            </form>
-
-            <p className="text-center text-slate-500 text-sm mt-8">
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-semibold underline">
-                Retour à la connexion
-              </Link>
-            </p>
-          </>
-        )}
+      <div className="pb-3 text-center text-[11px] text-slate-400">
+        &copy; {new Date().getFullYear()} Aliou Sow Academy &bull; Tous droits réservés
       </div>
     </div>
   );

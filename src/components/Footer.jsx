@@ -1,11 +1,8 @@
-
-import React, { useContext } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 // --- Icônes des réseaux sociaux ---
-
 const FacebookIcon = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
     <path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z" />
@@ -25,19 +22,23 @@ const TikTokIcon = (props) => (
 );
 
 // === Coordonnées de contact ===
-
 const CONTACT_PHONE_DISPLAY = '+221 77 102 33 99';
 const CONTACT_PHONE_LINK = 'tel:+221771023399';
 const CONTACT_EMAIL = 'Sowaliou2504@gmail.com';
 
-// Liens des réseaux sociaux
-
+// === Liens des réseaux sociaux ===
+// Un réseau n'est affiché que si son lien est renseigné (mets '#' pour le masquer).
 const FACEBOOK_URL = '#';
 const YOUTUBE_URL = 'https://youtube.com/@dermannaltv4340?si=Jk86Ads8TMVEx6vv';
 const TIKTOK_URL = 'https://www.tiktok.com/@aliousow9216';
 
-// Pages où le footer n'est PAS affiché
+const SOCIALS = [
+  { label: 'Facebook', url: FACEBOOK_URL, Icon: FacebookIcon },
+  { label: 'YouTube', url: YOUTUBE_URL, Icon: YoutubeIcon },
+  { label: 'TikTok', url: TIKTOK_URL, Icon: TikTokIcon },
+].filter((s) => s.url && s.url !== '#');
 
+// Pages où le footer n'est PAS affiché (connexion, inscription, tableaux de bord)
 const HIDDEN_ON = [
   '/login',
   '/register',
@@ -47,21 +48,23 @@ const HIDDEN_ON = [
   '/student-dashboard',
 ];
 
-// anchor : id d'une section de la page d'accueil
-// top    : remonte en haut de l'accueil
-// state  : filtre transmis à la page d'accueil
-
+// anchor : id d'une section de la page d'accueil (défilement fluide)
+// state  : filtre transmis à la page d'accueil (matière / niveau déjà sélectionné)
 const columns = [
+  {
+    title: "Obtenir de l'aide",
+    links: [
+      { label: 'FAQ', to: '/#faq', anchor: 'faq' },
+      { label: 'Témoignages', to: '/#testimonials', anchor: 'testimonials' },
+      { label: 'Se connecter', to: '/login' },
+      { label: "S'inscrire", to: '/register' },
+    ],
+  },
   {
     title: 'Matières',
     links: [
       { label: 'Mathématiques', to: '/#courses', state: { subject: 'Mathématiques', level: 'Tous' } },
       { label: 'Physique-Chimie', to: '/#courses', state: { subject: 'Physique-Chimie', level: 'Tous' } },
-    ],
-  },
-  {
-    title: 'Niveaux',
-    links: [
       { label: '4ème', to: '/#courses', state: { subject: 'Tous', level: '4ème' } },
       { label: '3ème', to: '/#courses', state: { subject: 'Tous', level: '3ème' } },
       { label: '2nde S', to: '/#courses', state: { subject: 'Tous', level: '2nde S' } },
@@ -69,27 +72,12 @@ const columns = [
       { label: 'Terminale S', to: '/#courses', state: { subject: 'Tous', level: 'TS' } },
     ],
   },
-  {
-    title: 'Plateforme',
-    links: [
-      { label: 'Accueil', to: '/', top: true },
-      { label: 'Modules', to: '/#modules', anchor: 'modules' },
-      { label: 'Témoignages', to: '/#testimonials', anchor: 'testimonials' },
-      { label: 'FAQ', to: '/#faq', anchor: 'faq' },
-      { label: 'Se connecter', to: '/login' },
-      { label: "S'inscrire", to: '/register' },
-    ],
-  },
 ];
 
-const linkClass =
-  'text-sm text-slate-300 hover:text-white hover:underline transition-colors';
-
-const socialClass =
-  'w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/20 transition';
+const linkClass = 'text-slate-700 hover:text-[#2f4fd8] transition-colors';
+const headingClass = 'text-sm font-bold uppercase tracking-wide text-slate-900 mb-4';
 
 const Footer = () => {
-  const { user } = useContext(AuthContext);
   const location = useLocation();
 
   if (HIDDEN_ON.some((path) => location.pathname.startsWith(path))) {
@@ -110,129 +98,35 @@ const Footer = () => {
     }
   };
 
-  const getClickHandler = (item) => {
-    if (item.anchor) return handleAnchorClick(item.anchor);
-    if (item.top) return handleTopClick;
-    return undefined;
-  };
-
   return (
-    <footer className="bg-slate-900 text-white">
-
-      {/* Bandeau d'invitation */}
-      {!user && (
-        <div className="border-b border-white/10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-            <p className="text-lg sm:text-xl font-bold max-w-2xl leading-snug">
-              Prêt à progresser en{' '}
-              <span className="text-indigo-300">
-                Mathématiques et Physique-Chimie
-              </span>{' '}
-              avec M. Aliou Sow ?
-            </p>
-
-            <Link
-              to="/register"
-              className="shrink-0 inline-flex items-center justify-center h-11 px-6 rounded-lg bg-white text-slate-900 text-sm font-bold hover:bg-slate-100 transition"
-            >
-              Créer mon compte
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Présentation + colonnes de liens */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-10">
-
-        <div className="col-span-2">
-          <Link
-            to="/"
-            onClick={handleTopClick}
-            className="inline-flex items-center gap-3 mb-4"
-          >
-            <span className="bg-white rounded-lg p-1.5 inline-flex">
-              <img
-                src={logo}
-                alt="Aliou Sow Academy"
-                className="h-8 w-auto"
-              />
-            </span>
-
+    <footer className="bg-slate-50 text-slate-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-14 pb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        {/* Présentation */}
+        <div>
+          <Link to="/" onClick={handleTopClick} className="inline-flex items-center gap-3 mb-4">
+            <img src={logo} alt="Aliou Sow Academy" className="h-11 w-auto" />
             <span className="leading-tight">
-              <span className="block text-sm font-extrabold tracking-wide">
-                ALIOU SOW
-              </span>
-              <span className="block text-[10px] font-semibold tracking-[0.25em] text-indigo-300">
-                ACADEMY
-              </span>
+              <span className="block text-base font-extrabold tracking-wide text-slate-900">ALIOU SOW</span>
+              <span className="block text-[10px] font-semibold tracking-[0.25em] text-indigo-600">ACADEMY</span>
             </span>
           </Link>
-
-          <p className="text-sm text-slate-300 leading-relaxed max-w-sm mb-5">
-            Aliou Sow Academy est une plateforme d'apprentissage en ligne
-            dédiée aux Mathématiques et à la Physique-Chimie, conçue pour
-            la classe de M. Aliou Sow.
+          <p className="text-sm text-slate-700 leading-relaxed">
+            Aliou Sow Academy est une plateforme d'apprentissage en ligne dédiée aux Mathématiques et à la
+            Physique-Chimie, conçue pour la classe de M. Aliou Sow.
           </p>
-
-          <p className="text-sm text-slate-300 mb-1">
-            Tél :{' '}
-            <a
-              href={CONTACT_PHONE_LINK}
-              className="hover:text-white hover:underline"
-            >
-              {CONTACT_PHONE_DISPLAY}
-            </a>
-          </p>
-
-          <p className="text-sm text-slate-300 mb-5">
-            Mail :{' '}
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="hover:text-white hover:underline"
-            >
-              {CONTACT_EMAIL}
-            </a>
-          </p>
-
-          {/* Réseaux sociaux : Facebook, YouTube et TikTok */}
-          <div className="flex gap-3">
-
-            <a
-              href={YOUTUBE_URL}
-              aria-label="YouTube"
-              className={socialClass}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="YouTube"
-            >
-              <YoutubeIcon className="w-4 h-4 text-white" />
-            </a>
-
-            <a
-              href={TIKTOK_URL}
-              aria-label="TikTok"
-              className={socialClass}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="TikTok"
-            >
-              <TikTokIcon className="w-4 h-4 text-white" />
-            </a>
-
-          </div>
         </div>
 
+        {/* Colonnes de liens */}
         {columns.map((col) => (
           <div key={col.title}>
-            <h3 className="text-sm font-bold mb-4">{col.title}</h3>
-
-            <ul className="space-y-2.5">
+            <h3 className={headingClass}>{col.title}</h3>
+            <ul className="space-y-2.5 text-sm">
               {col.links.map((item) => (
                 <li key={`${col.title}-${item.label}`}>
                   <Link
                     to={item.to}
                     state={item.state}
-                    onClick={getClickHandler(item)}
+                    onClick={item.anchor ? handleAnchorClick(item.anchor) : undefined}
                     className={linkClass}
                   >
                     {item.label}
@@ -243,15 +137,48 @@ const Footer = () => {
           </div>
         ))}
 
-      </div>
+        {/* Contact */}
+        <div>
+          <h3 className={headingClass}>Contactez-nous</h3>
+          <p className="text-sm text-slate-700 mb-1.5">
+            Tél :{' '}
+            <a href={CONTACT_PHONE_LINK} className="text-[#2f4fd8] hover:underline">
+              {CONTACT_PHONE_DISPLAY}
+            </a>
+          </p>
+          <p className="text-sm text-slate-700 mb-5">
+            Mail :{' '}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#2f4fd8] hover:underline break-all">
+              {CONTACT_EMAIL}
+            </a>
+          </p>
 
-      {/* Barre du bas */}
-      <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} Aliou Sow Academy - Tous droits réservés.
+          {SOCIALS.length > 0 && (
+            <div className="flex items-center gap-4">
+              {SOCIALS.map(({ label, url, Icon }) => (
+                <a
+                  key={label}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  title={label}
+                  className="text-slate-900 hover:text-[#2f4fd8] transition-colors"
+                >
+                  <Icon className="w-5 h-5" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Copyright */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="border-t border-slate-200 py-6 text-center text-sm text-slate-700">
+          Copyright &copy; {new Date().getFullYear()} Aliou Sow Academy | Tous droits réservés
+        </div>
+      </div>
     </footer>
   );
 };

@@ -13,18 +13,29 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Footer from './components/Footer';
 
-// Pages qui ont leur propre barre du haut : on masque la barre et le pied de page publics
-const PAGES_WITHOUT_LAYOUT = ['/student-dashboard', '/profile'];
+// Pages qui possèdent leur propre affichage dédié (sans barre ni pied de page publics)
+const PAGES_WITHOUT_LAYOUT = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/student-dashboard',
+  '/profile',
+  '/teacher-dashboard',
+];
 
 function AppContent() {
   const { pathname } = useLocation();
   const { user } = useContext(AuthContext);
-  // Espace connecté : tableau de bord + pages de cours (avec leur propre barre et menu latéral)
+
+  // Masquer la barre publique et le pied de page sur les pages d'authentification (pour supprimer tout scroll),
+  // sur les dashboards connectés et dans le lecteur de cours
   const hideLayout =
-    PAGES_WITHOUT_LAYOUT.includes(pathname) || (pathname.startsWith('/courses/') && !!user);
+    PAGES_WITHOUT_LAYOUT.includes(pathname) ||
+    pathname.startsWith('/reset-password') ||
+    (pathname.startsWith('/courses/') && !!user);
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-600 selection:text-white">
       {!hideLayout && <Navbar />}
       <Routes>
         <Route path="/" element={<Landing />} />

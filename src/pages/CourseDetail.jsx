@@ -224,7 +224,7 @@ const CourseReviews = ({ courseId, canReview }) => {
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
-          className={`${size} ${n <= value ? 'text-[#d6a74a] fill-[#d6a74a]' : 'text-slate-300'}`}
+          className={`${size} ${n <= value ? 'text-[#ff9800] fill-[#d6a74a]' : 'text-slate-300'}`}
         />
       ))}
     </span>
@@ -253,7 +253,7 @@ const CourseReviews = ({ courseId, canReview }) => {
                 >
                   <Star
                     className={`w-8 h-8 transition ${
-                      n <= (hoverRating || rating) ? 'text-[#d6a74a] fill-[#d6a74a]' : 'text-slate-300'
+                      n <= (hoverRating || rating) ? 'text-[#ff9800] fill-[#d6a74a]' : 'text-slate-300'
                     }`}
                   />
                 </button>
@@ -851,15 +851,15 @@ const CourseDetail = () => {
       <CourseShell>
         <div className={`min-h-screen bg-slate-50 pb-16 text-slate-800 ${user ? '' : 'pt-16'}`}>
           {/* ===== Bannière pleine largeur : titre, description, chiffres clés ===== */}
-          <section className="relative overflow-hidden bg-gradient-to-r from-[#0b1f49] via-[#1d3a8a] to-[#273d8f] text-white">
+          <section className="relative overflow-hidden bg-gradient-to-r from-[#00796b] via-[#00897b] to-[#004d40] text-white">
             <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-white/5 pointer-events-none"></div>
             <div className="absolute -bottom-28 left-1/3 w-64 h-64 rounded-full bg-[#d6a74a]/10 pointer-events-none"></div>
 
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-24 lg:pb-28">
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-24 lg:pb-28 lg:min-h-[23rem]">
               <div className="lg:w-2/3 lg:pr-10">
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="text-xs bg-white/15 px-3 py-1 rounded-full font-semibold">{course.subject}</span>
-                  <span className="text-xs bg-[#d6a74a] text-[#0b1f49] px-3 py-1 rounded-full font-bold">
+                  <span className="text-xs bg-[#ff9800] text-white shadow-sm px-3 py-1 rounded-full font-bold">
                     {levelLabel}
                   </span>
                   {courseIsFree && (
@@ -875,20 +875,20 @@ const CourseDetail = () => {
 
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-6 text-sm text-white/90">
                   <span className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[#d6a74a]" />
+                    <BookOpen className="w-4 h-4 text-[#ff9800]" />
                     {chaptersCount} section{chaptersCount > 1 ? 's' : ''}
                   </span>
                   <span className="flex items-center gap-2">
-                    <Play className="w-4 h-4 text-[#d6a74a]" />
+                    <Play className="w-4 h-4 text-[#ff9800]" />
                     {lessonsCount} leçon{lessonsCount > 1 ? 's' : ''}
                   </span>
                   <span className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-[#d6a74a]" />
+                    <GraduationCap className="w-4 h-4 text-[#ff9800]" />
                     {levelLabel}
                   </span>
                   {course.duration && (
                     <span className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[#d6a74a]" />
+                      <Clock className="w-4 h-4 text-[#ff9800]" />
                       {course.duration}
                     </span>
                   )}
@@ -915,7 +915,7 @@ const CourseDetail = () => {
                       onClick={() => setPreviewTab(tab.key)}
                       className={`px-5 py-4 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition cursor-pointer ${
                         previewTab === tab.key
-                          ? 'border-[#d6a74a] text-[#0b1f49]'
+                          ? 'border-[#00897b] text-[#00897b]'
                           : 'border-transparent text-slate-500 hover:text-slate-800'
                       }`}
                     >
@@ -1044,10 +1044,10 @@ const CourseDetail = () => {
             </div>
 
             {/* Colonne latérale : sur téléphone elle passe AVANT le contenu pour que le bouton d'accès soit visible */}
-            <aside className="order-1 lg:order-2 lg:col-span-1 space-y-4 lg:sticky lg:top-20">
+            <aside className="order-1 lg:order-2 lg:col-span-1 space-y-4 lg:sticky lg:top-20 lg:-mt-44">
               {/* Carte d'accès */}
               <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg">
-                <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                <div className="aspect-video bg-slate-100 overflow-hidden">
                   <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
                 </div>
 
@@ -1074,7 +1074,7 @@ const CourseDetail = () => {
                         <button
                           onClick={handleEnrollFree}
                           disabled={enrollingFree}
-                          className="w-full bg-[#d6a74a] hover:bg-[#b8862b] disabled:opacity-60 text-[#0b1f49] font-bold px-6 py-3.5 rounded-lg text-sm text-center flex items-center justify-center gap-2 cursor-pointer transition"
+                          className="w-full bg-[#ff9800] hover:bg-[#f57c00] text-white font-bold px-6 py-3.5 rounded-lg text-sm text-center flex items-center justify-center gap-2 cursor-pointer transition"
                         >
                           {enrollingFree ? (
                             <div className="w-4 h-4 border-2 border-[#0b1f49] border-t-transparent rounded-full animate-spin"></div>

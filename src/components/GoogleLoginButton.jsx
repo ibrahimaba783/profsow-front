@@ -28,6 +28,9 @@ const GoogleLoginButton = ({ onError }) => {
           onSuccess={handleSuccess}
           onError={() => onError?.('Connexion Google échouée')}
           text="signup_with"
+          shape="pill"
+          theme="outline"
+          size="large"
           locale="fr"
         />
       )}

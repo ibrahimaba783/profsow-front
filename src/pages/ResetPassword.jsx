@@ -44,76 +44,81 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 pt-20 pb-12">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8">
+    <div className="min-h-screen gradient-bg flex items-center justify-center px-4 pt-16 relative overflow-hidden">
+      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-indigo-200/40 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-200/40 rounded-full blur-[100px] pointer-events-none"></div>
+
+      <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-slate-100 relative z-10 slide-in">
         {success ? (
-          <div className="text-center py-4 space-y-4">
-            <div className="w-14 h-14 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+          <div className="text-center py-4 space-y-5">
+            <div className="w-14 h-14 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
               <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h2 className="text-xl font-black text-slate-900">Mot de passe modifié !</h2>
-            <p className="text-xs text-slate-600">
-              Votre mot de passe a été mis à jour avec succès. Redirection vers la page de connexion...
-            </p>
+            <h2 className="text-xl font-extrabold text-slate-900">Mot de passe réinitialisé !</h2>
+            <p className="text-slate-500 text-sm">Redirection vers la page de connexion...</p>
           </div>
         ) : (
           <>
-            <div className="text-center mb-6">
-              <img src={logo} alt="Aliou Sow Academy" className="h-10 w-auto mx-auto mb-3" />
-              <h2 className="text-2xl font-black text-slate-900">Nouveau mot de passe</h2>
-              <p className="text-xs text-slate-500 mt-1">Choisissez un mot de passe sécurisé pour votre compte</p>
+            <div className="text-center mb-8">
+              <img src={logo} alt="Aliou Sow Academy" className="h-14 w-auto mx-auto mb-4" />
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-wide">Nouveau mot de passe</h2>
+              <p className="text-slate-500 text-sm mt-1">Choisissez un nouveau mot de passe pour votre compte.</p>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-xs font-semibold mb-4">
+              <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-sm mb-6">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1.5">Nouveau mot de passe</label>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Nouveau mot de passe</label>
                 <div className="relative">
+                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     minLength={6}
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minimum 6 caractères"
-                    className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition pr-11"
+                    className="input-animated pl-10 pr-10"
+                    placeholder="Min. 6 caractères"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     tabIndex={-1}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1.5">Confirmez le mot de passe</label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Confirmer le mot de passe</label>
                 <div className="relative">
+                  <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
                     minLength={6}
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Répétez le mot de passe"
-                    className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition pr-11"
+                    className="input-animated pl-10 pr-10"
+                    placeholder="Retapez le mot de passe"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                     tabIndex={-1}
                   >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -121,7 +126,7 @@ const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer mt-2"
+                className="w-full btn-neon text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -130,6 +135,12 @@ const ResetPassword = () => {
                 )}
               </button>
             </form>
+
+            <p className="text-center text-slate-500 text-sm mt-8">
+              <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-semibold underline">
+                Retour à la connexion
+              </Link>
+            </p>
           </>
         )}
       </div>

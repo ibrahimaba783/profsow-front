@@ -1,253 +1,236 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Sparkles, MailOpen, Eye, EyeOff, Check } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
+import profPhoto from '../assets/prof-aliou-sow.jpg';
 import GoogleLoginButton from '../components/GoogleLoginButton';
 
-const STUDENT_AVATARS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
+// Atouts affichés à gauche
+const AUTH_POINTS = [
+  'Cours vidéo et séances en direct sur Google Meet',
+  'Fiches de cours et devoirs corrigés en PDF',
+  'Quiz interactifs avec correction automatique',
+  'Du collège à la Terminale S : BFEM et Baccalauréat',
 ];
 
 const inputClass =
-  'w-full h-10 border border-slate-300 rounded-lg px-3.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#ff9800] focus:ring-2 focus:ring-orange-100 transition bg-white';
+  'w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2f4fd8] focus:ring-2 focus:ring-[#2f4fd8]/20 transition';
 
 const Register = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [emailPreview, setEmailPreview] = useState('');
 
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setError('');
+    setEmailPreview('');
     setSubmitting(true);
 
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-    if (!fullName) {
-      setError('Veuillez renseigner votre prénom et votre nom');
-      setSubmitting(false);
-      return;
-    }
-
     try {
-      await register(fullName, email.trim(), password, 'student');
-      navigate('/student-dashboard');
+      const data = await register(name, email, password, 'student');
+
+      if (data?.emailPreviewUrl) {
+        setEmailPreview(data.emailPreviewUrl);
+      } else {
+        navigate('/student-dashboard');
+      }
     } catch (err) {
-      setError(err.message || 'Erreur lors de la création du compte. Vérifiez vos informations.');
+      setError(err.message || 'Erreur lors de la création du compte');
       setSubmitting(false);
     }
   };
 
+  const handleProceed = () => {
+    navigate('/student-dashboard');
+  };
+
   return (
-    <div className="h-screen w-screen bg-white flex flex-col justify-between overflow-x-hidden overflow-y-auto lg:overflow-hidden relative select-none">
-      {/* Lien retour discret en haut à gauche */}
-      <div className="pt-4 px-6 sm:px-10">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#00897b] transition"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Retour à l'accueil</span>
-        </Link>
-      </div>
+    <div className="h-screen bg-white pt-16 overflow-y-auto">
+      <div className="max-w-6xl mx-auto min-h-full px-6 py-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        {/* Côté gauche : présentation + témoignage (masqué sur mobile) */}
+        <div className="hidden lg:block">
+          <h1 className="text-4xl font-extrabold text-slate-900 leading-tight mb-6">
+            Améliorer vos compétences avec Aliou Sow Academy
+          </h1>
+          <p className="text-slate-700 leading-relaxed mb-8">
+            Avec Aliou Sow Academy, suivez des cours de Mathématiques et de Physique-Chimie, regardez les
+            vidéos, téléchargez les fiches PDF, testez-vous avec des quiz et participez aux séances en direct
+            pour réussir le BFEM et le Baccalauréat.
+          </p>
 
-      <div className="max-w-6xl w-full mx-auto px-4 sm:px-8 my-auto py-2">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
-          {/* ============================================================== */}
-          {/* CÔTÉ GAUCHE : Exactement conforme à la capture Bakeli (Image 1) */}
-          {/* ============================================================== */}
-          <div className="hidden lg:block lg:col-span-6 space-y-5 pr-4">
-            <h1 className="text-3xl lg:text-[40px] font-black text-[#111827] leading-[1.14] tracking-tight">
-              Améliorer vos compétences avec Aliou Sow Academy
-            </h1>
+          <ul className="space-y-3 mb-8">
+            {AUTH_POINTS.map((point) => (
+              <li key={point} className="flex items-start gap-3 text-slate-800 font-medium">
+                <Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
 
-            <p className="text-slate-600 text-sm leading-relaxed font-normal">
-              Avec Aliou Sow Academy, suivez des cours en ligne, obtenez des bases solides en Mathématiques et Physique-Chimie, développez vos compétences scientifiques du collège au lycée, et boostez votre parcours pour décrocher le BFEM et le Baccalauréat avec mention.
-            </p>
-
-            <div className="pt-1">
-              {/* Grand guillemet orange vif caractéristique Bakeli (Image 1) */}
-              <div className="text-4xl font-serif font-black text-[#ff9800] leading-none mb-1">“</div>
-
-              {/* Témoignage d'élève */}
-              <p className="text-slate-700 text-sm leading-relaxed font-normal">
-                Aliou Sow Academy a complètement changé ma façon d'apprendre. Les cours sont bien structurés, accessibles à tout moment, et adaptés à mon rythme. Grâce à cette plateforme, j'ai pu combler mes lacunes en sciences et réussir brillamment mes examens.
-              </p>
-
-              <p className="mt-2.5 text-sm font-bold text-slate-800 italic">
-                -Youmané Diop (Terminale S)
-              </p>
-
-              {/* Les 4 avatars en rond sous le témoignage (Image 1) */}
-              <div className="flex items-center gap-3 mt-3.5">
-                {STUDENT_AVATARS.map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt="Élève"
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ============================================================== */}
-          {/* CÔTÉ DROIT : Carte d'inscription Bakeli (Image 1) */}
-          {/* ============================================================== */}
-          <div className="lg:col-span-6 w-full max-w-[430px] mx-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-5 sm:p-7">
-            <div className="text-center mb-3">
-              <Link to="/" title="Retour à l'accueil" className="inline-block">
-                <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto mx-auto mb-1.5" />
-              </Link>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Inscrivez-vous</h2>
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 p-2.5 rounded-xl text-xs font-semibold mb-3">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Bouton de connexion Google */}
-            <div className="flex justify-center mb-3">
-              <GoogleLoginButton onError={setError} />
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-2.5 text-xs">
-              {/* Prénom et Nom côte à côte (Image 1) */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Prénom <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className={inputClass}
-                    placeholder="Entrez votre prénom"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Nom <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className={inputClass}
-                    placeholder="Entrez votre nom"
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={inputClass}
-                  placeholder="exemple@gmail.com"
-                />
-              </div>
-
-              {/* Téléphone optionnel avec drapeau 🇸🇳 +221 (Image 1) */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Téléphone <span className="text-slate-400 font-normal">(optionnel)</span>
-                </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3 flex items-center gap-1.5 text-xs font-bold text-slate-600 pointer-events-none">
-                    <span>🇸🇳</span>
-                    <span>+221</span>
-                    <span className="text-slate-300">|</span>
-                  </span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={`${inputClass} pl-20`}
-                    placeholder="77 000 00 00"
-                  />
-                </div>
-              </div>
-
-              {/* Mot de passe avec oeil (Image 1) */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Mot de passe <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`${inputClass} pr-10`}
-                    placeholder="••••••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
-                    tabIndex={-1}
-                    aria-label={showPassword ? 'Masquer' : 'Afficher'}
-                  >
-                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Bouton Orange Bakeli plein (Image 1) */}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full h-11 rounded-lg bg-[#ff9800] hover:bg-[#f57c00] text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer mt-3"
-              >
-                {submitting ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <span>S'inscrire</span>
-                )}
-              </button>
-            </form>
-
-            {/* Lien de bas de carte (Image 1) */}
-            <div className="text-center mt-3 pt-2.5 border-t border-slate-100 text-xs text-slate-600">
-              <span>Vous avez déjà un compte ?</span>{' '}
-              <Link to="/login" className="font-bold text-[#00897b] hover:underline">
-                Connectez-vous
-              </Link>
+          <div className="flex items-center gap-4">
+            <img
+              src={profPhoto}
+              alt="M. Aliou Sow"
+              className="w-16 h-16 rounded-full object-cover object-[50%_8%] ring-4 ring-[#d6a74a]"
+            />
+            <div className="leading-tight">
+              <p className="font-extrabold text-[#0b1f49]">M. Aliou Sow</p>
+              <p className="text-sm text-slate-500 mt-0.5">Professeur de Mathématiques &amp; Physique-Chimie</p>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="pb-3 text-center text-[11px] text-slate-400">
-        &copy; {new Date().getFullYear()} Aliou Sow Academy &bull; Tous droits réservés
+        {/* Côté droit : carte d'inscription */}
+        <div className="w-full max-w-md mx-auto lg:max-w-none bg-white rounded-2xl shadow-xl border border-slate-100 p-6">
+          {emailPreview ? (
+            <div className="text-center py-6 space-y-6">
+              <div className="w-16 h-16 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <MailOpen className="w-8 h-8" />
+              </div>
+
+              <h2 className="text-2xl font-bold text-slate-900">Inscription réussie !</h2>
+
+              <p className="text-slate-600 text-sm max-w-sm mx-auto">
+                Votre compte a été créé. Un e-mail de bienvenue a été envoyé à <strong>{email}</strong>.
+              </p>
+
+              <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-left max-w-md mx-auto space-y-2">
+                <span className="flex items-center gap-1 text-xs font-bold text-indigo-600">
+                  <Sparkles className="w-3 h-3 animate-pulse" />
+                  SIMULATION D'ENVOI D'EMAIL RÉEL
+                </span>
+
+                <p className="text-slate-500 text-xs">
+                  Comme le serveur utilise Nodemailer en mode test, vous pouvez prévisualiser l'e-mail de
+                  bienvenue formaté en HTML réel envoyé.
+                </p>
+
+                <a
+                  href={emailPreview}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-indigo-600 hover:text-indigo-700 text-xs font-bold underline break-all"
+                >
+                  Ouvrir l'e-mail envoyé dans le navigateur ↗
+                </a>
+              </div>
+
+              <button
+                onClick={handleProceed}
+                className="bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold px-8 py-3 rounded-lg transition w-full max-w-xs mx-auto cursor-pointer"
+              >
+                Accéder à mon espace
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-4">
+                <img src={logo} alt="Aliou Sow Academy" className="h-12 w-auto mx-auto mb-2" />
+                <h2 className="text-2xl font-extrabold text-slate-900">Inscrivez-vous</h2>
+                <p className="text-slate-500 text-sm mt-1">Rejoignez la classe de M. Aliou Sow en quelques secondes</p>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-sm mb-5">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <GoogleLoginButton onError={setError} />
+
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 border-t border-slate-200"></div>
+                <span className="text-xs text-slate-400 font-medium">OU</span>
+                <div className="flex-1 border-t border-slate-200"></div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-800 mb-1.5">
+                    Nom complet <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={inputClass}
+                    placeholder="Alioune Diop"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-800 mb-1.5">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={inputClass}
+                    placeholder="exemple@gmail.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-800 mb-1.5">
+                    Mot de passe <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={`${inputClass} pr-10`}
+                      placeholder="Minimum 6 caractères"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer"
+                      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 mt-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {submitting ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    "S'inscrire"
+                  )}
+                </button>
+              </form>
+
+              <div className="text-center mt-4 text-sm text-slate-500">
+                <p>Vous avez déjà un compte ?</p>
+                <Link to="/login" className="font-bold text-[#2f4fd8] hover:underline">
+                  Connectez-vous
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import {
@@ -68,9 +68,18 @@ const TeacherDashboard = () => {
   const isEffectiveAdmin = isActualAdmin && !previewAsTeacher;
   const isEffectiveTeacher = user?.role === 'teacher' || (isActualAdmin && previewAsTeacher);
 
+  const [searchParams] = useSearchParams();
+  const urlTab = searchParams.get('tab');
+
   // Navigation par onglets
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'courses' | 'students' | 'subscriptions' | 'users' | 'quizzes' | 'live' | 'nocode'
+  const [activeTab, setActiveTab] = useState(urlTab || 'overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (urlTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
 
   // Données principales
   const [courses, setCourses] = useState([]);
@@ -184,14 +193,6 @@ const TeacherDashboard = () => {
     }
     fetchDashboardData();
   }, [user, previewAsTeacher]);
-
-  // Protection stricte : si un prof tente d'ouvrir un onglet interdit, basculer sur 'overview'
-  useEffect(() => {
-    const adminOnlyTabs = ['subscriptions', 'users', 'nocode'];
-    if (isEffectiveTeacher && adminOnlyTabs.includes(activeTab)) {
-      setActiveTab('overview');
-    }
-  }, [activeTab, isEffectiveTeacher]);
 
   const fetchDashboardData = async () => {
     try {

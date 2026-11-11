@@ -210,7 +210,7 @@ const Navbar = () => {
                     <p className="font-bold text-slate-900 truncate">{user.name}</p>
                     <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
                     <span className="inline-block mt-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-teal-50 text-[#00897b] uppercase">
-                      {user.role === 'admin' ? 'Administrateur' : user.role === 'teacher' ? 'Professeur' : 'Élève'}
+                      {user.role === 'admin' ? 'ADMINISTRATEUR' : user.role === 'teacher' ? 'PROFESSEUR' : 'ÉLÈVE'}
                     </span>
                   </div>
 
@@ -312,7 +312,7 @@ const Navbar = () => {
                 className="flex items-center gap-2 py-2 text-sm font-bold text-[#00897b]"
               >
                 <LayoutDashboard className="w-4 h-4" />
-                Mon Espace
+                {user.role === 'admin' ? 'Back Office Admin' : user.role === 'teacher' ? 'Espace Professeur' : 'Mon Espace Élève'}
               </Link>
               <button
                 onClick={handleLogout}

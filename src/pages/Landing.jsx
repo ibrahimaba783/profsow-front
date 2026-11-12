@@ -2,26 +2,26 @@ import React, { useEffect, useState, useRef, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
+import CourseCard from '../components/CourseCard';
+import LevelSelect from '../components/LevelSelect';
 import {
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Calculator,
-  Atom,
   Quote,
   Users,
   BookOpen,
-  GraduationCap,
-  Clock,
+  Briefcase,
   Smartphone,
   Check,
   Zap,
   WifiOff,
   Bell,
+  GraduationCap,
+  Award,
 } from 'lucide-react';
-import logoFull from '../assets/logo-aliou-sow-academy-hero.png';
 import profPhoto from '../assets/prof-aliou-sow.jpg';
 
-// --- Matières et niveaux (valeurs identiques à celles du modèle Course) ---
 const SUBJECTS = ['Mathématiques', 'Physique-Chimie'];
 const LEVELS = [
   { value: '4ème', label: '4ème' },
@@ -31,40 +31,9 @@ const LEVELS = [
   { value: 'TS', label: 'Terminale S' },
 ];
 
-// Dans la base, la Terminale S est enregistrée sous la valeur "TS"
-const formatLevel = (level) => (level === 'TS' ? 'Terminale S' : level);
-const getInitials = (name) =>
-  (name || 'Aliou Sow')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0].toUpperCase())
-    .join('');
-
-// Nombre de cours affichés avant de cliquer sur "Tout afficher"
 const COURSES_PREVIEW_COUNT = 8;
+const TRENDING_PREVIEW_COUNT = 4;
 
-// --- Contenu des modules proposés (uniquement Maths & Physique-Chimie) ---
-const MODULES = [
-  {
-    key: 'Mathématiques',
-    icon: Calculator,
-    title: 'Mathématiques',
-    description:
-      "Algèbre, analyse, géométrie et probabilités du collège à la Terminale S. Des cours structurés par chapitres, avec exercices et corrigés détaillés.",
-    banner: 'bg-gradient-to-br from-indigo-500 to-indigo-700',
-  },
-  {
-    key: 'Physique-Chimie',
-    icon: Atom,
-    title: 'Physique-Chimie',
-    description:
-      "Mécanique, électricité, chimie organique et thermodynamique. Comprenez les phénomènes physiques à travers des cours clairs, appliqués et illustrés.",
-    banner: 'bg-gradient-to-br from-emerald-500 to-teal-600',
-  },
-];
-
-// --- Section "Apprenez partout, même hors ligne" ---
 const INSTALL_FEATURES = [
   {
     icon: Zap,
@@ -92,76 +61,77 @@ const INSTALL_STEPS = [
   {
     emoji: '🌐',
     title: 'Chrome / Edge',
-    text: "Cliquez sur \"Installer\" dans la barre d'adresse ou utilisez le bouton ci-dessus",
+    text: 'Cliquez sur "Installer" dans la barre d\'adresse ou utilisez le bouton ci-dessus',
   },
   {
     emoji: '🍎',
     title: 'Safari (iOS)',
-    text: "Appuyez sur le bouton Partager puis \"Sur l'écran d'accueil\"",
+    text: 'Appuyez sur le bouton Partager puis "Sur l\'écran d\'accueil"',
   },
   {
     emoji: '🤖',
     title: 'Android',
-    text: "Appuyez sur \"Ajouter à l'écran d'accueil\" dans le menu du navigateur",
+    text: 'Appuyez sur "Ajouter à l\'écran d\'accueil" dans le menu du navigateur',
   },
 ];
 
-// --- Étapes (section "Développer vos compétences") ---
 const STEPS = [
   "S'inscrire",
   'Choisir un module',
-  'Suivre les cours en vidéo et en direct',
-  'Tester vos connaissances avec les quiz',
+  'Tester vos connaissances',
+  'Suivre les cours et séances en direct',
 ];
 
-// --- Témoignages (contenu à personnaliser avec de vrais retours d'élèves) ---
 const TESTIMONIALS = [
   {
-    name: 'Fatou Diagne',
-    level: 'Terminale S',
+    name: 'FATOU DIAGNE',
+    level: 'Élève en Terminale S',
     quote:
-      "Grâce aux cours de M. Sow, j'ai enfin compris les limites et les suites. Les quiz m'ont permis de vérifier mes acquis avant le bac.",
+      "Grâce à Aliou Sow Academy, j'ai pu maîtriser les fonctions, les suites et la mécanique. Les cours sont très structurés et les quiz corrigés m'ont permis de réussir mon Baccalauréat sereinement.",
   },
   {
-    name: 'Moussa Ka',
-    level: '1ère S',
+    name: 'MOUSSA KA',
+    level: 'Élève en 1ère S',
     quote:
-      "Les séances en direct sur Meet sont un vrai plus. Je pose mes questions et j'ai une réponse immédiate, comme en classe.",
+      "Les séances en direct et l'espace d'échange avec M. Aliou Sow font toute la différence. Dès que j'ai une question sur un chapitre de Physique-Chimie, j'obtiens une explication claire et rapide.",
   },
   {
-    name: 'Aïssatou Sarr',
-    level: '3ème',
+    name: 'AÏSSATOU SARR',
+    level: 'Élève en 3ème',
     quote:
-      "Les fiches PDF sont hyper claires. J'ai pu préparer mon BFEM sereinement grâce aux exercices corrigés.",
+      "Les fiches PDF et les vidéos pas à pas sont faciles à suivre sur téléphone comme sur ordinateur. J'ai préparé mon BFEM en toute confiance grâce aux exercices interactifs.",
   },
 ];
 
-// --- FAQ ---
 const FAQS = [
   {
     question: 'Comment fonctionne Aliou Sow Academy ?',
     answer:
-      "Inscris-toi, choisis un module (Mathématiques ou Physique-Chimie), avance chapitre par chapitre avec les vidéos et fiches PDF, puis teste tes acquis avec les quiz. Des sessions en direct sur Google Meet complètent chaque module.",
+      "Inscrivez-vous en quelques secondes, choisissez votre module en Mathématiques ou Physique-Chimie selon votre classe (4ème à Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, cours rédigés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
   },
   {
-    question: 'Les cours suivent-ils le programme officiel sénégalais ?',
+    question: 'Les cours suivent-ils le programme officiel ?',
     answer:
-      "Oui, les cours sont conçus par M. Aliou Sow en suivant le programme du collège et du lycée, en vue du BFEM et du Baccalauréat.",
+      "Oui, l'ensemble des modules est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (4ème, 3ème, 2nde S, 1ère S, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
+  },
+  {
+    question: "Quel est le tarif et la durée d'accès à un module ?",
+    answer:
+      "L'accès standard à un module est fixé à 6 000 FCFA (payable simplement par Wave ou Orange Money), avec des offres gratuites sur certains modules de découverte et un accès renouvelable pour accompagner votre progression.",
   },
   {
     question: 'Puis-je accéder aux cours sur mobile ?',
     answer:
-      "Oui, la plateforme est accessible depuis n'importe quel navigateur, sur ordinateur comme sur smartphone.",
+      "Oui, la plateforme est entièrement responsive et optimisée pour smartphones, tablettes et ordinateurs. Vous pouvez même l'installer sur votre écran d'accueil pour un accès rapide.",
   },
   {
-    question: 'Comment poser une question si je suis bloqué(e) ?',
+    question: "Y a-t-il un support disponible si j'ai des questions ?",
     answer:
-      "Tu peux poser tes questions pendant les séances en direct sur Google Meet, ou contacter M. Aliou Sow directement.",
+      "Oui ! Chaque module intègre un salon de discussion et de soutien pédagogique permettant d'échanger directement avec M. Aliou Sow et les autres apprenants, en plus des séances en direct.",
   },
 ];
 
-// --- Hook de compteur animé, démarre uniquement quand `start` devient vrai ---
-const useCountUp = (target, start, duration = 1500) => {
+const useCountUp = (target, start, duration = 1400) => {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -183,91 +153,30 @@ const useCountUp = (target, start, duration = 1500) => {
   return value;
 };
 
-const StatCard = ({ icon: Icon, target, label, start }) => {
+const StatCard = ({ icon: Icon, target, label, suffix = '', start }) => {
   const value = useCountUp(target, start);
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8 text-center">
-      <Icon className="w-12 h-12 mx-auto mb-4 text-[#d6a74a]" strokeWidth={1.5} />
-      <div className="text-3xl md:text-4xl font-extrabold text-slate-900">{value}</div>
-      <p className="text-slate-600 mt-2">{label}</p>
+    <div className="bg-white border border-slate-100 rounded-xl shadow-[0_2px_14px_rgba(15,23,42,0.04)] p-8 text-center">
+      <Icon className="w-11 h-11 mx-auto mb-4 text-[#f59d0e]" strokeWidth={1.6} />
+      <div className="text-3xl md:text-4xl font-extrabold text-slate-900">
+        {value}
+        {target > 0 ? suffix : ''}
+      </div>
+      <p className="text-slate-500 text-sm mt-2">{label}</p>
     </div>
   );
 };
 
-// Carte de cours (style Bakeli) : image, matière + niveau, titre, durée, sections, professeur.
-// Aucun prix n'est affiché sur la page d'accueil.
-const CourseCardItem = ({ course }) => {
-  const teacherName = course.teacher?.name || 'Aliou Sow';
-  const sectionsCount = course.chaptersCount ?? course.chapters?.length ?? 0;
-
-  return (
-    <Link
-      to={`/courses/${course._id}`}
-      className="group flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-slate-300 transition"
-    >
-      <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
-        <img
-          src={course.image}
-          alt={course.title}
-          loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-        />
-      </div>
-
-      <div className="flex flex-col flex-1 p-4">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <span className="text-[11px] font-semibold bg-blue-50 text-blue-600 rounded-full px-2.5 py-0.5 truncate">
-            {course.subject}
-          </span>
-          <span className="text-[11px] font-semibold bg-amber-50 text-amber-700 rounded-full px-2.5 py-0.5 shrink-0">
-            {formatLevel(course.level)}
-          </span>
-        </div>
-
-        <h3 className="text-[15px] font-bold text-slate-900 leading-snug line-clamp-3 min-h-[3.9rem]">
-          {course.title}
-        </h3>
-
-        <div className="flex items-center gap-4 mt-4 text-xs text-slate-500 min-h-[1.25rem]">
-          {course.duration && (
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-red-400" />
-              {course.duration}
-            </span>
-          )}
-          {sectionsCount > 0 && (
-            <span className="flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-amber-500" />
-              {sectionsCount} section{sectionsCount > 1 ? 's' : ''}
-            </span>
-          )}
-        </div>
-
-        <div className="mt-auto pt-4">
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-            <span className="flex items-center gap-2 min-w-0">
-              <span className="w-7 h-7 rounded bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
-                {getInitials(teacherName)}
-              </span>
-              <span className="text-xs text-slate-700 truncate">{teacherName}</span>
-            </span>
-            <span className="text-xs font-bold text-[#2f4fd8] flex items-center gap-0.5 shrink-0 group-hover:underline">
-              Voir le cours <ChevronRight className="w-3.5 h-3.5" />
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-};
-
-// Squelette affiché pendant le chargement des cours
 const CourseSkeletonRow = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     {[1, 2, 3, 4].map((i) => (
-      <div key={i} className="rounded-xl border border-slate-200 overflow-hidden animate-pulse">
+      <div key={i} className="rounded-xl border border-slate-200 overflow-hidden animate-pulse bg-white">
         <div className="aspect-[16/10] bg-slate-100"></div>
         <div className="p-4 space-y-3">
+          <div className="flex justify-between">
+            <div className="h-4 bg-slate-100 rounded-full w-20"></div>
+            <div className="h-4 bg-slate-100 rounded-full w-16"></div>
+          </div>
           <div className="h-4 bg-slate-100 rounded w-5/6"></div>
           <div className="h-3 bg-slate-100 rounded w-1/2"></div>
           <div className="h-5 bg-slate-100 rounded w-1/3"></div>
@@ -277,16 +186,30 @@ const CourseSkeletonRow = () => (
   </div>
 );
 
+const getInitials = (name) =>
+  (name || 'AS')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join('');
+
 const Landing = () => {
   const { user, loading: authLoading } = useContext(AuthContext);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSubject, setActiveSubject] = useState('Tous');
   const [activeLevel, setActiveLevel] = useState('Tous');
+  const [onlyFree, setOnlyFree] = useState(false);
   const [showAllCourses, setShowAllCourses] = useState(false);
   const [statsVisible, setStatsVisible] = useState(false);
-  const [platformStats, setPlatformStats] = useState({ studentsCount: 0, coursesCount: 0, modulesCount: 0 });
-  const [openFaq, setOpenFaq] = useState(0);
+  const [platformStats, setPlatformStats] = useState({
+    studentsCount: 0,
+    coursesCount: 0,
+    modulesCount: 0,
+  });
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [openFaq, setOpenFaq] = useState(-1);
   const [installPrompt, setInstallPrompt] = useState(null);
   const statsRef = useRef(null);
   const location = useLocation();
@@ -295,7 +218,6 @@ const Landing = () => {
   const firstName = user?.name ? user.name.trim().split(' ')[0] : '';
   const dashboardPath = user?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
 
-  // Filtres éventuels transmis par le footer (matière / niveau) + défilement vers la section du hash
   useEffect(() => {
     if (location.state?.subject) setActiveSubject(location.state.subject);
     if (location.state?.level) setActiveLevel(location.state.level);
@@ -309,12 +231,11 @@ const Landing = () => {
     }
   }, [location]);
 
-  // Chargement des cours depuis l'API (tous modules confondus, filtrage côté client)
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const data = await api('/courses');
-        setCourses(data);
+        setCourses(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Erreur de chargement des cours :', err);
       } finally {
@@ -324,7 +245,6 @@ const Landing = () => {
     fetchCourses();
   }, []);
 
-  // Chargement des statistiques RÉELLES de la plateforme (calculées côté backend, aucune valeur inventée)
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -337,19 +257,17 @@ const Landing = () => {
     fetchStats();
   }, []);
 
-  // Déclenche les compteurs animés dès que la section stats entre dans l'écran
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) setStatsVisible(true);
       },
-      { threshold: 0.3 }
+      { threshold: 0.25 }
     );
     if (statsRef.current) observer.observe(statsRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // Récupère l'invite d'installation du navigateur (bouton "Installer l'application")
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
@@ -366,115 +284,127 @@ const Landing = () => {
     setInstallPrompt(null);
   };
 
-  const goToModule = (subjectKey) => {
-    setActiveSubject(subjectKey);
-    setActiveLevel('Tous');
-    document.getElementById('courses')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const resetFilters = () => {
     setActiveSubject('Tous');
     setActiveLevel('Tous');
+    setOnlyFree(false);
   };
 
-  const filteredCourses = courses.filter(
-    (c) =>
-      (activeSubject === 'Tous' || c.subject === activeSubject) &&
-      (activeLevel === 'Tous' || c.level === activeLevel)
-  );
+  // Cours tendance : triés par nombre d'apprenants puis récence
+  const trendingCourses = [...courses]
+    .sort((a, b) => (b.studentsCount || 0) - (a.studentsCount || 0))
+    .slice(0, TRENDING_PREVIEW_COUNT);
 
-  const visibleCourses = showAllCourses ? filteredCourses : filteredCourses.slice(0, COURSES_PREVIEW_COUNT);
+  const filteredCourses = courses.filter((c) => {
+    const matchSubject = activeSubject === 'Tous' || c.subject === activeSubject;
+    const matchLevel = activeLevel === 'Tous' || c.level === activeLevel;
+    const matchFree = !onlyFree || c.isFree || c.price === 0;
+    return matchSubject && matchLevel && matchFree;
+  });
+
+  const visibleCourses = showAllCourses
+    ? filteredCourses
+    : filteredCourses.slice(0, COURSES_PREVIEW_COUNT);
   const canToggleCourses = filteredCourses.length > COURSES_PREVIEW_COUNT;
 
-  return (
-    <div className="min-h-screen bg-white pt-16 text-slate-900 flex flex-col items-center">
-      {/* Bannière d'accueil : texte à gauche, photo du professeur avec formes colorées à droite */}
-      <header className="w-full bg-white border-b border-slate-100 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-8 items-center">
-          {/* Texte */}
-          <div>
-            <div className="w-16 h-1.5 rounded-full bg-[#d6a74a] mb-6"></div>
+  const prevTestimonial = () =>
+    setActiveTestimonial((i) => (i - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
+  const nextTestimonial = () =>
+    setActiveTestimonial((i) => (i + 1) % TESTIMONIALS.length);
 
+  // Ordre cyclique pour afficher les témoignages comme sur les captures Bakeli
+  const orderedTestimonials = TESTIMONIALS.map(
+    (_, idx) => TESTIMONIALS[(activeTestimonial + idx) % TESTIMONIALS.length]
+  );
+
+  return (
+    <div className="min-h-screen bg-white pt-[72px] text-slate-900">
+      {/* 1. BANNIÈRE D'ACCUEIL (Format exact Capture 1 Bakeli) */}
+      <header className="w-full bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+          {/* Texte à gauche */}
+          <div>
             {isLoggedIn ? (
               <>
-                <h1 className="font-black uppercase tracking-tight leading-[1.05] text-[#0b1f49] text-4xl sm:text-5xl mb-6">
-                  Ravi de vous retrouver{firstName ? ', ' : ' !'}
-                  {firstName && <span className="text-[#2f4fd8]">{firstName} !</span>}
+                <h1 className="font-black uppercase tracking-tight leading-[1.12] text-slate-900 text-3xl sm:text-4xl lg:text-[42px] mb-5">
+                  RAVI DE VOUS RETROUVER{firstName ? `, ${firstName.toUpperCase()} !` : ' !'}
                 </h1>
-                <p className="text-slate-600 text-lg leading-relaxed max-w-xl mb-8">
-                  Reprenez là où vous vous êtes arrêté ou découvrez de nouveaux cours de Mathématiques et de
-                  Physique-Chimie avec M. Aliou Sow.
+                <p className="text-slate-600 text-base leading-relaxed max-w-xl mb-8">
+                  Poursuivez vos cours de Mathématiques et de Physique-Chimie avec M. Aliou Sow,
+                  téléchargez vos fiches PDF, participez aux séances en direct et évaluez vos
+                  connaissances avec les quiz interactifs.
                 </p>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                   <Link
                     to={dashboardPath}
-                    className="text-center border-2 border-[#0b1f49] bg-[#0b1f49] text-white hover:bg-white hover:text-[#0b1f49] font-bold px-8 py-3.5 rounded-lg transition"
+                    className="inline-block border border-[#f59d0e] bg-[#f59d0e] text-white hover:bg-[#e08b00] font-semibold px-7 py-3 rounded-lg transition"
                   >
-                    Aller à mon espace
+                    Accéder à mon espace
                   </Link>
                   <a
-                    href="#courses"
-                    className="text-center text-[#0b1f49] hover:text-[#2f4fd8] font-bold px-2 py-3.5 transition"
+                    href="#catalogue"
+                    className="inline-block border border-[#009688] text-[#009688] hover:bg-[#009688] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
                   >
-                    Découvrir les cours &rarr;
+                    Explorer les modules
                   </a>
                 </div>
               </>
             ) : (
               <>
-                <h1 className="font-black uppercase tracking-tight leading-[1.05] text-[#0b1f49] text-4xl sm:text-5xl mb-6">
-                  Maîtrisez les <span className="text-[#2f4fd8]">Mathématiques</span> &amp; la{' '}
-                  <span className="text-[#b8862b]">Physique-Chimie</span>
+                <h1 className="font-black uppercase tracking-tight leading-[1.12] text-slate-900 text-3xl sm:text-4xl lg:text-[42px] mb-5">
+                  APPRENEZ À VOTRE RYTHME ET RÉUSSISSEZ EN SCIENCES
                 </h1>
-                <p className="text-slate-600 text-lg leading-relaxed max-w-xl mb-8">
-                  Accédez à des cours vidéo, des documents PDF, des quiz interactifs et des séances en direct avec
-                  M. Aliou Sow. Du collège à la Terminale S, avancez à votre rythme et préparez sereinement le
-                  BFEM et le Baccalauréat.
+                <p className="text-slate-600 text-base leading-relaxed max-w-xl mb-8">
+                  Avec la plateforme d&apos;apprentissage en ligne de M. Aliou Sow, accédez à des
+                  cours structurés en Mathématiques et Physique-Chimie, adaptés de la 4ème à la
+                  Terminale S. Avancez à votre propre rythme grâce aux vidéos, documents PDF, quiz et
+                  séances en direct pour réussir le BFEM et le Baccalauréat.
                 </p>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <Link
-                    to="/register"
-                    className="text-center border-2 border-[#0b1f49] text-[#0b1f49] hover:bg-[#0b1f49] hover:text-white font-bold px-8 py-3.5 rounded-lg transition"
-                  >
-                    Inscrivez-vous dès maintenant !
-                  </Link>
-                  <a
-                    href="#courses"
-                    className="text-center text-[#0b1f49] hover:text-[#2f4fd8] font-bold px-2 py-3.5 transition"
-                  >
-                    Découvrir les cours &rarr;
-                  </a>
-                </div>
+                <Link
+                  to="/register"
+                  className="inline-block border border-[#f59d0e] text-[#f59d0e] hover:bg-[#f59d0e] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
+                >
+                  Inscrivez-vous dès maintenant !
+                </Link>
               </>
             )}
           </div>
 
-          {/* Photo du professeur + formes décoratives */}
+          {/* Portrait du professeur + formes organiques orange/vert sarcelle (Capture 1 Bakeli) */}
           <div className="flex justify-center lg:justify-end lg:pr-6">
-            <div className="relative w-[280px] sm:w-[340px] lg:w-[380px]">
-              {/* Formes en arrière-plan */}
-              <div className="absolute -top-8 -left-10 w-3/5 h-3/5 rounded-[58%_42%_52%_48%/45%_55%_45%_55%] bg-gradient-to-b from-[#f6d58a] to-[#d6a74a] -rotate-12"></div>
-              <div className="absolute -bottom-8 -right-8 w-3/5 h-3/5 rounded-[45%_55%_40%_60%/55%_45%_55%_45%] bg-gradient-to-b from-[#2f4fd8] to-[#0b1f49] rotate-6"></div>
-              <div className="absolute bottom-16 -left-12 w-24 h-24 rounded-full bg-[#efe6d3]"></div>
-              <div className="absolute -top-5 right-10 w-10 h-10 rounded-full bg-gradient-to-b from-[#d6a74a] to-[#2f4fd8]"></div>
-              <div className="absolute top-1/3 -right-10 w-16 h-8 rounded-[0_100%_0_100%] bg-gradient-to-r from-[#d6a74a] to-[#2f4fd8] -rotate-[25deg]"></div>
-              <div className="absolute bottom-6 right-1/4 w-4 h-4 rounded-full bg-[#d6a74a]"></div>
+            <div className="relative w-[280px] sm:w-[340px] lg:w-[380px] py-4">
+              {/* Forme organique centrale dégradée orange -> vert sarcelle */}
+              <div className="absolute top-6 left-2 w-3/4 h-3/4 rounded-[58%_42%_52%_48%/45%_55%_45%_55%] bg-gradient-to-r from-[#f59d0e] via-[#84a94c] to-[#009688] opacity-90 -rotate-6"></div>
+              {/* Cercle beige doux à gauche */}
+              <div className="absolute bottom-14 -left-10 w-24 h-24 rounded-full bg-[#efe8dd]"></div>
+              {/* Goutte dégradée en haut à gauche */}
+              <div className="absolute top-8 -left-4 w-11 h-11 rounded-full bg-gradient-to-br from-[#f59d0e] to-[#009688]"></div>
+              {/* Petit point vert/orange en haut */}
+              <div className="absolute top-4 left-1/3 w-4 h-4 rounded-full bg-gradient-to-br from-[#f59d0e] to-[#009688]"></div>
+              {/* Forme goutte en haut à droite */}
+              <div className="absolute top-12 -right-4 w-12 h-7 rounded-[0_100%_0_100%] bg-gradient-to-r from-[#f59d0e] to-[#009688] -rotate-12"></div>
+              {/* Forme goutte en bas à gauche */}
+              <div className="absolute bottom-4 -left-6 w-14 h-9 rounded-[100%_0_100%_0] bg-gradient-to-r from-[#f59d0e] to-[#009688] rotate-12"></div>
+              {/* Cercle dégradé en bas à droite */}
+              <div className="absolute -bottom-2 -right-2 w-14 h-14 rounded-full bg-gradient-to-br from-[#f59d0e] to-[#009688]"></div>
 
-              {/* Photo */}
-              <div className="relative z-10 aspect-[4/5] overflow-hidden border-4 border-white shadow-2xl rounded-tl-[110px] rounded-br-[110px] rounded-tr-[28px] rounded-bl-[28px] bg-slate-100">
+              {/* Photo de M. Aliou Sow */}
+              <div className="relative z-10 aspect-[4/5] mx-auto w-[84%] overflow-hidden rounded-[44%_56%_48%_52%/36%_38%_62%_64%] border-4 border-white shadow-xl bg-slate-100">
                 <img
                   src={profPhoto}
-                  alt="M. Aliou Sow, professeur de Mathématiques et de Physique-Chimie"
-                  className="w-full h-full object-cover object-[50%_8%]"
+                  alt="M. Aliou Sow, professeur de Mathématiques et Physique-Chimie"
+                  className="w-full h-full object-cover object-[50%_10%]"
                 />
               </div>
 
-              {/* Carte d'identification */}
-              <div className="absolute z-20 -bottom-6 left-4 sm:-left-8 bg-white rounded-xl shadow-xl px-4 py-3 flex items-center gap-3 max-w-[260px]">
-                <span className="w-1.5 self-stretch rounded-full bg-[#d6a74a]"></span>
+              {/* Badge professeur discret */}
+              <div className="relative z-20 -mt-7 mx-auto w-fit bg-white/95 backdrop-blur border border-slate-100 rounded-xl shadow-lg px-4 py-2.5 flex items-center gap-3">
+                <span className="w-1.5 h-8 rounded-full bg-[#009688]"></span>
                 <div className="leading-tight">
-                  <p className="text-sm font-extrabold text-[#0b1f49]">M. Aliou Sow</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Professeur de Mathématiques &amp; Physique-Chimie</p>
+                  <p className="text-sm font-extrabold text-slate-900">M. Aliou Sow</p>
+                  <p className="text-[11px] text-slate-500">
+                    Mathématiques &amp; Physique-Chimie
+                  </p>
                 </div>
               </div>
             </div>
@@ -482,317 +412,408 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Nos modules : titre à gauche, "Tout afficher" à droite, cartes compactes */}
-      <section id="modules" className="w-full max-w-7xl px-4 sm:px-6 py-14 scroll-mt-20">
-        <div className="flex items-end justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Nos Modules</h2>
-            <p className="text-slate-500 mt-1">Deux matières clés pour réussir le BFEM et le Baccalauréat.</p>
-          </div>
-          <button
-            onClick={() => goToModule('Tous')}
-            className="text-[#2f4fd8] font-bold hover:underline shrink-0 cursor-pointer"
+      {/* 2. NOS MODULES TENDANCE (Capture 2 Bakeli) */}
+      <section id="trending" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 scroll-mt-24">
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            Nos Modules Tendance
+          </h2>
+          <Link
+            to="/courses"
+            className="text-sm sm:text-base font-semibold text-[#009688] hover:underline shrink-0"
           >
             Tout afficher
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {MODULES.map((mod) => {
-            const Icon = mod.icon;
-            const count = courses.filter((c) => c.subject === mod.key).length;
-            return (
-              <div
-                key={mod.key}
-                className="flex items-start gap-5 bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg transition"
-              >
-                <div className={`w-16 h-16 rounded-xl shrink-0 flex items-center justify-center ${mod.banner}`}>
-                  <Icon className="w-8 h-8 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-slate-900">{mod.title}</h3>
-                  <p className="text-sm text-slate-500 mt-1 leading-relaxed line-clamp-3">{mod.description}</p>
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="text-xs font-semibold text-slate-500">
-                      {loading ? '' : `${count} cours`}
-                    </span>
-                    <button
-                      onClick={() => goToModule(mod.key)}
-                      className="text-sm font-bold text-[#2f4fd8] hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      Voir les cours <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Nos cours : liste déroulante de niveau, pastilles de matières, "Tout afficher", cartes */}
-      <section id="courses" className="w-full max-w-7xl px-4 sm:px-6 pb-14 scroll-mt-20">
-        <div className="mb-6">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Nos Cours</h2>
-          <p className="text-slate-500 mt-1">Choisissez un niveau et une matière pour trouver votre cours.</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 mb-8">
-          <div className="relative">
-            <select
-              value={activeLevel}
-              onChange={(e) => setActiveLevel(e.target.value)}
-              aria-label="Filtrer par niveau"
-              className="appearance-none h-11 pl-5 pr-11 rounded-full border border-slate-400 bg-white text-sm font-semibold text-slate-800 outline-none focus:border-[#2f4fd8] cursor-pointer"
-            >
-              <option value="Tous">Tous les niveaux</option>
-              {LEVELS.map((level) => (
-                <option key={level.value} value={level.value}>
-                  {level.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
-          {['Tous', ...SUBJECTS].map((subject) => (
-            <button
-              key={subject}
-              onClick={() => setActiveSubject(subject)}
-              className={`h-10 px-4 rounded-full border text-sm font-semibold transition cursor-pointer ${
-                activeSubject === subject
-                  ? 'bg-[#0b1f49] border-[#0b1f49] text-white'
-                  : 'bg-white border-slate-400 text-slate-700 hover:border-[#0b1f49]'
-              }`}
-            >
-              {subject === 'Tous' ? 'Toutes les matières' : subject}
-            </button>
-          ))}
-
-          {canToggleCourses && (
-            <button
-              onClick={() => setShowAllCourses((v) => !v)}
-              className="ml-auto text-[#2f4fd8] font-bold hover:underline cursor-pointer"
-            >
-              {showAllCourses ? 'Réduire' : 'Tout afficher'}
-            </button>
-          )}
+          </Link>
         </div>
 
         {loading ? (
           <CourseSkeletonRow />
-        ) : courses.length === 0 ? (
-          <div className="border border-dashed border-slate-300 rounded-xl py-16 px-6 text-center">
-            <p className="text-slate-700 font-semibold mb-1">Les premiers cours arrivent bientôt.</p>
-            <p className="text-slate-400 text-sm">Revenez très prochainement sur Aliou Sow Academy.</p>
-          </div>
-        ) : filteredCourses.length === 0 ? (
-          <div className="border border-slate-200 rounded-xl py-16 px-6 text-center">
-            <p className="text-slate-700 font-semibold mb-1">Aucun cours ne correspond à cette sélection.</p>
-            <button
-              onClick={resetFilters}
-              className="mt-3 text-[#2f4fd8] hover:underline text-sm font-bold cursor-pointer"
-            >
-              Réinitialiser les filtres
-            </button>
+        ) : trendingCourses.length === 0 ? (
+          <div className="border border-dashed border-slate-300 rounded-xl py-14 px-6 text-center">
+            <p className="text-slate-700 font-semibold mb-1">
+              Les premiers modules arrivent bientôt.
+            </p>
+            <p className="text-slate-400 text-sm">
+              Revenez très prochainement sur Aliou Sow Academy.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {visibleCourses.map((course) => (
-              <CourseCardItem key={course._id} course={course} />
+            {trendingCourses.map((course) => (
+              <CourseCard key={course._id} course={course} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Chiffres clés — valeurs RÉELLES calculées depuis la base de données */}
-      <div className="w-full bg-slate-50">
-        <section ref={statsRef} className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-10 text-slate-900">
+      {/* 3. CHIFFRES CLÉS (Capture 3 Bakeli - Données réelles de la BD) */}
+      <section ref={statsRef} className="w-full bg-[#f8fafc] py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-slate-900 mb-10">
             Découvrez les chiffres des élèves ayant suivi nos cours
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard icon={Users} target={platformStats.studentsCount} label="Élèves inscrits" start={statsVisible} />
+            <StatCard
+              icon={Users}
+              target={platformStats.studentsCount}
+              suffix="+"
+              label="Apprenants inscrits"
+              start={statsVisible}
+            />
             <StatCard
               icon={BookOpen}
               target={platformStats.coursesCount}
+              suffix="+"
               label="Cours disponibles"
               start={statsVisible}
             />
             <StatCard
-              icon={GraduationCap}
+              icon={Briefcase}
               target={platformStats.modulesCount}
-              label="Modules proposés"
+              label="Matières scientifiques proposées"
               start={statsVisible}
             />
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      {/* Apprenez partout, même hors ligne */}
-      <div className="w-full bg-white">
-        <section id="install" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 scroll-mt-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 leading-tight">
-                Apprenez partout, même hors ligne
-              </h2>
-              <p className="text-slate-600 text-lg mt-4 leading-relaxed max-w-xl">
-                Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez à vos cours
-                rapidement, même sans connexion internet.
-              </p>
+      {/* 4. APPRENEZ PARTOUT, MÊME HORS LIGNE + COMMENT INSTALLER ? (Captures 4 & 5 Bakeli) */}
+      <section id="install" className="w-full bg-white py-16 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
+              Apprenez partout, même hors ligne
+            </h2>
+            <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed">
+              Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez
+              à vos cours rapidement, même sans connexion internet.
+            </p>
 
-              <div className="mt-8 flex flex-col gap-5">
-                {INSTALL_FEATURES.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={item.title} className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#b8862b] flex items-center justify-center shrink-0">
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">{item.title}</h3>
-                        <p className="text-sm text-slate-500">{item.text}</p>
-                      </div>
+            <div className="mt-8 space-y-5">
+              {INSTALL_FEATURES.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#f59d0e] flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5" />
                     </div>
-                  );
-                })}
-              </div>
-
-              {installPrompt && (
-                <button
-                  onClick={handleInstall}
-                  className="mt-8 bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold px-6 py-3 rounded-lg transition cursor-pointer"
-                >
-                  Installer l'application
-                </button>
-              )}
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-900 text-lg mb-5">Comment installer ?</h3>
-              <div className="space-y-4">
-                {INSTALL_STEPS.map((step) => (
-                  <div
-                    key={step.title}
-                    className="flex items-start gap-4 bg-slate-50 border border-slate-200 rounded-xl p-5"
-                  >
-                    <span className="text-2xl leading-none">{step.emoji}</span>
                     <div>
-                      <h4 className="font-bold text-slate-900 mb-1">{step.title}</h4>
-                      <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
+                      <h3 className="font-bold text-slate-900 text-[15px]">{item.title}</h3>
+                      <p className="text-sm text-slate-500 mt-0.5">{item.text}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          </div>
-        </section>
-      </div>
 
-      {/* Ce que disent nos élèves */}
-      <div className="w-full bg-slate-50">
-        <section id="testimonials" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 scroll-mt-20">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-8">Ce que disent nos élèves</h2>
+            {installPrompt && (
+              <button
+                onClick={handleInstall}
+                className="mt-8 bg-[#009688] hover:bg-[#00796b] text-white font-semibold px-6 py-3 rounded-lg transition cursor-pointer"
+              >
+                Installer l&apos;application
+              </button>
+            )}
+          </div>
+
+          <hr className="border-slate-100 my-14" />
+
+          <h3 className="text-xl font-bold text-slate-900 text-center mb-8">
+            Comment installer ?
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {INSTALL_STEPS.map((step) => (
+              <div
+                key={step.title}
+                className="bg-slate-50/70 border border-slate-100 rounded-xl p-6 text-center shadow-[0_1px_6px_rgba(15,23,42,0.03)]"
+              >
+                <div className="text-3xl mb-3">{step.emoji}</div>
+                <h4 className="font-bold text-slate-900 mb-2">{step.title}</h4>
+                <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. TROUVER LE MODULE QUI VOUS CORRESPOND (Captures 5 & 6 Bakeli) */}
+      <section id="catalogue" className="w-full bg-white pb-16 pt-4 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+            Trouver le module qui vous correspond
+          </h2>
+          <p className="text-slate-600 mt-2 mb-7">
+            Choisissez la matière qui vous passionne et adaptez le niveau d&apos;étude selon vos
+            objectifs pour avancer à votre rythme.
+          </p>
+
+          {/* Barre de filtres exacte Bakeli */}
+          <div className="flex flex-wrap items-center gap-3 mb-8">
+            <LevelSelect
+              value={activeLevel}
+              onChange={setActiveLevel}
+              options={[{ value: 'Tous', label: 'Tous les niveaux' }, ...LEVELS]}
+              size="md"
+            />
+
+            {['Tous', ...SUBJECTS].map((subject) => (
+              <button
+                key={subject}
+                onClick={() => setActiveSubject(subject)}
+                className={`h-10 px-4 rounded-full border text-sm font-medium transition cursor-pointer ${
+                  activeSubject === subject
+                    ? 'bg-[#009688] border-[#009688] text-white'
+                    : 'bg-white border-slate-300 text-slate-700 hover:border-[#009688]'
+                }`}
+              >
+                {subject === 'Tous' ? 'Toutes les matières' : subject}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setOnlyFree((v) => !v)}
+              className={`h-10 px-4 rounded-full border text-sm font-medium transition cursor-pointer ${
+                onlyFree
+                  ? 'bg-[#f59d0e] border-[#f59d0e] text-white'
+                  : 'bg-white border-slate-300 text-slate-700 hover:border-[#f59d0e]'
+              }`}
+            >
+              Cours gratuits
+            </button>
+
+            {canToggleCourses ? (
+              <button
+                onClick={() => setShowAllCourses((v) => !v)}
+                className="ml-auto text-sm sm:text-base font-semibold text-[#009688] hover:underline cursor-pointer"
+              >
+                {showAllCourses ? 'Réduire' : 'Tout afficher'}
+              </button>
+            ) : (
+              <Link
+                to="/courses"
+                className="ml-auto text-sm sm:text-base font-semibold text-[#009688] hover:underline"
+              >
+                Tout afficher
+              </Link>
+            )}
+          </div>
+
+          {loading ? (
+            <CourseSkeletonRow />
+          ) : courses.length === 0 ? (
+            <div className="border border-dashed border-slate-300 rounded-xl py-16 px-6 text-center">
+              <p className="text-slate-700 font-semibold mb-1">
+                Les premiers cours arrivent bientôt.
+              </p>
+              <p className="text-slate-400 text-sm">
+                Revenez très prochainement sur Aliou Sow Academy.
+              </p>
+            </div>
+          ) : filteredCourses.length === 0 ? (
+            <div className="border border-slate-200 rounded-xl py-14 px-6 text-center">
+              <p className="text-slate-700 font-semibold mb-1">
+                Aucun module ne correspond à cette sélection.
+              </p>
+              <button
+                onClick={resetFilters}
+                className="mt-3 text-[#009688] hover:underline text-sm font-semibold cursor-pointer"
+              >
+                Réinitialiser les filtres
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {visibleCourses.map((course) => (
+                <CourseCard key={course._id} course={course} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 6. CE QUE DISENT NOS APPRENANTS (Captures 7 & 8 Bakeli) */}
+      <section id="testimonials" className="w-full bg-[#f8fafc] py-16 scroll-mt-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-8">
+            Ce que disent nos apprenants
+          </h2>
+
           <div className="space-y-4">
-            {TESTIMONIALS.map((t) => (
+            {orderedTestimonials.map((t) => (
               <figure
                 key={t.name}
-                className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8"
+                className="bg-white border border-slate-100 rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.04)] p-6 sm:p-8"
               >
-                <Quote className="w-8 h-8 text-[#0b1f49] mb-3" />
-                <blockquote className="text-slate-600 leading-relaxed">{t.quote}</blockquote>
+                <Quote className="w-7 h-7 text-slate-900 fill-slate-900 mb-3 rotate-180" />
+                <blockquote className="text-slate-600 text-[15px] leading-relaxed">
+                  {t.quote}
+                </blockquote>
                 <figcaption className="flex items-center gap-4 mt-5">
-                  <span className="w-12 h-12 rounded-full bg-[#0b1f49] text-white font-bold flex items-center justify-center shrink-0">
+                  <span className="w-12 h-12 rounded-full bg-[#009688] text-white font-bold text-sm flex items-center justify-center shrink-0">
                     {getInitials(t.name)}
                   </span>
                   <span>
-                    <span className="block text-sm font-bold uppercase text-slate-800">{t.name}</span>
-                    <span className="block text-sm text-slate-500">Élève en {t.level}</span>
+                    <span className="block text-sm font-extrabold uppercase text-slate-900">
+                      {t.name}
+                    </span>
+                    <span className="block text-xs text-slate-500 mt-0.5">{t.level}</span>
                   </span>
                 </figcaption>
               </figure>
             ))}
           </div>
-        </section>
-      </div>
 
-      {/* Développer vos compétences */}
-      <div className="w-full bg-white">
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div className="flex items-center gap-2 mt-5">
+            <button
+              type="button"
+              onClick={prevTestimonial}
+              aria-label="Témoignage précédent"
+              className="w-7 h-7 bg-slate-900 text-white flex items-center justify-center rounded hover:bg-[#009688] transition cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={nextTestimonial}
+              aria-label="Témoignage suivant"
+              className="w-7 h-7 bg-white border border-slate-200 text-slate-600 flex items-center justify-center rounded hover:border-[#009688] hover:text-[#009688] transition cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. DÉVELOPPER DES COMPÉTENCES (Capture 8 Bakeli) */}
+      <section className="w-full bg-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-3">
-              Développer vos compétences avec Aliou Sow Academy
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight mb-3">
+              Développer des compétences avec Aliou Sow Academy
             </h2>
-            <p className="text-slate-600 text-lg leading-relaxed mb-8 max-w-xl">
-              Boostez vos résultats et révélez votre potentiel avec une plateforme claire, structurée et accessible.
+            <p className="text-slate-600 text-base leading-relaxed mb-7 max-w-xl">
+              Boostez vos compétences et révélez votre potentiel avec Aliou Sow Academy, votre allié
+              pour un apprentissage scientifique structuré et accessible !
             </p>
-            <ul className="space-y-4 mb-8">
+
+            <ul className="space-y-3.5 mb-8">
               {STEPS.map((step) => (
-                <li key={step} className="flex items-center gap-3 font-semibold text-slate-800">
-                  <Check className="w-5 h-5 text-emerald-500 shrink-0" />
-                  {step}
+                <li key={step} className="flex items-center gap-3 font-medium text-slate-800">
+                  <Check className="w-5 h-5 text-[#009688] shrink-0" />
+                  <span>{step}</span>
                 </li>
               ))}
             </ul>
-            <a
-              href="#courses"
-              className="inline-flex items-center h-12 px-7 rounded-lg bg-[#0b1f49] hover:bg-[#2f4fd8] text-white font-bold transition"
+
+            <Link
+              to="/courses"
+              className="inline-flex items-center h-12 px-7 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white font-semibold transition"
             >
               Explorer nos cours
-            </a>
+            </Link>
           </div>
-          <div className="flex justify-center">
-            <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-gradient-to-br from-indigo-50 to-amber-50 flex items-center justify-center p-8">
-              <img src={logoFull} alt="Aliou Sow Academy" className="w-full h-auto" />
-            </div>
-          </div>
-        </section>
-      </div>
 
-      {/* Bandeau d'appel à l'action */}
-      <div className="w-full bg-gradient-to-r from-[#0b1f49] via-[#1d3a8a] to-[#273d8f] text-center">
-        <section className="max-w-4xl mx-auto px-6 py-16">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Commençons avec Aliou Sow Academy</h2>
-          <p className="text-white/90 font-medium max-w-2xl mx-auto mb-8">
-            Des cours clairs et structurés par M. Aliou Sow pour transformer vos difficultés en réussite au BFEM et au
-            Baccalauréat.
+          {/* Illustration éducative (Capture 8 Bakeli) */}
+          <div className="flex justify-center">
+            <svg
+              viewBox="0 0 360 280"
+              className="w-full max-w-[340px] h-auto"
+              role="img"
+              aria-label="Illustration étudiant en apprentissage"
+            >
+              <circle cx="185" cy="145" r="108" fill="#eef4ff" />
+              {/* Feuille A+ */}
+              <rect x="115" y="42" width="46" height="58" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="2" />
+              <text x="123" y="62" fontSize="14" fontWeight="bold" fill="#4f46e5">A+</text>
+              <line x1="123" y1="73" x2="152" y2="73" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="123" y1="82" x2="148" y2="82" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="123" y1="91" x2="144" y2="91" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+              {/* Engrenages */}
+              <circle cx="72" cy="148" r="20" fill="#ffffff" stroke="#6366f1" strokeWidth="4" strokeDasharray="7 5" />
+              <circle cx="72" cy="148" r="7" fill="#a5b4fc" />
+              <circle cx="102" cy="122" r="12" fill="#ffffff" stroke="#6366f1" strokeWidth="3" strokeDasharray="5 4" />
+              <circle cx="102" cy="122" r="4" fill="#a5b4fc" />
+              {/* Chapeau de diplômé */}
+              <polygon points="240,58 278,72 240,86 202,72" fill="#4f6ef7" />
+              <path d="M216,78 L216,96 C216,96 240,104 264,96 L264,78" fill="#6366f1" />
+              <line x1="274" y1="74" x2="274" y2="100" stroke="#f59d0e" strokeWidth="2.5" />
+              <circle cx="274" cy="102" r="3" fill="#f59d0e" />
+              {/* Ampoule */}
+              <circle cx="290" cy="142" r="16" fill="#dbeafe" stroke="#60a5fa" strokeWidth="2" />
+              <rect x="284" y="157" width="12" height="7" rx="2" fill="#64748b" />
+              <line x1="290" y1="118" x2="290" y2="111" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
+              <line x1="312" y1="142" x2="319" y2="142" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
+              <line x1="306" y1="125" x2="311" y2="120" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
+              {/* Étudiant avec livre */}
+              <circle cx="185" cy="134" r="28" fill="#0f172a" />
+              <circle cx="185" cy="139" r="17" fill="#f8cbb8" />
+              <path d="M168,136 C172,126 198,126 202,136 C198,123 172,123 168,136 Z" fill="#0f172a" />
+              <path d="M126,232 C132,190 156,174 185,174 C214,174 238,190 244,232 Z" fill="#c7d2fe" />
+              {/* Livre ouvert */}
+              <polygon points="145,196 185,204 185,244 145,235" fill="#4f6ef7" />
+              <polygon points="225,196 185,204 185,244 225,235" fill="#6366f1" />
+              <circle cx="152" cy="222" r="9" fill="#f8cbb8" />
+              <circle cx="218" cy="222" r="9" fill="#f8cbb8" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. BANDEAU D'APPEL À L'ACTION VERT SARCELLE (Capture 9 Bakeli) */}
+      <section className="relative w-full bg-[#009688] text-white overflow-hidden">
+        <GraduationCap className="hidden md:block absolute -right-8 top-6 w-56 h-56 text-white/10 -rotate-12 pointer-events-none" />
+        <Award className="hidden md:block absolute -left-8 bottom-4 w-48 h-48 text-white/10 rotate-12 pointer-events-none" />
+
+        <div className="relative max-w-4xl mx-auto px-6 py-16 text-center">
+          <h2 className="text-2xl sm:text-4xl font-extrabold mb-4">
+            Commençons avec Aliou Sow Academy
+          </h2>
+          <p className="text-white/90 text-sm sm:text-base max-w-2xl mx-auto mb-8 leading-relaxed">
+            Reconnue pour ses cours structurés de Mathématiques et Physique-Chimie qui transforment
+            les élèves ambitieux en lauréats au BFEM et au Baccalauréat.
           </p>
-          <a
-            href="#courses"
-            className="inline-flex items-center h-12 px-8 rounded-lg border border-white text-white hover:bg-white hover:text-[#0b1f49] font-bold transition"
+          <Link
+            to="/courses"
+            className="inline-flex items-center h-11 px-8 rounded-lg border border-white text-white hover:bg-white hover:text-[#009688] text-sm font-semibold transition"
           >
             Découvrez nos cours
-          </a>
-        </section>
-      </div>
+          </Link>
+        </div>
+      </section>
 
-      {/* Questions fréquentes */}
-      <div className="w-full bg-slate-50">
-        <section id="faq" className="max-w-7xl mx-auto px-4 sm:px-6 py-14 scroll-mt-20">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6">Questions fréquentes</h2>
-          <div className="flex flex-col divide-y divide-slate-200">
+      {/* 9. QUESTIONS FRÉQUENTES (Captures 9 & 10 Bakeli) */}
+      <section id="faq" className="w-full bg-[#f8fafc] py-16 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-8">
+            Questions fréquentes
+          </h2>
+          <div className="divide-y divide-slate-200 border-b border-slate-200">
             {FAQS.map((faq, i) => (
               <div key={faq.question}>
                 <button
+                  type="button"
                   onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
-                  className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group"
                 >
-                  <span className="text-lg text-slate-800">{faq.question}</span>
+                  <span className="text-base sm:text-lg text-slate-700 group-hover:text-slate-900 transition-colors">
+                    {faq.question}
+                  </span>
                   <ChevronDown
-                    className={`w-5 h-5 text-slate-500 shrink-0 transition-transform ${
-                      openFaq === i ? 'rotate-180' : ''
+                    className={`w-5 h-5 text-slate-500 shrink-0 transition-transform duration-200 ${
+                      openFaq === i ? 'rotate-180 text-[#009688]' : ''
                     }`}
                   />
                 </button>
                 {openFaq === i && (
-                  <p className="text-slate-500 pb-5 pr-8 leading-relaxed">{faq.answer}</p>
+                  <p className="text-slate-500 text-sm sm:text-base pb-5 pr-8 leading-relaxed">
+                    {faq.answer}
+                  </p>
                 )}
               </div>
             ))}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   );
 };

@@ -22,7 +22,7 @@ import {
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 const inputClass =
-  'w-full h-11 pl-10 pr-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0b1f49] focus:ring-2 focus:ring-[#0b1f49]/10 transition';
+  'w-full h-11 pl-10 pr-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#009688] focus:ring-2 focus:ring-[#009688]/15 transition';
 
 const Profile = () => {
   const { user, updateProfile, logout } = useContext(AuthContext);
@@ -33,7 +33,6 @@ const Profile = () => {
   const [bio, setBio] = useState(user?.bio || '');
   const [password, setPassword] = useState('');
 
-  // Rôles spécifiques au Prof
   const [subjects, setSubjects] = useState(user?.subjects || []);
   const [levels, setLevels] = useState(user?.levels || []);
 
@@ -115,15 +114,14 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-8 h-8 border-2 border-[#0b1f49] border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="loader-spinner"></div>
       </div>
     );
   }
 
   const initial = user.name ? user.name.trim().charAt(0).toUpperCase() : '?';
 
-  // Liens du menu latéral selon le rôle
   const sidebarItems = isTeacher
     ? [{ to: '/teacher-dashboard', label: 'Tableau de bord', icon: LayoutDashboard }]
     : [
@@ -132,17 +130,21 @@ const Profile = () => {
       ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900">
       {/* Barre du haut */}
-      <header className="fixed top-0 inset-x-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center justify-between gap-4 px-4 sm:px-6">
-        <Link to="/" className="shrink-0">
-          <img src={logo} alt="Aliou Sow Academy" className="h-10 w-auto" />
+      <header className="fixed top-0 inset-x-0 h-[72px] bg-white border-b border-slate-200 z-40 flex items-center justify-between gap-4 px-4 sm:px-6">
+        <Link to="/" className="flex items-center gap-2 shrink-0">
+          <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto" />
+          <span className="hidden sm:block leading-tight">
+            <span className="block text-sm font-extrabold text-slate-900 tracking-wide">ALIOU SOW</span>
+            <span className="block text-[9px] font-bold tracking-[0.24em] text-[#009688]">ACADEMY</span>
+          </span>
         </Link>
 
         {!isTeacher && (
           <form
             onSubmit={handleSearch}
-            className="flex-1 max-w-xl hidden sm:flex items-center bg-slate-50 border border-slate-200 rounded-full pl-5 pr-1.5 py-1.5"
+            className="flex-1 max-w-xl hidden sm:flex items-center bg-white border border-slate-200 rounded-full pl-4 pr-1.5 py-1"
           >
             <input
               type="text"
@@ -154,7 +156,7 @@ const Profile = () => {
             <button
               type="submit"
               aria-label="Rechercher"
-              className="w-9 h-9 rounded-full bg-[#d6a74a] hover:bg-[#b8862b] text-white flex items-center justify-center shrink-0 cursor-pointer transition"
+              className="w-8 h-8 rounded-full bg-[#f59d0e] hover:bg-[#e08b00] text-white flex items-center justify-center shrink-0 cursor-pointer transition"
             >
               <Search className="w-4 h-4" />
             </button>
@@ -166,7 +168,7 @@ const Profile = () => {
             {avatarPreview ? (
               <img src={avatarPreview} alt={user.name} className="w-9 h-9 rounded-full object-cover border border-slate-200" />
             ) : (
-              <span className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center">
+              <span className="w-9 h-9 rounded-full bg-[#009688] text-white flex items-center justify-center">
                 <User className="w-5 h-5" />
               </span>
             )}
@@ -216,17 +218,17 @@ const Profile = () => {
       {/* Menu latéral repliable */}
       {sidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 top-16 bg-black/30 z-20"
+          className="md:hidden fixed inset-0 top-[72px] bg-black/30 z-20"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
       <aside
-        className={`fixed top-16 bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-30 px-4 py-6 transition-transform duration-300 ${
+        className={`fixed top-[72px] bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-30 px-4 py-6 transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <p className="text-[11px] font-bold tracking-wider text-slate-400 px-2 mb-3">
-          {isTeacher ? 'ESPACE PROFESSEUR' : 'MES COURS'}
+          {isTeacher ? 'ESPACE PROFESSEUR' : 'ESPACE ÉLÈVE'}
         </p>
         <nav className="space-y-2">
           {sidebarItems.map((item) => {
@@ -248,13 +250,13 @@ const Profile = () => {
 
           <Link
             to="/profile"
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold bg-amber-50 text-[#0b1f49]"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold bg-teal-50 text-[#009688]"
           >
-            <span className="w-9 h-9 rounded-lg bg-[#d6a74a] text-white flex items-center justify-center">
+            <span className="w-9 h-9 rounded-lg bg-[#009688] text-white flex items-center justify-center">
               <User className="w-4 h-4" />
             </span>
             <span className="flex-1 text-left">Mon profil</span>
-            <ChevronRight className="w-4 h-4 text-[#b8862b]" />
+            <ChevronRight className="w-4 h-4 text-[#009688]" />
           </Link>
         </nav>
       </aside>
@@ -262,7 +264,7 @@ const Profile = () => {
       <button
         onClick={() => setSidebarOpen((v) => !v)}
         aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
-        className={`fixed top-[5.5rem] z-30 w-7 h-7 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center text-slate-600 hover:text-[#0b1f49] cursor-pointer transition-all duration-300 ${
+        className={`fixed top-[5.5rem] z-30 w-7 h-7 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center text-slate-600 hover:text-[#009688] cursor-pointer transition-all duration-300 ${
           sidebarOpen ? 'left-[15.125rem]' : 'left-2'
         }`}
       >
@@ -270,13 +272,15 @@ const Profile = () => {
       </button>
 
       {/* Contenu principal */}
-      <main className={`pt-16 min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
+      <main className={`pt-[72px] min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
           <h1 className="text-2xl font-extrabold text-slate-900">Paramètres</h1>
-          <p className="text-sm text-slate-500 mt-1 mb-6">Gérez vos informations personnelles et votre mot de passe.</p>
+          <p className="text-sm text-slate-500 mt-1 mb-6">
+            Gérez vos informations personnelles et votre mot de passe.
+          </p>
 
           {success && (
-            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-600 p-3 rounded-lg text-sm mb-6">
+            <div className="flex items-center gap-2 bg-teal-50 border border-teal-100 text-[#009688] p-3 rounded-lg text-sm mb-6">
               <Check className="w-4 h-4" />
               <span>{success}</span>
             </div>
@@ -292,11 +296,11 @@ const Profile = () => {
             {/* Carte photo */}
             <section className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col sm:flex-row items-center gap-6">
               <div className="relative group cursor-pointer shrink-0" onClick={() => fileInputRef.current?.click()}>
-                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[#d6a74a] bg-slate-100 flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[#f59d0e] bg-slate-100 flex items-center justify-center">
                   {avatarPreview ? (
                     <img src={avatarPreview} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-3xl font-bold text-[#0b1f49]">{initial}</span>
+                    <span className="text-3xl font-bold text-[#009688]">{initial}</span>
                   )}
                 </div>
                 <div className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -307,13 +311,13 @@ const Profile = () => {
               <div className="text-center sm:text-left">
                 <h2 className="text-lg font-bold text-slate-900">{user.name}</h2>
                 <p className="text-sm text-slate-500">{user.email}</p>
-                <span className="inline-block text-xs bg-amber-50 text-[#b8862b] border border-amber-200 px-3 py-1 rounded-full font-semibold mt-2 uppercase tracking-widest">
+                <span className="inline-block text-xs bg-amber-50 text-[#f59d0e] border border-amber-200 px-3 py-1 rounded-full font-semibold mt-2 uppercase tracking-widest">
                   {isTeacher ? 'Professeur' : 'Étudiant'}
                 </span>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="block mt-3 text-sm font-semibold text-[#0b1f49] hover:underline cursor-pointer"
+                  className="block mt-3 text-sm font-semibold text-[#009688] hover:underline cursor-pointer"
                 >
                   Changer la photo
                 </button>
@@ -351,7 +355,7 @@ const Profile = () => {
                   <textarea
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="w-full h-24 pl-10 pr-3 py-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0b1f49] focus:ring-2 focus:ring-[#0b1f49]/10 resize-none transition"
+                    className="w-full h-24 pl-10 pr-3 py-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#009688] focus:ring-2 focus:ring-[#009688]/15 resize-none transition"
                     placeholder="Racontez-nous un peu votre parcours..."
                   />
                 </div>
@@ -372,7 +376,7 @@ const Profile = () => {
                         onClick={() => toggleSubject(sub)}
                         className={`px-4 py-2 rounded-full text-xs font-semibold border transition cursor-pointer ${
                           subjects.includes(sub)
-                            ? 'bg-[#0b1f49] text-white border-[#0b1f49]'
+                            ? 'bg-[#009688] text-white border-[#009688]'
                             : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500'
                         }`}
                       >
@@ -382,7 +386,7 @@ const Profile = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 block mb-2">Niveaux d'enseignement</label>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Niveaux d&apos;enseignement</label>
                   <div className="flex flex-wrap gap-2">
                     {availableLevels.map((lvl) => (
                       <button
@@ -391,7 +395,7 @@ const Profile = () => {
                         onClick={() => toggleLevel(lvl)}
                         className={`px-4 py-2 rounded-full text-xs font-semibold border transition cursor-pointer ${
                           levels.includes(lvl)
-                            ? 'bg-[#d6a74a] text-white border-[#d6a74a]'
+                            ? 'bg-[#f59d0e] text-white border-[#f59d0e]'
                             : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500'
                         }`}
                       >
@@ -426,7 +430,7 @@ const Profile = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="h-11 px-8 rounded-lg bg-[#0b1f49] hover:bg-[#12306e] disabled:opacity-60 text-white text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                className="h-11 px-8 rounded-lg bg-[#009688] hover:bg-[#00796b] disabled:opacity-60 text-white text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 {submitting ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

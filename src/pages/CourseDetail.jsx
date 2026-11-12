@@ -15,6 +15,7 @@ const CourseShell = ({ children }) => {
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [avatarError, setAvatarError] = useState(false);
 
   if (!user) return children;
 
@@ -39,7 +40,7 @@ const CourseShell = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="fixed top-0 inset-x-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center justify-between gap-4 px-4 sm:px-6">
+      <header className="fixed top-0 inset-x-0 h-[72px] bg-white border-b border-slate-200 z-40 flex items-center justify-between gap-4 px-4 sm:px-6">
         <Link to="/" className="shrink-0">
           <img src={logo} alt="Aliou Sow Academy" className="h-10 w-auto" />
         </Link>
@@ -58,7 +59,7 @@ const CourseShell = ({ children }) => {
           <button
             type="submit"
             aria-label="Rechercher"
-            className="w-9 h-9 rounded-full bg-[#d6a74a] hover:bg-[#b8862b] text-white flex items-center justify-center shrink-0 cursor-pointer transition"
+            className="w-9 h-9 rounded-full bg-[#f59d0e] hover:bg-[#e08b00] text-white flex items-center justify-center shrink-0 cursor-pointer transition"
           >
             <Search className="w-4 h-4" />
           </button>
@@ -66,9 +67,19 @@ const CourseShell = ({ children }) => {
 
         <div className="relative shrink-0">
           <button onClick={() => setMenuOpen((v) => !v)} className="flex items-center gap-2 cursor-pointer">
-            <span className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center">
-              <User className="w-5 h-5" />
-            </span>
+            {user.avatar && !avatarError ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                referrerPolicy="no-referrer"
+                onError={() => setAvatarError(true)}
+                className="w-9 h-9 rounded-full object-cover border border-slate-200"
+              />
+            ) : (
+              <span className="w-9 h-9 rounded-full bg-[#009688] text-white flex items-center justify-center">
+                <User className="w-5 h-5" />
+              </span>
+            )}
             <span className="hidden sm:block text-sm font-semibold text-slate-800 max-w-[140px] truncate">
               {user.name}
             </span>
@@ -114,12 +125,12 @@ const CourseShell = ({ children }) => {
 
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 top-16 bg-black/30 z-20"
+          className="lg:hidden fixed inset-0 top-[72px] bg-black/30 z-20"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
       <aside
-        className={`fixed top-16 bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-30 px-4 py-6 transition-transform duration-300 ${
+        className={`fixed top-[72px] bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-30 px-4 py-6 transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -156,14 +167,14 @@ const CourseShell = ({ children }) => {
       <button
         onClick={() => setSidebarOpen((v) => !v)}
         aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
-        className={`fixed top-[5.5rem] z-30 w-7 h-7 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center text-slate-600 hover:text-[#0b1f49] cursor-pointer transition-all duration-300 ${
+        className={`fixed top-[5.75rem] z-30 w-7 h-7 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center text-slate-600 hover:text-[#009688] cursor-pointer transition-all duration-300 ${
           sidebarOpen ? 'left-[15.125rem]' : 'left-2'
         }`}
       >
         {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
       </button>
 
-      <main className={`pt-16 min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : ''}`}>
+      <main className={`pt-[72px] min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : ''}`}>
         {children}
       </main>
     </div>
@@ -224,7 +235,7 @@ const CourseReviews = ({ courseId, canReview }) => {
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
-          className={`${size} ${n <= value ? 'text-[#d6a74a] fill-[#d6a74a]' : 'text-slate-300'}`}
+          className={`${size} ${n <= value ? 'text-[#f59d0e] fill-[#f59d0e]' : 'text-slate-300'}`}
         />
       ))}
     </span>
@@ -235,7 +246,7 @@ const CourseReviews = ({ courseId, canReview }) => {
       {canReview && (
         <form
           onSubmit={handleSubmit}
-          className="border border-[#d6a74a] rounded-xl p-5 sm:p-6 space-y-4 mb-8"
+          className="border border-[#f59d0e] rounded-xl p-5 sm:p-6 space-y-4 mb-8"
         >
           <h3 className="text-lg font-bold text-slate-900">Laisser un avis</h3>
 
@@ -253,7 +264,7 @@ const CourseReviews = ({ courseId, canReview }) => {
                 >
                   <Star
                     className={`w-8 h-8 transition ${
-                      n <= (hoverRating || rating) ? 'text-[#d6a74a] fill-[#d6a74a]' : 'text-slate-300'
+                      n <= (hoverRating || rating) ? 'text-[#f59d0e] fill-[#f59d0e]' : 'text-slate-300'
                     }`}
                   />
                 </button>
@@ -271,7 +282,7 @@ const CourseReviews = ({ courseId, canReview }) => {
               rows={4}
               maxLength={1000}
               placeholder="Partagez votre expérience avec ce module..."
-              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2f4fd8] focus:ring-2 focus:ring-[#2f4fd8]/20 resize-none"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#009688] focus:ring-2 focus:ring-[#009688]/20 resize-none"
             ></textarea>
           </div>
 
@@ -282,7 +293,7 @@ const CourseReviews = ({ courseId, canReview }) => {
           <button
             type="submit"
             disabled={!rating || submitting}
-            className="px-6 py-2.5 bg-[#0b1f49] hover:bg-[#2f4fd8] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition cursor-pointer"
+            className="px-6 py-2.5 bg-[#009688] hover:bg-[#00796b] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition cursor-pointer"
           >
             {submitting ? 'Publication...' : "Publier l'avis"}
           </button>
@@ -397,7 +408,7 @@ const CourseDetail = () => {
 
   useEffect(() => {
     fetchCourseDetails();
-  }, [id]);
+  }, [id, user?._id]);
 
   useEffect(() => {
     if (activeTab === 'discussion' && (isSubscribed || user?.role === 'teacher')) {
@@ -406,7 +417,7 @@ const CourseDetail = () => {
     if (activeTab === 'quizzes' && (isSubscribed || user?.role === 'teacher')) {
       fetchQuizzes();
     }
-  }, [activeTab, isSubscribed]);
+  }, [activeTab, isSubscribed, user?.role, id]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -798,6 +809,20 @@ const CourseDetail = () => {
     );
   }
 
+  if (!course) {
+    return (
+      <CourseShell>
+        <div className="min-h-[70vh] flex flex-col items-center justify-center pt-24 px-4 text-center">
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Module introuvable</h2>
+          <p className="text-sm text-slate-500 mb-6">Ce module n'existe pas ou a été supprimé.</p>
+          <Link to="/courses" className="px-6 py-2.5 rounded-full bg-[#009688] hover:bg-[#00796b] text-white text-sm font-semibold transition">
+            Voir tous les modules
+          </Link>
+        </div>
+      </CourseShell>
+    );
+  }
+
   // IMPORTANT : on affiche un APERÇU public (page de présentation du cours, comme sur Bakeli)
   // à tous ceux qui n'ont pas d'accès complet — y compris les visiteurs non connectés
   // (user === null). Le contenu pédagogique réel (vidéos, PDF, liens Meet) reste caché :
@@ -845,21 +870,21 @@ const CourseDetail = () => {
     ];
 
     const primaryBtn =
-      'w-full bg-[#d6a74a] hover:bg-[#b8862b] text-[#0b1f49] font-bold px-6 py-3.5 rounded-lg text-sm text-center block transition';
+      'w-full bg-[#009688] hover:bg-[#00796b] text-white font-bold px-6 py-3.5 rounded-full text-sm text-center block transition shadow-sm';
 
     return (
       <CourseShell>
-        <div className={`min-h-screen bg-slate-50 pb-16 text-slate-800 ${user ? '' : 'pt-16'}`}>
+        <div className={`min-h-screen bg-slate-50 pb-16 text-slate-800 ${user ? '' : 'pt-[72px]'}`}>
           {/* ===== Bannière pleine largeur : titre, description, chiffres clés ===== */}
-          <section className="relative overflow-hidden bg-gradient-to-r from-[#0b1f49] via-[#1d3a8a] to-[#273d8f] text-white">
+          <section className="relative overflow-hidden bg-gradient-to-r from-[#00695c] via-[#00897b] to-[#009688] text-white">
             <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-white/5 pointer-events-none"></div>
-            <div className="absolute -bottom-28 left-1/3 w-64 h-64 rounded-full bg-[#d6a74a]/10 pointer-events-none"></div>
+            <div className="absolute -bottom-28 left-1/3 w-64 h-64 rounded-full bg-[#f59d0e]/15 pointer-events-none"></div>
 
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-24 lg:pb-28">
               <div className="lg:w-2/3 lg:pr-10">
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="text-xs bg-white/15 px-3 py-1 rounded-full font-semibold">{course.subject}</span>
-                  <span className="text-xs bg-[#d6a74a] text-[#0b1f49] px-3 py-1 rounded-full font-bold">
+                  <span className="text-xs bg-[#f59d0e] text-white px-3 py-1 rounded-full font-bold">
                     {levelLabel}
                   </span>
                   {courseIsFree && (
@@ -875,20 +900,20 @@ const CourseDetail = () => {
 
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-6 text-sm text-white/90">
                   <span className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[#d6a74a]" />
+                    <BookOpen className="w-4 h-4 text-[#f59d0e]" />
                     {chaptersCount} section{chaptersCount > 1 ? 's' : ''}
                   </span>
                   <span className="flex items-center gap-2">
-                    <Play className="w-4 h-4 text-[#d6a74a]" />
+                    <Play className="w-4 h-4 text-[#f59d0e]" />
                     {lessonsCount} leçon{lessonsCount > 1 ? 's' : ''}
                   </span>
                   <span className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-[#d6a74a]" />
+                    <GraduationCap className="w-4 h-4 text-[#f59d0e]" />
                     {levelLabel}
                   </span>
                   {course.duration && (
                     <span className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[#d6a74a]" />
+                      <Clock className="w-4 h-4 text-[#f59d0e]" />
                       {course.duration}
                     </span>
                   )}
@@ -915,7 +940,7 @@ const CourseDetail = () => {
                       onClick={() => setPreviewTab(tab.key)}
                       className={`px-5 py-4 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition cursor-pointer ${
                         previewTab === tab.key
-                          ? 'border-[#d6a74a] text-[#0b1f49]'
+                          ? 'border-[#009688] text-[#009688]'
                           : 'border-transparent text-slate-500 hover:text-slate-800'
                       }`}
                     >
@@ -1053,12 +1078,19 @@ const CourseDetail = () => {
 
                 <div className="p-5 space-y-4">
                   <div>
-                    <p className="text-xl font-extrabold text-slate-900">
-                      {courseIsFree ? 'Cours gratuit' : 'Accès complet au module'}
-                    </p>
+                    <div className="flex items-baseline gap-2.5 flex-wrap">
+                      <p className="text-2xl font-extrabold text-[#009688]">
+                        {courseIsFree ? 'Gratuit' : `${Number(course.price || 6000).toLocaleString('fr-FR')} FCFA`}
+                      </p>
+                      {!courseIsFree && course.originalPrice > (course.price || 6000) && (
+                        <span className="text-sm text-slate-400 line-through">
+                          {Number(course.originalPrice).toLocaleString('fr-FR')} FCFA
+                        </span>
+                      )}
+                    </div>
                     <p className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      Accès pendant 1 an
+                      <Clock className="w-3.5 h-3.5 text-[#f59d0e]" />
+                      Accès pendant {course.duration || (course.durationMonths ? `${course.durationMonths} mois` : '1 mois renouvelable')}
                     </p>
                   </div>
 
@@ -1074,10 +1106,10 @@ const CourseDetail = () => {
                         <button
                           onClick={handleEnrollFree}
                           disabled={enrollingFree}
-                          className="w-full bg-[#d6a74a] hover:bg-[#b8862b] disabled:opacity-60 text-[#0b1f49] font-bold px-6 py-3.5 rounded-lg text-sm text-center flex items-center justify-center gap-2 cursor-pointer transition"
+                          className="w-full bg-[#009688] hover:bg-[#00796b] disabled:opacity-60 text-white font-bold px-6 py-3.5 rounded-full text-sm text-center flex items-center justify-center gap-2 cursor-pointer transition shadow-sm"
                         >
                           {enrollingFree ? (
-                            <div className="w-4 h-4 border-2 border-[#0b1f49] border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           ) : (
                             <>
                               <Sparkles className="w-4 h-4" />
@@ -1104,7 +1136,7 @@ const CourseDetail = () => {
                   {!user && (
                     <p className="text-xs text-slate-400 text-center">
                       Pas encore de compte ?{' '}
-                      <Link to="/register" className="text-[#2f4fd8] hover:underline font-semibold">
+                      <Link to="/register" className="text-[#009688] hover:underline font-semibold">
                         Inscrivez-vous
                       </Link>
                     </p>
@@ -1173,11 +1205,11 @@ const CourseDetail = () => {
                 <h4 className="font-bold text-slate-900 mb-3">Ce qui est inclus</h4>
                 <ul className="space-y-3 text-sm text-slate-600">
                   <li className="flex items-center gap-3">
-                    <Video className="w-4 h-4 text-[#2f4fd8] shrink-0" />
+                    <Video className="w-4 h-4 text-[#009688] shrink-0" />
                     <span>Cours vidéo et séances en direct</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-purple-600 shrink-0" />
+                    <FileText className="w-4 h-4 text-[#f59d0e] shrink-0" />
                     <span>Fiches et documents PDF</span>
                   </li>
                   <li className="flex items-center gap-3">
@@ -1185,7 +1217,7 @@ const CourseDetail = () => {
                     <span>Quiz et évaluations corrigés</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <MessageSquare className="w-4 h-4 text-pink-600 shrink-0" />
+                    <MessageSquare className="w-4 h-4 text-[#f59d0e] shrink-0" />
                     <span>Salon de discussion avec le professeur</span>
                   </li>
                 </ul>
@@ -1204,13 +1236,13 @@ const CourseDetail = () => {
 
   return (
     <CourseShell>
-    <div className="min-h-screen gradient-bg pt-8 pb-12 px-4 md:px-8 text-slate-800">
+    <div className="min-h-screen bg-[#f8fafc] pt-8 pb-12 px-4 md:px-8 text-slate-800">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Barre latérale gauche - Infos & Chapitres */}
         <div className="lg:col-span-1 space-y-6">
           <div className="glass-card p-6 rounded-2xl border border-slate-100">
-            <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded font-semibold uppercase">
+            <span className="text-xs bg-[#e0f2f1] text-[#00796b] border border-[#009688]/20 px-2 py-0.5 rounded font-semibold uppercase">
               {course.subject} • {course.level}
             </span>
             <h2 className="text-xl font-extrabold text-slate-900 mt-3 mb-2">{course.title}</h2>
@@ -1232,19 +1264,19 @@ const CourseDetail = () => {
           <div className="grid grid-cols-3 gap-2 bg-slate-50 p-1 rounded-xl border border-slate-100 text-center text-xs font-bold">
             <button
               onClick={() => setActiveTab('content')}
-              className={`py-2 rounded-lg cursor-pointer transition ${activeTab === 'content' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`py-2 rounded-lg cursor-pointer transition ${activeTab === 'content' ? 'bg-[#009688] text-white' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Leçons
             </button>
             <button
               onClick={() => setActiveTab('discussion')}
-              className={`py-2 rounded-lg cursor-pointer transition flex items-center justify-center gap-1 ${activeTab === 'discussion' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`py-2 rounded-lg cursor-pointer transition flex items-center justify-center gap-1 ${activeTab === 'discussion' ? 'bg-[#009688] text-white' : 'text-slate-500 hover:text-slate-800'}`}
             >
               <span>Salon</span>
             </button>
             <button
               onClick={() => setActiveTab('quizzes')}
-              className={`py-2 rounded-lg cursor-pointer transition ${activeTab === 'quizzes' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`py-2 rounded-lg cursor-pointer transition ${activeTab === 'quizzes' ? 'bg-[#009688] text-white' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Quiz
             </button>
@@ -1254,11 +1286,11 @@ const CourseDetail = () => {
           {activeTab === 'content' && (
             <div className="glass-card p-4 rounded-2xl border border-slate-100 space-y-4 max-h-[50vh] overflow-y-auto pr-1">
               <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Sommaire</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#009688]">Sommaire</span>
                 {user?.role === 'teacher' && (
                   <button
                     onClick={() => setShowAddChapter(!showAddChapter)}
-                    className="p-1 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded hover:bg-indigo-600 hover:text-white"
+                    className="p-1 bg-[#e0f2f1] text-[#009688] border border-[#009688]/20 rounded hover:bg-[#009688] hover:text-white"
                   >
                     <Plus className="w-3 h-3" />
                   </button>
@@ -1276,7 +1308,7 @@ const CourseDetail = () => {
                     className="input-animated text-xs p-1.5"
                     placeholder="Nom du chapitre..."
                   />
-                  <button type="submit" className="px-3 bg-indigo-600 rounded text-xs font-bold text-white">Ajouter</button>
+                  <button type="submit" className="px-3 bg-[#009688] hover:bg-[#00796b] rounded text-xs font-bold text-white">Ajouter</button>
                 </form>
               )}
 
@@ -1292,7 +1324,7 @@ const CourseDetail = () => {
                           <>
                             <button
                               onClick={() => setSelectedChapterId(chapter._id)}
-                              className="p-0.5 text-indigo-600 hover:text-indigo-800"
+                              className="p-0.5 text-[#009688] hover:text-[#00796b]"
                               title="Ajouter leçon"
                             >
                               <Plus className="w-3.5 h-3.5" />
@@ -1315,7 +1347,7 @@ const CourseDetail = () => {
                           key={lesson._id}
                           className={`flex items-center justify-between p-2 rounded-lg text-xs transition cursor-pointer ${
                             activeLesson?._id === lesson._id
-                              ? 'bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold'
+                              ? 'bg-[#e0f2f1] border border-[#009688]/30 text-[#00796b] font-semibold'
                               : 'hover:bg-slate-50 border border-transparent text-slate-500'
                           }`}
                           onClick={() => {
@@ -1410,7 +1442,7 @@ const CourseDetail = () => {
                     )}
 
                     {newLessonType === 'jitsi' && (
-                      <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-lg p-3">
+                      <div className="flex items-center gap-3 bg-[#e0f2f1] border border-[#009688]/20 rounded-lg p-3">
                         <img src="https://cdn.jsdelivr.net/npm/@thesvg/icons/icons/jitsi.svg" alt="Jitsi" className="w-6 h-6 shrink-0" />
                         <p className="text-slate-500 text-[11px] leading-relaxed">
                           Une salle de classe virtuelle sera créée automatiquement pour cette leçon.
@@ -1471,7 +1503,7 @@ const CourseDetail = () => {
                       <button
                         type="submit"
                         disabled={addingLesson}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-bold"
+                        className="px-4 py-2 bg-[#009688] hover:bg-[#00796b] text-white rounded text-xs font-bold"
                       >
                         {addingLesson ? 'Chargement Cloudinary...' : 'Enregistrer'}
                       </button>
@@ -1484,7 +1516,7 @@ const CourseDetail = () => {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                     <h3 className="text-xl font-bold text-slate-900">{activeLesson.title}</h3>
-                    <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-1 rounded font-bold capitalize">
+                    <span className="text-xs bg-[#e0f2f1] text-[#00796b] border border-[#009688]/20 px-3 py-1 rounded font-bold capitalize">
                       {activeLesson.contentType}
                     </span>
                   </div>
@@ -1511,7 +1543,7 @@ const CourseDetail = () => {
                   {activeLesson.contentType === 'pdf' && activeLesson.pdfPath && (
                     <div className="w-full space-y-4">
                       <div className="p-8 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center text-center">
-                        <FileText className="w-16 h-16 text-indigo-600 mb-4" />
+                        <FileText className="w-16 h-16 text-[#009688] mb-4" />
                         <h4 className="text-base font-bold text-slate-900 mb-2">Fiche de cours PDF</h4>
                         <p className="text-slate-500 text-xs mb-6">
                           Téléchargez et visualisez le document PDF associé à cette leçon (hébergé de manière sécurisée).
@@ -1520,7 +1552,7 @@ const CourseDetail = () => {
                           href={getInlinePdfUrl(activeLesson.pdfPath)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn-shiny px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md inline-block cursor-pointer"
+                          className="btn-shiny px-6 py-3 bg-[#009688] hover:bg-[#00796b] text-white rounded-xl text-xs font-bold shadow-md inline-block cursor-pointer"
                         >
                           Visualiser le PDF (Cloudinary)
                         </a>
@@ -1536,7 +1568,7 @@ const CourseDetail = () => {
                   {/* Salle de classe en direct intégrée (Jitsi) */}
                   {activeLesson.contentType === 'jitsi' && (
                     <div className="w-full space-y-3">
-                      <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-xs text-slate-600">
+                      <div className="flex items-center gap-2 bg-[#e0f2f1] border border-[#009688]/20 rounded-lg p-3 text-xs text-slate-600">
                         <img src="https://cdn.jsdelivr.net/npm/@thesvg/icons/icons/jitsi.svg" alt="Jitsi" className="w-5 h-5 shrink-0" />
                         <span>Salle de classe en direct — activez votre caméra/micro dans la fenêtre ci-dessous pour rejoindre.</span>
                       </div>
@@ -1592,7 +1624,7 @@ const CourseDetail = () => {
           {/* FORUM DE DISCUSSION */}
           {activeTab === 'discussion' && (
             <div className="glass-card p-6 rounded-3xl border border-slate-100 min-h-[60vh] flex flex-col justify-between">
-              <h3 className="text-lg font-bold text-indigo-600 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-[#009688] border-b border-slate-100 pb-3 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" />
                 <span>Discussion & Soutien en Direct</span>
               </h3>
@@ -1607,14 +1639,14 @@ const CourseDetail = () => {
                       <img src={msg.sender?.avatar} alt={msg.sender?.name} className="w-7 h-7 rounded-full object-cover border border-slate-200" />
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`font-bold ${msg.sender?.role === 'teacher' ? 'text-indigo-600' : 'text-slate-700'}`}>
+                          <span className={`font-bold ${msg.sender?.role === 'teacher' ? 'text-[#009688]' : 'text-slate-700'}`}>
                             {msg.sender?.name}
                           </span>
                           <span className="text-[9px] text-slate-400">
                             {new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <div className={`p-3 rounded-2xl leading-relaxed ${msg.sender?._id === user?._id ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-100 text-slate-800 rounded-tl-none'}`}>
+                        <div className={`p-3 rounded-2xl leading-relaxed ${msg.sender?._id === user?._id ? 'bg-[#009688] text-white rounded-tr-none' : 'bg-slate-100 text-slate-800 rounded-tl-none'}`}>
                           {msg.message}
                         </div>
                       </div>
@@ -1637,7 +1669,7 @@ const CourseDetail = () => {
                 <button
                   type="submit"
                   disabled={sendingMessage}
-                  className="px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center cursor-pointer shadow"
+                  className="px-4 bg-[#009688] hover:bg-[#00796b] text-white rounded-lg flex items-center justify-center cursor-pointer shadow"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -1651,7 +1683,7 @@ const CourseDetail = () => {
               
               {/* Header Quiz */}
               <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
-                <h3 className="text-lg font-bold text-purple-600 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-[#009688] flex items-center gap-2">
                   <Award className="w-5 h-5" />
                   <span>Exercices d'Évaluation</span>
                 </h3>
@@ -1668,7 +1700,7 @@ const CourseDetail = () => {
                         setViewingResultsQuiz(null);
                       }
                     }}
-                    className="btn-shiny px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    className="btn-shiny px-4 py-2 bg-[#009688] hover:bg-[#00796b] text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Créer un Quiz</span>
@@ -1751,7 +1783,7 @@ const CourseDetail = () => {
                             <button
                               type="button"
                               onClick={() => addOptionField(qIdx)}
-                              className="text-indigo-600 font-bold hover:underline"
+                              className="text-[#009688] font-bold hover:underline"
                             >
                               + Ajouter option
                             </button>
@@ -1779,7 +1811,7 @@ const CourseDetail = () => {
                         <button
                           type="submit"
                           disabled={savingQuiz}
-                          className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold disabled:opacity-60"
+                          className="px-6 py-2 bg-[#009688] hover:bg-[#00796b] rounded text-white font-bold disabled:opacity-60"
                         >
                           {savingQuiz ? 'Enregistrement...' : editingQuizId ? 'Enregistrer les modifications' : 'Créer le Quiz'}
                         </button>
@@ -1812,14 +1844,14 @@ const CourseDetail = () => {
 
                   {quizScore ? (
                     <div className="text-center py-8 space-y-6 slide-in">
-                      <div className="w-16 h-16 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <div className="w-16 h-16 bg-[#e0f2f1] border border-[#009688]/20 text-[#009688] rounded-full flex items-center justify-center mx-auto mb-2">
                         <Award className="w-10 h-10" />
                       </div>
                       <h4 className="text-2xl font-bold text-slate-900">Résultats</h4>
                       <p className="text-slate-500 text-sm">
                         {isPreviewMode ? 'Aperçu du score obtenu avec ces réponses :' : 'Vous avez terminé le quiz avec le score de :'}
                       </p>
-                      <div className="text-4xl font-black text-indigo-600">{quizScore.score} / {quizScore.total}</div>
+                      <div className="text-4xl font-black text-[#009688]">{quizScore.score} / {quizScore.total}</div>
                       <p className="text-slate-400 text-xs">Pourcentage d'exactitude : {quizScore.percentage}%</p>
                       {isPreviewMode && (
                         <p className="text-amber-600 text-xs">Cette tentative n'a pas été enregistrée (mode aperçu).</p>
@@ -1859,7 +1891,7 @@ const CourseDetail = () => {
                                 onClick={() => handleSelectQuizAnswer(idx, oIdx)}
                                 className={`p-3 rounded-xl text-left border transition font-medium cursor-pointer ${
                                   quizAnswers[idx] === oIdx
-                                    ? 'bg-indigo-50 border-indigo-400 text-slate-900'
+                                    ? 'bg-[#e0f2f1] border-[#009688] text-slate-900'
                                     : 'bg-white border-slate-200 hover:border-slate-400 text-slate-500'
                                 }`}
                               >
@@ -1889,7 +1921,7 @@ const CourseDetail = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                     <h4 className="text-base font-bold text-slate-900">
-                      Résultats — <span className="text-purple-600">{viewingResultsQuiz.title}</span>
+                      Résultats — <span className="text-[#009688]">{viewingResultsQuiz.title}</span>
                     </h4>
                     <button
                       onClick={() => { setViewingResultsQuiz(null); setQuizResults([]); }}
@@ -1929,7 +1961,7 @@ const CourseDetail = () => {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-black text-indigo-600">{r.score} / {r.totalQuestions}</div>
+                            <div className="font-black text-[#009688]">{r.score} / {r.totalQuestions}</div>
                             <div className="text-[10px] text-slate-400">{Math.round((r.score / r.totalQuestions) * 100)}%</div>
                           </div>
                         </div>
@@ -1947,7 +1979,7 @@ const CourseDetail = () => {
                     </div>
                   ) : (
                     quizzes.map((quiz) => (
-                      <div key={quiz._id} className="flex justify-between items-center bg-slate-50 border border-slate-100 p-4 rounded-xl text-sm hover:border-indigo-300 transition">
+                      <div key={quiz._id} className="flex justify-between items-center bg-slate-50 border border-slate-100 p-4 rounded-xl text-sm hover:border-[#009688]/40 transition">
                         <div>
                           <div className="font-bold text-slate-800">{quiz.title}</div>
                           <div className="text-[10px] text-slate-400 mt-1">{quiz.questions.length} questions interactives</div>
@@ -1965,7 +1997,7 @@ const CourseDetail = () => {
                             <button
                               onClick={() => handleEditQuiz(quiz)}
                               title="Modifier"
-                              className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-600 cursor-pointer transition"
+                              className="px-3 py-1.5 bg-[#e0f2f1] border border-[#009688]/20 hover:bg-[#009688] hover:text-white rounded-lg text-xs font-bold text-[#009688] cursor-pointer transition"
                             >
                               Modifier
                             </button>
@@ -1987,7 +2019,7 @@ const CourseDetail = () => {
                         ) : (
                           <button
                             onClick={() => handleSelectQuiz(quiz)}
-                            className="px-4 py-1.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-600 hover:text-white rounded-lg text-xs font-bold text-indigo-600 cursor-pointer transition"
+                            className="px-4 py-1.5 bg-[#e0f2f1] border border-[#009688]/20 hover:bg-[#009688] hover:text-white rounded-lg text-xs font-bold text-[#009688] cursor-pointer transition"
                           >
                             Faire le Quiz
                           </button>

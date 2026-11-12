@@ -4,15 +4,12 @@ import { Search, Menu, X, ChevronDown, LayoutDashboard, User, LogOut } from 'luc
 import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
-// === À ADAPTER SI BESOIN ===
-const COURSES_PATH = '/courses'; // page catalogue (la recherche y envoie ?search=...)
-const PROFILE_PATH = '/profile'; // page profil de l'utilisateur connecté
+const COURSES_PATH = '/courses';
+const PROFILE_PATH = '/profile';
 
-// Sections de la page d'accueil (les id doivent exister dans Home.jsx)
 const ANCHOR_LINKS = [
-  { id: 'modules', label: 'Modules' },
-  { id: 'courses', label: 'Cours' },
-  { id: 'testimonials', label: 'Témoignages' },
+  { id: 'catalogue', label: 'Nos modules' },
+  { id: 'trending', label: 'Modules tendances' },
 ];
 
 const Navbar = () => {
@@ -24,13 +21,16 @@ const Navbar = () => {
   const [query, setQuery] = useState('');
   const menuRef = useRef(null);
 
-  // Ferme les menus à chaque changement de page
   useEffect(() => {
     setMobileOpen(false);
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Ferme le menu utilisateur quand on clique en dehors
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setQuery(params.get('search') || '');
+  }, [location.search]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -43,7 +43,6 @@ const Navbar = () => {
 
   const dashboardPath = user?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
 
-  // Défilement fluide vers une section (si on est déjà sur l'accueil)
   const handleAnchorClick = (id) => (e) => {
     setMobileOpen(false);
     if (location.pathname === '/') {
@@ -52,7 +51,6 @@ const Navbar = () => {
     }
   };
 
-  // Clic sur "Accueil" : remonte en haut si on est déjà sur l'accueil
   const handleHomeClick = (e) => {
     setMobileOpen(false);
     if (location.pathname === '/') {
@@ -75,17 +73,28 @@ const Navbar = () => {
     navigate('/');
   };
 
+  // Barre de recherche exacte Bakeli : pilule blanche + bouton rond orange à droite
   const renderSearch = () => (
-    <form onSubmit={handleSearch} role="search" className="relative w-full">
-      <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+    <form
+      onSubmit={handleSearch}
+      role="search"
+      className="flex items-center w-full h-11 rounded-full border border-slate-200 bg-white pl-4 pr-1.5 shadow-[0_1px_4px_rgba(15,23,42,0.03)] focus-within:border-[#f59d0e] focus-within:ring-2 focus-within:ring-[#f59d0e]/15 transition"
+    >
       <input
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Que souhaitez-vous apprendre ?"
+        placeholder="Qu'est-ce que vous souhaitez apprendre ?"
         aria-label="Rechercher un cours"
-        className="w-full h-11 pl-11 pr-4 rounded-full border border-slate-300 bg-slate-50 text-sm text-slate-800 placeholder-slate-500 outline-none transition focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        className="flex-1 min-w-0 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
       />
+      <button
+        type="submit"
+        aria-label="Rechercher"
+        className="w-8 h-8 rounded-full bg-[#f59d0e] hover:bg-[#e08b00] text-white flex items-center justify-center shrink-0 cursor-pointer transition"
+      >
+        <Search className="w-4 h-4" />
+      </button>
     </form>
   );
 
@@ -98,28 +107,36 @@ const Navbar = () => {
       className="w-9 h-9 rounded-full object-cover border border-slate-200"
     />
   ) : (
-    <span className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold">
+    <span className="w-9 h-9 rounded-full bg-[#009688] text-white flex items-center justify-center text-sm font-bold">
       {initial}
     </span>
   );
 
-  const desktopLinkClass = 'text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors';
+  const isHome = location.pathname === '/';
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-white border-b border-slate-200 shadow-sm">
-      <div className="max-w-7xl mx-auto h-16 px-4 sm:px-6 flex items-center gap-4 lg:gap-6">
+    <header className="fixed top-0 left-0 w-full z-50 bg-white border-b border-slate-100 shadow-[0_1px_10px_rgba(15,23,42,0.05)]">
+      <div className="max-w-7xl mx-auto h-[72px] px-4 sm:px-6 flex items-center gap-4 lg:gap-6">
         {/* Logo */}
         <Link to="/" onClick={handleHomeClick} className="flex items-center gap-2 shrink-0">
           <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto" />
           <span className="hidden sm:block leading-tight">
-            <span className="block text-base font-extrabold text-slate-900 tracking-wide">ALIOU SOW</span>
-            <span className="block text-[10px] font-semibold tracking-[0.25em] text-indigo-600">ACADEMY</span>
+            <span className="block text-[15px] font-extrabold text-slate-900 tracking-wide">ALIOU SOW</span>
+            <span className="block text-[9px] font-bold tracking-[0.24em] text-[#009688]">ACADEMY</span>
           </span>
         </Link>
 
-        {/* Liens (grand écran) */}
-        <nav className="hidden lg:flex items-center gap-5" aria-label="Navigation principale">
-          <Link to="/" onClick={handleHomeClick} className={desktopLinkClass}>
+        {/* Liens de navigation (format Bakeli) */}
+        <nav className="hidden lg:flex items-center gap-6 shrink-0" aria-label="Navigation principale">
+          <Link
+            to="/"
+            onClick={handleHomeClick}
+            className={`text-sm font-medium py-1 transition-colors ${
+              isHome
+                ? 'text-slate-900 border-b-2 border-[#f59d0e]'
+                : 'text-slate-700 hover:text-[#009688]'
+            }`}
+          >
             Accueil
           </Link>
           {ANCHOR_LINKS.map((item) => (
@@ -127,29 +144,29 @@ const Navbar = () => {
               key={item.id}
               to={`/#${item.id}`}
               onClick={handleAnchorClick(item.id)}
-              className={desktopLinkClass}
+              className="text-sm font-medium text-slate-700 hover:text-[#009688] py-1 transition-colors whitespace-nowrap"
             >
               {item.label}
             </Link>
           ))}
         </nav>
 
-        {/* Recherche (tablette et plus) */}
-        <div className="hidden md:block flex-1 max-w-xl">{renderSearch()}</div>
+        {/* Barre de recherche centrale */}
+        <div className="hidden md:block flex-1 max-w-md lg:max-w-lg mx-auto">{renderSearch()}</div>
 
-        {/* Zone connexion (grand écran) */}
-        <div className="hidden lg:flex items-center gap-3 ml-auto">
+        {/* Boutons Connexion / Inscription (format Bakeli : pilules orange et vert sarcelle) */}
+        <div className="hidden lg:flex items-center gap-3 ml-auto shrink-0">
           {!loading && !user && (
             <>
               <Link
                 to="/login"
-                className="h-10 px-4 inline-flex items-center rounded-lg border border-indigo-600 text-indigo-700 text-sm font-bold hover:bg-indigo-50 transition"
+                className="h-10 px-5 inline-flex items-center justify-center rounded-full bg-[#f59d0e] hover:bg-[#e08b00] text-white text-sm font-semibold shadow-sm transition whitespace-nowrap"
               >
                 Se connecter
               </Link>
               <Link
                 to="/register"
-                className="h-10 px-4 inline-flex items-center rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition"
+                className="h-10 px-5 inline-flex items-center justify-center rounded-full bg-[#009688] hover:bg-[#00796b] text-white text-sm font-semibold shadow-sm transition whitespace-nowrap"
               >
                 S'inscrire
               </Link>
@@ -158,7 +175,10 @@ const Navbar = () => {
 
           {!loading && user && (
             <>
-              <Link to={dashboardPath} className={desktopLinkClass}>
+              <Link
+                to={dashboardPath}
+                className="h-10 px-4 inline-flex items-center rounded-full bg-[#009688]/10 text-[#009688] text-sm font-semibold hover:bg-[#009688]/15 transition whitespace-nowrap"
+              >
                 Mon espace
               </Link>
 
@@ -217,13 +237,13 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Bouton menu (mobile et tablette) */}
+        {/* Bouton menu mobile */}
         <button
           type="button"
           onClick={() => setMobileOpen((o) => !o)}
           aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
           aria-expanded={mobileOpen}
-          className="lg:hidden ml-auto w-10 h-10 inline-flex items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer"
+          className="lg:hidden ml-auto w-10 h-10 inline-flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -231,14 +251,14 @@ const Navbar = () => {
 
       {/* Panneau mobile */}
       {mobileOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-4 pb-5 pt-4 space-y-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="lg:hidden border-t border-slate-100 bg-white px-4 pb-5 pt-4 space-y-4 max-h-[calc(100vh-4.5rem)] overflow-y-auto shadow-lg">
           <div className="md:hidden">{renderSearch()}</div>
 
           <nav className="flex flex-col" aria-label="Navigation mobile">
             <Link
               to="/"
               onClick={handleHomeClick}
-              className="py-3 text-sm font-medium text-slate-700 border-b border-slate-100 hover:text-indigo-600"
+              className="py-3 text-sm font-medium text-slate-800 border-b border-slate-100 hover:text-[#009688]"
             >
               Accueil
             </Link>
@@ -247,24 +267,30 @@ const Navbar = () => {
                 key={item.id}
                 to={`/#${item.id}`}
                 onClick={handleAnchorClick(item.id)}
-                className="py-3 text-sm font-medium text-slate-700 border-b border-slate-100 hover:text-indigo-600"
+                className="py-3 text-sm font-medium text-slate-800 border-b border-slate-100 hover:text-[#009688]"
               >
                 {item.label}
               </Link>
             ))}
+            <Link
+              to={COURSES_PATH}
+              className="py-3 text-sm font-medium text-slate-800 border-b border-slate-100 hover:text-[#009688]"
+            >
+              Catalogue des cours
+            </Link>
           </nav>
 
           {!loading && !user && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pt-1">
               <Link
                 to="/login"
-                className="h-11 inline-flex items-center justify-center rounded-lg border border-indigo-600 text-indigo-700 text-sm font-bold hover:bg-indigo-50"
+                className="h-11 inline-flex items-center justify-center rounded-full bg-[#f59d0e] text-white text-sm font-semibold hover:bg-[#e08b00]"
               >
                 Se connecter
               </Link>
               <Link
                 to="/register"
-                className="h-11 inline-flex items-center justify-center rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700"
+                className="h-11 inline-flex items-center justify-center rounded-full bg-[#009688] text-white text-sm font-semibold hover:bg-[#00796b]"
               >
                 S'inscrire
               </Link>

@@ -1,10 +1,6 @@
-
-import React, { useContext } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
-
-// --- Icônes des réseaux sociaux ---
 
 const FacebookIcon = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -24,19 +20,11 @@ const TikTokIcon = (props) => (
   </svg>
 );
 
-// === Coordonnées de contact ===
-
 const CONTACT_PHONE_DISPLAY = '+221 77 102 33 99';
 const CONTACT_PHONE_LINK = 'tel:+221771023399';
 const CONTACT_EMAIL = 'Sowaliou2504@gmail.com';
-
-// Liens des réseaux sociaux
-
-const FACEBOOK_URL = '#';
 const YOUTUBE_URL = 'https://youtube.com/@dermannaltv4340?si=Jk86Ads8TMVEx6vv';
 const TIKTOK_URL = 'https://www.tiktok.com/@aliousow9216';
-
-// Pages où le footer n'est PAS affiché
 
 const HIDDEN_ON = [
   '/login',
@@ -47,49 +35,7 @@ const HIDDEN_ON = [
   '/student-dashboard',
 ];
 
-// anchor : id d'une section de la page d'accueil
-// top    : remonte en haut de l'accueil
-// state  : filtre transmis à la page d'accueil
-
-const columns = [
-  {
-    title: 'Matières',
-    links: [
-      { label: 'Mathématiques', to: '/#courses', state: { subject: 'Mathématiques', level: 'Tous' } },
-      { label: 'Physique-Chimie', to: '/#courses', state: { subject: 'Physique-Chimie', level: 'Tous' } },
-    ],
-  },
-  {
-    title: 'Niveaux',
-    links: [
-      { label: '4ème', to: '/#courses', state: { subject: 'Tous', level: '4ème' } },
-      { label: '3ème', to: '/#courses', state: { subject: 'Tous', level: '3ème' } },
-      { label: '2nde S', to: '/#courses', state: { subject: 'Tous', level: '2nde S' } },
-      { label: '1ère S', to: '/#courses', state: { subject: 'Tous', level: '1ère S' } },
-      { label: 'Terminale S', to: '/#courses', state: { subject: 'Tous', level: 'TS' } },
-    ],
-  },
-  {
-    title: 'Plateforme',
-    links: [
-      { label: 'Accueil', to: '/', top: true },
-      { label: 'Modules', to: '/#modules', anchor: 'modules' },
-      { label: 'Témoignages', to: '/#testimonials', anchor: 'testimonials' },
-      { label: 'FAQ', to: '/#faq', anchor: 'faq' },
-      { label: 'Se connecter', to: '/login' },
-      { label: "S'inscrire", to: '/register' },
-    ],
-  },
-];
-
-const linkClass =
-  'text-sm text-slate-300 hover:text-white hover:underline transition-colors';
-
-const socialClass =
-  'w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/20 transition';
-
 const Footer = () => {
-  const { user } = useContext(AuthContext);
   const location = useLocation();
 
   if (HIDDEN_ON.some((path) => location.pathname.startsWith(path))) {
@@ -110,148 +56,166 @@ const Footer = () => {
     }
   };
 
-  const getClickHandler = (item) => {
-    if (item.anchor) return handleAnchorClick(item.anchor);
-    if (item.top) return handleTopClick;
-    return undefined;
-  };
-
   return (
-    <footer className="bg-slate-900 text-white">
-
-      {/* Bandeau d'invitation */}
-      {!user && (
-        <div className="border-b border-white/10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-            <p className="text-lg sm:text-xl font-bold max-w-2xl leading-snug">
-              Prêt à progresser en{' '}
-              <span className="text-indigo-300">
-                Mathématiques et Physique-Chimie
-              </span>{' '}
-              avec M. Aliou Sow ?
-            </p>
-
-            <Link
-              to="/register"
-              className="shrink-0 inline-flex items-center justify-center h-11 px-6 rounded-lg bg-white text-slate-900 text-sm font-bold hover:bg-slate-100 transition"
-            >
-              Créer mon compte
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Présentation + colonnes de liens */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-10">
-
-        <div className="col-span-2">
-          <Link
-            to="/"
-            onClick={handleTopClick}
-            className="inline-flex items-center gap-3 mb-4"
-          >
-            <span className="bg-white rounded-lg p-1.5 inline-flex">
-              <img
-                src={logo}
-                alt="Aliou Sow Academy"
-                className="h-8 w-auto"
-              />
-            </span>
-
+    <footer className="bg-white border-t border-slate-200 text-slate-700">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        {/* Colonne 1 : Présentation (format Bakeli) */}
+        <div>
+          <Link to="/" onClick={handleTopClick} className="inline-flex items-center gap-2.5 mb-4">
+            <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto" />
             <span className="leading-tight">
-              <span className="block text-sm font-extrabold tracking-wide">
-                ALIOU SOW
-              </span>
-              <span className="block text-[10px] font-semibold tracking-[0.25em] text-indigo-300">
-                ACADEMY
-              </span>
+              <span className="block text-sm font-extrabold text-slate-900 tracking-wide">ALIOU SOW</span>
+              <span className="block text-[9px] font-bold tracking-[0.24em] text-[#009688]">ACADEMY</span>
             </span>
           </Link>
-
-          <p className="text-sm text-slate-300 leading-relaxed max-w-sm mb-5">
-            Aliou Sow Academy est une plateforme d'apprentissage en ligne
-            dédiée aux Mathématiques et à la Physique-Chimie, conçue pour
-            la classe de M. Aliou Sow.
+          <p className="text-sm text-slate-600 leading-relaxed max-w-xs">
+            Aliou Sow Academy est une plateforme de formation en ligne dédiée aux Mathématiques et à la
+            Physique-Chimie, conçue par M. Aliou Sow pour accompagner les élèves de la 4ème à la Terminale S.
           </p>
+        </div>
 
-          <p className="text-sm text-slate-300 mb-1">
-            Tél :{' '}
-            <a
-              href={CONTACT_PHONE_LINK}
-              className="hover:text-white hover:underline"
-            >
-              {CONTACT_PHONE_DISPLAY}
-            </a>
-          </p>
+        {/* Colonne 2 : OBTENIR DE L'AIDE */}
+        <div>
+          <h3 className="text-xs font-extrabold tracking-wider uppercase text-slate-900 mb-4">
+            OBTENIR DE L'AIDE
+          </h3>
+          <ul className="space-y-2.5 text-sm text-slate-600">
+            <li>
+              <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-[#009688] transition-colors">
+                Contactez-Nous
+              </a>
+            </li>
+            <li>
+              <Link to="/courses" className="hover:text-[#009688] transition-colors">
+                Tous nos modules
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/#faq"
+                onClick={handleAnchorClick('faq')}
+                className="hover:text-[#009688] transition-colors"
+              >
+                FAQ
+              </Link>
+            </li>
+            <li>
+              <Link to="/register" className="hover:text-[#009688] transition-colors">
+                Créer un compte
+              </Link>
+            </li>
+          </ul>
+        </div>
 
-          <p className="text-sm text-slate-300 mb-5">
-            Mail :{' '}
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="hover:text-white hover:underline"
-            >
-              {CONTACT_EMAIL}
-            </a>
-          </p>
+        {/* Colonne 3 : DOMAINES */}
+        <div>
+          <h3 className="text-xs font-extrabold tracking-wider uppercase text-slate-900 mb-4">
+            DOMAINES &amp; NIVEAUX
+          </h3>
+          <ul className="space-y-2.5 text-sm text-slate-600">
+            <li>
+              <Link
+                to="/#catalogue"
+                state={{ subject: 'Mathématiques', level: 'Tous' }}
+                onClick={handleAnchorClick('catalogue')}
+                className="hover:text-[#009688] transition-colors"
+              >
+                Mathématiques
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/#catalogue"
+                state={{ subject: 'Physique-Chimie', level: 'Tous' }}
+                onClick={handleAnchorClick('catalogue')}
+                className="hover:text-[#009688] transition-colors"
+              >
+                Physique-Chimie
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/#catalogue"
+                state={{ subject: 'Tous', level: '3ème' }}
+                onClick={handleAnchorClick('catalogue')}
+                className="hover:text-[#009688] transition-colors"
+              >
+                Collège (4ème - 3ème)
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/#catalogue"
+                state={{ subject: 'Tous', level: 'TS' }}
+                onClick={handleAnchorClick('catalogue')}
+                className="hover:text-[#009688] transition-colors"
+              >
+                Lycée (2nde S - 1ère S - TS)
+              </Link>
+            </li>
+          </ul>
+        </div>
 
-          {/* Réseaux sociaux : Facebook, YouTube et TikTok */}
-          <div className="flex gap-3">
+        {/* Colonne 4 : CONTACTEZ NOUS */}
+        <div>
+          <h3 className="text-xs font-extrabold tracking-wider uppercase text-slate-900 mb-4">
+            CONTACTEZ NOUS
+          </h3>
+          <div className="space-y-2 text-sm text-slate-600">
+            <p>Plateforme e-learning scientifique — Sénégal (4ème à Terminale S)</p>
+            <p>
+              Tel:{' '}
+              <a href={CONTACT_PHONE_LINK} className="text-[#009688] font-medium hover:underline">
+                {CONTACT_PHONE_DISPLAY}
+              </a>
+            </p>
+            <p>
+              Mail:{' '}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#009688] font-medium hover:underline">
+                {CONTACT_EMAIL}
+              </a>
+            </p>
+          </div>
 
+          <div className="flex items-center gap-4 mt-5 text-slate-900">
             <a
               href={YOUTUBE_URL}
               aria-label="YouTube"
-              className={socialClass}
               target="_blank"
               rel="noopener noreferrer"
               title="YouTube"
+              className="hover:text-[#009688] transition-colors"
             >
-              <YoutubeIcon className="w-4 h-4 text-white" />
+              <YoutubeIcon className="w-5 h-5" />
             </a>
-
             <a
               href={TIKTOK_URL}
               aria-label="TikTok"
-              className={socialClass}
               target="_blank"
               rel="noopener noreferrer"
               title="TikTok"
+              className="hover:text-[#009688] transition-colors"
             >
-              <TikTokIcon className="w-4 h-4 text-white" />
+              <TikTokIcon className="w-5 h-5" />
             </a>
-
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              aria-label="Facebook / Contact"
+              title="Contact"
+              className="hover:text-[#009688] transition-colors"
+            >
+              <FacebookIcon className="w-5 h-5" />
+            </a>
           </div>
         </div>
-
-        {columns.map((col) => (
-          <div key={col.title}>
-            <h3 className="text-sm font-bold mb-4">{col.title}</h3>
-
-            <ul className="space-y-2.5">
-              {col.links.map((item) => (
-                <li key={`${col.title}-${item.label}`}>
-                  <Link
-                    to={item.to}
-                    state={item.state}
-                    onClick={getClickHandler(item)}
-                    className={linkClass}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-
       </div>
 
       {/* Barre du bas */}
-      <div className="border-t border-white/10">
+      <div className="border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} Aliou Sow Academy - Tous droits réservés.
+          &copy; {new Date().getFullYear()} Aliou Sow Academy — Tous droits réservés.
         </div>
       </div>
-
     </footer>
   );
 };

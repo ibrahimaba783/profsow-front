@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
+import Courses from './pages/Courses';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
@@ -14,20 +15,20 @@ import ResetPassword from './pages/ResetPassword';
 import Footer from './components/Footer';
 
 // Pages qui ont leur propre barre du haut : on masque la barre et le pied de page publics
-const PAGES_WITHOUT_LAYOUT = ['/student-dashboard', '/profile'];
+const PAGES_WITHOUT_LAYOUT = ['/student-dashboard', '/teacher-dashboard', '/profile'];
 
 function AppContent() {
   const { pathname } = useLocation();
   const { user } = useContext(AuthContext);
-  // Espace connecté : tableau de bord + pages de cours (avec leur propre barre et menu latéral)
   const hideLayout =
     PAGES_WITHOUT_LAYOUT.includes(pathname) || (pathname.startsWith('/courses/') && !!user);
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#009688] selection:text-white">
       {!hideLayout && <Navbar />}
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/courses" element={<Courses />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />

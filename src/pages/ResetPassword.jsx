@@ -44,14 +44,11 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center px-4 pt-16 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-indigo-200/40 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-200/40 rounded-full blur-[100px] pointer-events-none"></div>
-
-      <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-slate-100 relative z-10 slide-in">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4 pt-[72px]">
+      <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200 shadow-sm slide-in">
         {success ? (
           <div className="text-center py-4 space-y-5">
-            <div className="w-14 h-14 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
+            <div className="w-14 h-14 bg-teal-50 border border-teal-100 text-[#009688] rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-7 h-7" />
             </div>
             <h2 className="text-xl font-extrabold text-slate-900">Mot de passe réinitialisé !</h2>
@@ -59,10 +56,12 @@ const ResetPassword = () => {
           </div>
         ) : (
           <>
-            <div className="text-center mb-8">
-              <img src={logo} alt="Aliou Sow Academy" className="h-14 w-auto mx-auto mb-4" />
-              <h2 className="text-2xl font-extrabold text-slate-900 tracking-wide">Nouveau mot de passe</h2>
-              <p className="text-slate-500 text-sm mt-1">Choisissez un nouveau mot de passe pour votre compte.</p>
+            <div className="text-center mb-7">
+              <img src={logo} alt="Aliou Sow Academy" className="h-12 w-auto mx-auto mb-3" />
+              <h2 className="text-2xl font-extrabold text-slate-900">Nouveau mot de passe</h2>
+              <p className="text-slate-500 text-sm mt-1">
+                Choisissez un nouveau mot de passe pour votre compte.
+              </p>
             </div>
 
             {error && (
@@ -73,8 +72,10 @@ const ResetPassword = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Nouveau mot de passe</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  Nouveau mot de passe
+                </label>
                 <div className="relative">
                   <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
@@ -98,8 +99,10 @@ const ResetPassword = () => {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Confirmer le mot de passe</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  Confirmer le mot de passe
+                </label>
                 <div className="relative">
                   <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
@@ -126,7 +129,7 @@ const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full btn-neon text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
+                className="w-full bg-[#009688] hover:bg-[#00796b] text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 {submitting ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -136,8 +139,8 @@ const ResetPassword = () => {
               </button>
             </form>
 
-            <p className="text-center text-slate-500 text-sm mt-8">
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-semibold underline">
+            <p className="text-center text-slate-500 text-sm mt-6">
+              <Link to="/login" className="text-[#009688] hover:underline font-semibold">
                 Retour à la connexion
               </Link>
             </p>

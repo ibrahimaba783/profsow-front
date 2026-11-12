@@ -11,8 +11,8 @@ const GoogleLoginButton = ({ onError }) => {
   const handleSuccess = async (response) => {
     setLoading(true);
     try {
-      await googleLogin(response.credential);
-      navigate('/student-dashboard');
+      const data = await googleLogin(response.credential);
+      navigate(data?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
     } catch (err) {
       setLoading(false);
       onError?.(err.message || 'Erreur de connexion avec Google');

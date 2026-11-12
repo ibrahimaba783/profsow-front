@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { SettingsContext } from '../context/SettingsContext';
 import { AlertCircle, Sparkles, MailOpen, Eye, EyeOff, Check } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 import profPhoto from '../assets/prof-aliou-sow.jpg';
@@ -26,6 +27,7 @@ const Register = () => {
   const [emailPreview, setEmailPreview] = useState('');
 
   const { register } = useContext(AuthContext);
+  const { settings } = useContext(SettingsContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -92,7 +94,23 @@ const Register = () => {
 
         {/* Côté droit : carte d'inscription */}
         <div className="w-full max-w-md mx-auto lg:max-w-lg bg-white rounded-2xl shadow-sm border border-slate-200 p-7 sm:p-8">
-          {emailPreview ? (
+          {settings.features?.enableOpenRegistration === false ? (
+            <div className="text-center py-8 space-y-4">
+              <div className="w-14 h-14 bg-amber-50 text-[#f59d0e] rounded-full flex items-center justify-center mx-auto">
+                <AlertCircle className="w-7 h-7" />
+              </div>
+              <h2 className="text-xl font-extrabold text-slate-900">Inscriptions temporairement fermées</h2>
+              <p className="text-sm text-slate-500">
+                Les nouvelles inscriptions publiques sont momentanément désactivées par l&apos;administrateur.
+              </p>
+              <Link
+                to="/login"
+                className="inline-block px-6 py-2.5 rounded-lg bg-[#009688] text-white text-sm font-bold hover:bg-[#00796b] transition"
+              >
+                Se connecter à un compte existant
+              </Link>
+            </div>
+          ) : emailPreview ? (
             <div className="text-center py-6 space-y-6">
               <div className="w-16 h-16 bg-emerald-50 border border-emerald-100 text-[#009688] rounded-full flex items-center justify-center mx-auto mb-4">
                 <MailOpen className="w-8 h-8" />

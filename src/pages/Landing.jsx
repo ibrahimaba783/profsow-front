@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { SettingsContext } from '../context/SettingsContext';
 import api from '../utils/api';
 import CourseCard from '../components/CourseCard';
 import LevelSelect from '../components/LevelSelect';
@@ -19,17 +20,11 @@ import {
   Bell,
   GraduationCap,
   Award,
+  Megaphone,
+  Wrench,
+  ExternalLink,
 } from 'lucide-react';
 import profPhoto from '../assets/prof-aliou-sow.jpg';
-
-const SUBJECTS = ['Mathématiques', 'Physique-Chimie'];
-const LEVELS = [
-  { value: '4ème', label: '4ème' },
-  { value: '3ème', label: '3ème' },
-  { value: '2nde S', label: '2nde S' },
-  { value: '1ère S', label: '1ère S' },
-  { value: 'TS', label: 'Terminale S' },
-];
 
 const COURSES_PREVIEW_COUNT = 8;
 const TRENDING_PREVIEW_COUNT = 4;
@@ -196,6 +191,18 @@ const getInitials = (name) =>
 
 const Landing = () => {
   const { user, loading: authLoading } = useContext(AuthContext);
+  const { settings } = useContext(SettingsContext);
+  const SUBJECTS = settings.subjects?.length > 0 ? settings.subjects : ['Mathématiques', 'Physique-Chimie'];
+  const LEVELS = settings.levels?.length > 0 ? settings.levels : [
+    { value: '4ème', label: '4ème' },
+    { value: '3ème', label: '3ème' },
+    { value: '2nde S', label: '2nde S' },
+    { value: '1ère S', label: '1ère S' },
+    { value: 'TS', label: 'Terminale S' },
+  ];
+  const dynamicTestimonials = settings.testimonials?.length > 0 ? settings.testimonials : TESTIMONIALS;
+  const dynamicFaqs = settings.faqs?.length > 0 ? settings.faqs : FAQS;
+  const activeExtraLinks = (settings.extraLinks || []).filter((item) => item && item.active !== false && item.title && item.url);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSubject, setActiveSubject] = useState('Tous');
@@ -216,7 +223,7 @@ const Landing = () => {
 
   const isLoggedIn = !authLoading && !!user;
   const firstName = user?.name ? user.name.trim().split(' ')[0] : '';
-  const dashboardPath = user?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
+  const dashboardPath = user?.role === 'admin' ? '/admin-dashboard' : user?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
 
   useEffect(() => {
     if (location.state?.subject) setActiveSubject(location.state.subject);
@@ -308,17 +315,63 @@ const Landing = () => {
   const canToggleCourses = filteredCourses.length > COURSES_PREVIEW_COUNT;
 
   const prevTestimonial = () =>
-    setActiveTestimonial((i) => (i - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
+    setActiveTestimonial((i) =>
+      dynamicTestimonials.length ? (i - 1 + dynamicTestimonials.length) % dynamicTestimonials.length : 0
+    );
   const nextTestimonial = () =>
-    setActiveTestimonial((i) => (i + 1) % TESTIMONIALS.length);
+    setActiveTestimonial((i) =>
+      dynamicTestimonials.length ? (i + 1) % dynamicTestimonials.length : 0
+    );
 
   // Ordre cyclique pour afficher les témoignages comme sur les captures Bakeli
-  const orderedTestimonials = TESTIMONIALS.map(
-    (_, idx) => TESTIMONIALS[(activeTestimonial + idx) % TESTIMONIALS.length]
+  const orderedTestimonials = dynamicTestimonials.map(
+    (_, idx) => dynamicTestimonials[(activeTestimonial + idx) % dynamicTestimonials.length]
   );
+
+  const announcement = settings.announcement || {};
+  const maintenanceMode = Boolean(settings.siteInfo?.maintenanceMode);
+  const openRegistration = settings.features?.enableOpenRegistration !== false;
 
   return (
     <div className="min-h-screen bg-white pt-[72px] text-slate-900">
+      {maintenanceMode && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-900">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 font-semibold">
+            <Wrench className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              {settings.siteInfo?.maintenanceMessage ||
+                'La plateforme est momentanément en maintenance. Nous revenons très vite !'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {announcement.active && announcement.message && (
+        <div
+          className={`border-b px-4 py-2.5 text-sm ${
+            announcement.type === 'warning'
+              ? 'bg-orange-50 border-orange-200 text-orange-900'
+              : announcement.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              : 'bg-teal-50 border-teal-200 text-[#00695c]'
+          }`}
+        >
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-3">
+            <span className="inline-flex items-center gap-2 font-medium">
+              <Megaphone className="w-4 h-4 shrink-0" />
+              {announcement.message}
+            </span>
+            {announcement.buttonText && announcement.link && (
+              <Link
+                to={announcement.link}
+                className="px-3 py-1 rounded-full bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition"
+              >
+                {announcement.buttonText}
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
       {/* 1. BANNIÈRE D'ACCUEIL (Format exact Capture 1 Bakeli) */}
       <header className="w-full bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
@@ -361,10 +414,10 @@ const Landing = () => {
                   séances en direct pour réussir le BFEM et le Baccalauréat.
                 </p>
                 <Link
-                  to="/register"
+                  to={openRegistration ? '/register' : '/courses'}
                   className="inline-block border border-[#f59d0e] text-[#f59d0e] hover:bg-[#f59d0e] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
                 >
-                  Inscrivez-vous dès maintenant !
+                  {openRegistration ? 'Inscrivez-vous dès maintenant !' : 'Découvrir nos modules'}
                 </Link>
               </>
             )}
@@ -759,6 +812,47 @@ const Landing = () => {
         </div>
       </section>
 
+      {activeExtraLinks.length > 0 && (
+        <section className="w-full bg-[#f8fafc] py-14 border-t border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="mb-8">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                Ressources &amp; Services complémentaires
+              </h2>
+              <p className="text-slate-600 text-sm sm:text-base mt-1">
+                Outils, documents et activités ajoutés par l&apos;équipe pédagogique.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeExtraLinks.map((item, idx) => (
+                <a
+                  key={`${item.title}-${idx}`}
+                  href={item.url}
+                  target={item.url.startsWith('http') ? '_blank' : undefined}
+                  rel={item.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="bg-white border border-slate-200 hover:border-[#009688] rounded-xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-4"
+                >
+                  <div>
+                    {item.badge && (
+                      <span className="inline-block text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-[#f59d0e] px-2.5 py-1 rounded-full mb-3">
+                        {item.badge}
+                      </span>
+                    )}
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>
+                    {item.description && (
+                      <p className="text-sm text-slate-600 leading-relaxed">{item.description}</p>
+                    )}
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009688]">
+                    Accéder <ExternalLink className="w-4 h-4" />
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* 8. BANDEAU D'APPEL À L'ACTION VERT SARCELLE (Capture 9 Bakeli) */}
       <section className="relative w-full bg-[#009688] text-white overflow-hidden">
         <GraduationCap className="hidden md:block absolute -right-8 top-6 w-56 h-56 text-white/10 -rotate-12 pointer-events-none" />
@@ -788,7 +882,7 @@ const Landing = () => {
             Questions fréquentes
           </h2>
           <div className="divide-y divide-slate-200 border-b border-slate-200">
-            {FAQS.map((faq, i) => (
+            {dynamicFaqs.map((faq, i) => (
               <div key={faq.question}>
                 <button
                   type="button"

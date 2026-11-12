@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { SettingsProvider } from './context/SettingsContext';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
 import Courses from './pages/Courses';
@@ -9,13 +10,19 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import CourseDetail from './pages/CourseDetail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Footer from './components/Footer';
 
 // Pages qui ont leur propre barre du haut : on masque la barre et le pied de page publics
-const PAGES_WITHOUT_LAYOUT = ['/student-dashboard', '/teacher-dashboard', '/profile'];
+const PAGES_WITHOUT_LAYOUT = [
+  '/student-dashboard',
+  '/teacher-dashboard',
+  '/admin-dashboard',
+  '/profile',
+];
 
 function AppContent() {
   const { pathname } = useLocation();
@@ -34,6 +41,7 @@ function AppContent() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/courses/:id" element={<CourseDetail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
@@ -46,9 +54,11 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <SettingsProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </SettingsProvider>
     </AuthProvider>
   );
 }

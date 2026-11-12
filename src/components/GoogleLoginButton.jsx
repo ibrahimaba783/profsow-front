@@ -12,7 +12,13 @@ const GoogleLoginButton = ({ onError }) => {
     setLoading(true);
     try {
       const data = await googleLogin(response.credential);
-      navigate(data?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
+      navigate(
+        data?.role === 'admin'
+          ? '/admin-dashboard'
+          : data?.role === 'teacher'
+          ? '/teacher-dashboard'
+          : '/student-dashboard'
+      );
     } catch (err) {
       setLoading(false);
       onError?.(err.message || 'Erreur de connexion avec Google');

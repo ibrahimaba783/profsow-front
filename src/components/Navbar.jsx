@@ -41,7 +41,12 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const dashboardPath = user?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
+  const dashboardPath =
+    user?.role === 'admin'
+      ? '/admin-dashboard'
+      : user?.role === 'teacher'
+      ? '/teacher-dashboard'
+      : '/student-dashboard';
 
   const handleAnchorClick = (id) => (e) => {
     setMobileOpen(false);

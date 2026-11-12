@@ -3,6 +3,26 @@ import api from '../utils/api';
 
 export const AuthContext = createContext();
 
+const pickUserState = (data) => ({
+  _id: data._id,
+  name: data.name,
+  email: data.email,
+  role: data.role,
+  isActive: data.isActive !== false,
+  phone: data.phone || '',
+  title: data.title || '',
+  avatar: data.avatar,
+  bio: data.bio || '',
+  subjects: data.subjects || [],
+  levels: data.levels || [],
+  preferences: data.preferences || {
+    emailNotifications: true,
+    liveReminders: true,
+    newsletter: false,
+  },
+  createdAt: data.createdAt,
+});
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
       try {
         const userData = await api('/auth/profile');
-        setUser(userData);
+        setUser(pickUserState(userData));
       } catch (err) {
         console.error('Session expirée ou invalide', err);
         localStorage.removeItem('token');
@@ -39,16 +59,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     localStorage.setItem('token', data.token);
-    setUser({
-      _id: data._id,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      avatar: data.avatar,
-      bio: data.bio,
-      subjects: data.subjects,
-      levels: data.levels,
-    });
+    setUser(pickUserState(data));
     return data;
   };
 
@@ -64,14 +75,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     localStorage.setItem('token', data.token);
-    setUser({
-      _id: data._id,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      avatar: data.avatar,
-      bio: data.bio,
-    });
+    setUser(pickUserState(data));
     return data;
   };
 
@@ -82,16 +86,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     localStorage.setItem('token', data.token);
-    setUser({
-      _id: data._id,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      avatar: data.avatar,
-      bio: data.bio,
-      subjects: data.subjects,
-      levels: data.levels,
-    });
+    setUser(pickUserState(data));
     return data;
   };
 
@@ -110,16 +105,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', data.token);
     }
 
-    setUser({
-      _id: data._id,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      avatar: data.avatar,
-      bio: data.bio,
-      subjects: data.subjects,
-      levels: data.levels,
-    });
+    setUser(pickUserState(data));
     return data;
   };
 

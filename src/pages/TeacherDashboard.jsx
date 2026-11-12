@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { SettingsContext } from '../context/SettingsContext';
 import api from '../utils/api';
 import { formatLevel } from '../components/CourseCard';
+import ConfirmModal from '../components/ConfirmModal';
 import {
   Plus,
   BookOpen,
@@ -27,12 +29,25 @@ import {
   User,
   Settings,
   LogOut,
+  Shield,
+  Check,
 } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 const TeacherDashboard = () => {
   const { user, logout } = useContext(AuthContext);
+  const { settings } = useContext(SettingsContext);
   const navigate = useNavigate();
+  const availableSubjects = settings.subjects?.length ? settings.subjects : ['Mathématiques', 'Physique-Chimie'];
+  const availableLevels = settings.levels?.length
+    ? settings.levels
+    : [
+        { value: '4ème', label: '4ème' },
+        { value: '3ème', label: '3ème' },
+        { value: '2nde S', label: '2nde S' },
+        { value: '1ère S', label: '1ère S' },
+        { value: 'TS', label: 'Terminale S' },
+      ];
   const [courses, setCourses] = useState([]);
   const [students, setStudents] = useState([]);
   const [quizResults, setQuizResults] = useState([]);
@@ -58,6 +73,25 @@ const TeacherDashboard = () => {
   const [imageFile, setImageFile] = useState(null);
   const [creating, setCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [toast, setToast] = useState({ type: '', text: '' });
+  const [confirmState, setConfirmState] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const showToast = (type, text) => {
+    setToast({ type, text });
+    setTimeout(() => setToast((prev) => (prev.text === text ? { type: '', text: '' } : prev)), 4000);
+  };
+
+  const executeConfirm = async () => {
+    if (!confirmState?.onConfirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirmState.onConfirm();
+      setConfirmState(null);
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -71,7 +105,10 @@ const TeacherDashboard = () => {
         api('/subscriptions/teacher/students'),
         api('/quizzes/teacher/results'),
       ]);
-      const teacherCourses = allCourses.filter((c) => c.teacher?._id === user?._id);
+      const teacherCourses =
+        user?.role === 'admin'
+          ? allCourses
+          : allCourses.filter((c) => c.teacher?._id === user?._id);
       setCourses(teacherCourses);
       setStudents(enrolledStudents);
       setQuizResults(scores);
@@ -83,14 +120,16 @@ const TeacherDashboard = () => {
   };
 
   const resetForm = () => {
+    const defaultPrice = settings.siteInfo?.defaultPrice ?? 6000;
+    const defaultDuration = settings.siteInfo?.defaultDuration || '3 mois';
     setTitle('');
     setDescription('');
-    setSubject('Mathématiques');
-    setLevel('TS');
-    setDuration('3 mois');
-    setPrice(6000);
+    setSubject(availableSubjects[0] || 'Mathématiques');
+    setLevel(availableLevels[availableLevels.length - 1]?.value || 'TS');
+    setDuration(defaultDuration);
+    setPrice(defaultPrice);
     setIsFree(false);
-    setOriginalPrice(6000);
+    setOriginalPrice(defaultPrice);
     setImageFile(null);
     setErrorMsg('');
     setEditingCourse(null);
@@ -161,21 +200,26 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleDeleteCourse = async (id) => {
-    if (
-      !window.confirm(
-        'Voulez-vous vraiment supprimer ce cours ? Tous les chapitres, leçons, quiz et abonnements associés seront perdus.'
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await api(`/courses/${id}`, { method: 'DELETE' });
-      await fetchDashboardData();
-    } catch (err) {
-      alert(err.message || 'Erreur lors de la suppression');
-    }
+  const handleDeleteCourse = (id) => {
+    const target = courses.find((c) => c._id === id);
+    setConfirmState({
+      title: 'Supprimer ce cours',
+      message: target
+        ? `Voulez-vous vraiment supprimer le cours "${target.title}" ?`
+        : 'Voulez-vous vraiment supprimer ce cours ?',
+      details: 'Tous les chapitres, leçons, quiz et abonnements associés seront définitivement perdus.',
+      confirmLabel: 'Supprimer',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await api(`/courses/${id}`, { method: 'DELETE' });
+          showToast('success', 'Cours supprimé avec succès.');
+          await fetchDashboardData();
+        } catch (err) {
+          showToast('error', err.message || 'Erreur lors de la suppression');
+        }
+      },
+    });
   };
 
   const handleLogout = () => {
@@ -421,6 +465,16 @@ const TeacherDashboard = () => {
                     <p className="text-xs font-semibold text-slate-500">{user?.name}</p>
                     <p className="text-sm text-slate-800 truncate">{user?.email}</p>
                   </div>
+                  {user?.role === 'admin' && (
+                    <Link
+                      to="/admin-dashboard"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[#009688] hover:bg-teal-50"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Back-Office Admin
+                    </Link>
+                  )}
                   <Link
                     to="/profile"
                     onClick={() => setMenuOpen(false)}
@@ -485,6 +539,17 @@ const TeacherDashboard = () => {
             );
           })}
 
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin-dashboard"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-[#009688] hover:bg-teal-50 transition"
+            >
+              <span className="w-9 h-9 rounded-lg bg-teal-50 text-[#009688] flex items-center justify-center">
+                <Shield className="w-4 h-4" />
+              </span>
+              <span className="flex-1 text-left">Back-Office Admin</span>
+            </Link>
+          )}
           <Link
             to="/profile"
             className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
@@ -669,8 +734,9 @@ const TeacherDashboard = () => {
                     onChange={(e) => setSubject(e.target.value)}
                     className="input-animated select-animated bg-white border-slate-200 text-slate-800 rounded-lg pl-4"
                   >
-                    <option value="Mathématiques">Mathématiques</option>
-                    <option value="Physique-Chimie">Physique-Chimie</option>
+                    {(availableSubjects.includes(subject) ? availableSubjects : [subject, ...availableSubjects].filter(Boolean)).map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -684,11 +750,12 @@ const TeacherDashboard = () => {
                     onChange={(e) => setLevel(e.target.value)}
                     className="input-animated select-animated bg-white border-slate-200 text-slate-800 rounded-lg pl-4"
                   >
-                    <option value="4ème">4ème</option>
-                    <option value="3ème">3ème</option>
-                    <option value="2nde S">2nde S</option>
-                    <option value="1ère S">1ère S</option>
-                    <option value="TS">TS</option>
+                    {(availableLevels.some((l) => l.value === level) || !level
+                      ? availableLevels
+                      : [{ value: level, label: level }, ...availableLevels]
+                    ).map((l) => (
+                      <option key={l.value} value={l.value}>{l.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -799,6 +866,34 @@ const TeacherDashboard = () => {
           </div>
         </div>
       )}
+
+      {toast.text && (
+        <div
+          className={`fixed bottom-5 right-5 z-[75] max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm font-medium shadow-lg ${
+            toast.type === 'error'
+              ? 'bg-red-50 border-red-200 text-red-700'
+              : 'bg-teal-50 border-teal-200 text-[#009688]'
+          }`}
+        >
+          {toast.type === 'error' ? <AlertCircle className="w-4 h-4 shrink-0" /> : <Check className="w-4 h-4 shrink-0" />}
+          <span className="flex-1">{toast.text}</span>
+          <button onClick={() => setToast({ type: '', text: '' })} className="cursor-pointer opacity-70 hover:opacity-100">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={Boolean(confirmState)}
+        title={confirmState?.title}
+        message={confirmState?.message}
+        details={confirmState?.details}
+        confirmLabel={confirmState?.confirmLabel}
+        variant={confirmState?.variant || 'danger'}
+        loading={confirmLoading}
+        onConfirm={executeConfirm}
+        onCancel={() => !confirmLoading && setConfirmState(null)}
+      />
     </div>
   );
 };

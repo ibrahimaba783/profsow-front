@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { SettingsContext } from '../context/SettingsContext';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 const FacebookIcon = (props) => (
@@ -20,12 +21,6 @@ const TikTokIcon = (props) => (
   </svg>
 );
 
-const CONTACT_PHONE_DISPLAY = '+221 77 102 33 99';
-const CONTACT_PHONE_LINK = 'tel:+221771023399';
-const CONTACT_EMAIL = 'Sowaliou2504@gmail.com';
-const YOUTUBE_URL = 'https://youtube.com/@dermannaltv4340?si=Jk86Ads8TMVEx6vv';
-const TIKTOK_URL = 'https://www.tiktok.com/@aliousow9216';
-
 const HIDDEN_ON = [
   '/login',
   '/register',
@@ -33,14 +28,26 @@ const HIDDEN_ON = [
   '/reset-password',
   '/teacher-dashboard',
   '/student-dashboard',
+  '/admin-dashboard',
 ];
 
 const Footer = () => {
   const location = useLocation();
+  const { settings } = useContext(SettingsContext);
 
   if (HIDDEN_ON.some((path) => location.pathname.startsWith(path))) {
     return null;
   }
+
+  const CONTACT_PHONE_DISPLAY = settings.channels?.contactPhone || '+221 77 102 33 99';
+  const CONTACT_PHONE_LINK = `tel:${CONTACT_PHONE_DISPLAY.replace(/\s+/g, '')}`;
+  const CONTACT_EMAIL = settings.channels?.contactEmail || 'Sowaliou2504@gmail.com';
+  const YOUTUBE_URL =
+    settings.channels?.youtubeUrl || 'https://youtube.com/@dermannaltv4340?si=Jk86Ads8TMVEx6vv';
+  const TIKTOK_URL = settings.channels?.tiktokUrl || 'https://www.tiktok.com/@aliousow9216';
+  const FACEBOOK_URL = settings.channels?.facebookUrl || `mailto:${CONTACT_EMAIL}`;
+  const subjectsList =
+    settings.subjects?.length > 0 ? settings.subjects : ['Mathématiques', 'Physique-Chimie'];
 
   const handleAnchorClick = (id) => (e) => {
     if (location.pathname === '/') {
@@ -69,8 +76,8 @@ const Footer = () => {
             </span>
           </Link>
           <p className="text-sm text-slate-600 leading-relaxed max-w-xs">
-            Aliou Sow Academy est une plateforme de formation en ligne dédiée aux Mathématiques et à la
-            Physique-Chimie, conçue par M. Aliou Sow pour accompagner les élèves de la 4ème à la Terminale S.
+            {settings.siteInfo?.platformName || 'Aliou Sow Academy'} est une plateforme de formation en ligne dédiée aux Mathématiques et à la
+            Physique-Chimie, conçue par {settings.siteInfo?.teacherDisplayName || 'M. Aliou Sow'} pour accompagner les élèves de la 4ème à la Terminale S.
           </p>
         </div>
 
@@ -113,26 +120,18 @@ const Footer = () => {
             DOMAINES &amp; NIVEAUX
           </h3>
           <ul className="space-y-2.5 text-sm text-slate-600">
-            <li>
-              <Link
-                to="/#catalogue"
-                state={{ subject: 'Mathématiques', level: 'Tous' }}
-                onClick={handleAnchorClick('catalogue')}
-                className="hover:text-[#009688] transition-colors"
-              >
-                Mathématiques
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/#catalogue"
-                state={{ subject: 'Physique-Chimie', level: 'Tous' }}
-                onClick={handleAnchorClick('catalogue')}
-                className="hover:text-[#009688] transition-colors"
-              >
-                Physique-Chimie
-              </Link>
-            </li>
+            {subjectsList.slice(0, 3).map((sub) => (
+              <li key={sub}>
+                <Link
+                  to="/#catalogue"
+                  state={{ subject: sub, level: 'Tous' }}
+                  onClick={handleAnchorClick('catalogue')}
+                  className="hover:text-[#009688] transition-colors"
+                >
+                  {sub}
+                </Link>
+              </li>
+            ))}
             <li>
               <Link
                 to="/#catalogue"
@@ -199,8 +198,10 @@ const Footer = () => {
               <TikTokIcon className="w-5 h-5" />
             </a>
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href={FACEBOOK_URL}
               aria-label="Facebook / Contact"
+              target={settings.channels?.facebookUrl ? '_blank' : undefined}
+              rel={settings.channels?.facebookUrl ? 'noopener noreferrer' : undefined}
               title="Contact"
               className="hover:text-[#009688] transition-colors"
             >
@@ -213,7 +214,7 @@ const Footer = () => {
       {/* Barre du bas */}
       <div className="border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} Aliou Sow Academy — Tous droits réservés.
+          &copy; {new Date().getFullYear()} {settings.siteInfo?.platformName || 'Aliou Sow Academy'} — Tous droits réservés.
         </div>
       </div>
     </footer>

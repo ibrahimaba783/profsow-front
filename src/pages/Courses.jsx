@@ -1,20 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, BookOpen, RotateCcw } from 'lucide-react';
+import { SettingsContext } from '../context/SettingsContext';
 import api from '../utils/api';
 import CourseCard from '../components/CourseCard';
 import LevelSelect from '../components/LevelSelect';
 
-const SUBJECTS = ['Mathématiques', 'Physique-Chimie'];
-const LEVELS = [
-  { value: '4ème', label: '4ème' },
-  { value: '3ème', label: '3ème' },
-  { value: '2nde S', label: '2nde S' },
-  { value: '1ère S', label: '1ère S' },
-  { value: 'TS', label: 'Terminale S' },
-];
-
 const Courses = () => {
+  const { settings } = useContext(SettingsContext);
   const [searchParams, setSearchParams] = useSearchParams();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +15,19 @@ const Courses = () => {
   const [activeSubject, setActiveSubject] = useState('Tous');
   const [activeLevel, setActiveLevel] = useState('Tous');
   const [priceFilter, setPriceFilter] = useState('Tous');
+
+  const SUBJECTS =
+    settings.subjects?.length > 0 ? settings.subjects : ['Mathématiques', 'Physique-Chimie'];
+  const LEVELS =
+    settings.levels?.length > 0
+      ? settings.levels
+      : [
+          { value: '4ème', label: '4ème' },
+          { value: '3ème', label: '3ème' },
+          { value: '2nde S', label: '2nde S' },
+          { value: '1ère S', label: '1ère S' },
+          { value: 'TS', label: 'Terminale S' },
+        ];
 
   useEffect(() => {
     setSearchQuery(searchParams.get('search') || '');
@@ -81,7 +87,8 @@ const Courses = () => {
             Catalogue des modules
           </h1>
           <p className="text-slate-600 mt-1.5 max-w-2xl">
-            Explorez tous les cours de Mathématiques et Physique-Chimie de M. Aliou Sow, de la 4ème à la Terminale S.
+            Explorez tous les cours de Mathématiques et Physique-Chimie de{' '}
+            {settings.siteInfo?.teacherDisplayName || 'M. Aliou Sow'}, de la 4ème à la Terminale S.
           </p>
 
           {/* Barre de filtres */}

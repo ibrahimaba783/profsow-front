@@ -24,7 +24,7 @@ import {
   Wrench,
   ExternalLink,
 } from 'lucide-react';
-import profPhoto from '../assets/prof-aliou-sow.jpg';
+import profPhoto from '../assets/prof-aliou-sow-cutout.png';
 
 const COURSES_PREVIEW_COUNT = 8;
 const TRENDING_PREVIEW_COUNT = 4;
@@ -423,43 +423,78 @@ const Landing = () => {
             )}
           </div>
 
-          {/* Portrait du professeur + formes organiques orange/vert sarcelle (Capture 1 Bakeli) */}
-          <div className="flex justify-center lg:justify-end lg:pr-6">
-            <div className="relative w-[280px] sm:w-[340px] lg:w-[380px] py-4">
-              {/* Forme organique centrale dégradée orange -> vert sarcelle */}
-              <div className="absolute top-6 left-2 w-3/4 h-3/4 rounded-[58%_42%_52%_48%/45%_55%_45%_55%] bg-gradient-to-r from-[#f59d0e] via-[#84a94c] to-[#009688] opacity-90 -rotate-6"></div>
-              {/* Cercle beige doux à gauche */}
-              <div className="absolute bottom-14 -left-10 w-24 h-24 rounded-full bg-[#efe8dd]"></div>
-              {/* Goutte dégradée en haut à gauche */}
-              <div className="absolute top-8 -left-4 w-11 h-11 rounded-full bg-gradient-to-br from-[#f59d0e] to-[#009688]"></div>
-              {/* Petit point vert/orange en haut */}
-              <div className="absolute top-4 left-1/3 w-4 h-4 rounded-full bg-gradient-to-br from-[#f59d0e] to-[#009688]"></div>
-              {/* Forme goutte en haut à droite */}
-              <div className="absolute top-12 -right-4 w-12 h-7 rounded-[0_100%_0_100%] bg-gradient-to-r from-[#f59d0e] to-[#009688] -rotate-12"></div>
-              {/* Forme goutte en bas à gauche */}
-              <div className="absolute bottom-4 -left-6 w-14 h-9 rounded-[100%_0_100%_0] bg-gradient-to-r from-[#f59d0e] to-[#009688] rotate-12"></div>
-              {/* Cercle dégradé en bas à droite */}
-              <div className="absolute -bottom-2 -right-2 w-14 h-14 rounded-full bg-gradient-to-br from-[#f59d0e] to-[#009688]"></div>
+          {/* Portrait détouré du professeur + formes organiques orange/vert sarcelle (Format exact Bakeli) */}
+          <div className="flex justify-center lg:justify-end lg:pr-4">
+            <div className="relative w-[300px] sm:w-[360px] lg:w-[410px] pt-2 flex items-end justify-center">
+              {/* Formes organiques SVG exactes (style Bakeli : deux lobes dégradés + pastilles flottantes) */}
+              <svg
+                viewBox="0 0 420 390"
+                aria-hidden="true"
+                className="absolute inset-x-0 bottom-0 w-full h-auto pointer-events-none select-none"
+              >
+                <defs>
+                  <linearGradient id="bakeliOrangeGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#f59d0e" />
+                    <stop offset="55%" stopColor="#8fa844" />
+                    <stop offset="100%" stopColor="#009688" />
+                  </linearGradient>
+                  <linearGradient id="bakeliGreenTeal" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#65a152" />
+                    <stop offset="55%" stopColor="#1b997a" />
+                    <stop offset="100%" stopColor="#009688" />
+                  </linearGradient>
+                  <linearGradient id="bakeliDotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#f59d0e" />
+                    <stop offset="100%" stopColor="#009688" />
+                  </linearGradient>
+                </defs>
 
-              {/* Photo de M. Aliou Sow */}
-              <div className="relative z-10 aspect-[4/5] mx-auto w-[84%] overflow-hidden rounded-[44%_56%_48%_52%/36%_38%_62%_64%] border-4 border-white shadow-xl bg-slate-100">
-                <img
-                  src={profPhoto}
-                  alt="M. Aliou Sow, professeur de Mathématiques et Physique-Chimie"
-                  className="w-full h-full object-cover object-[50%_10%]"
+                {/* Lobe beige doux à gauche */}
+                <path
+                  d="M72,218 C25,216 14,265 32,298 C48,326 95,332 130,305 L130,220 Z"
+                  fill="#efe8dd"
                 />
-              </div>
 
-              {/* Badge professeur discret */}
-              <div className="relative z-20 -mt-7 mx-auto w-fit bg-white/95 backdrop-blur border border-slate-100 rounded-xl shadow-lg px-4 py-2.5 flex items-center gap-3">
-                <span className="w-1.5 h-8 rounded-full bg-[#009688]"></span>
-                <div className="leading-tight">
-                  <p className="text-sm font-extrabold text-slate-900">M. Aliou Sow</p>
-                  <p className="text-[11px] text-slate-500">
-                    Mathématiques &amp; Physique-Chimie
-                  </p>
-                </div>
-              </div>
+                {/* Grande forme organique orange -> vert derrière l'épaule gauche */}
+                <path
+                  d="M84,390 C72,300 94,164 148,144 C194,126 238,176 266,262 L272,390 Z"
+                  fill="url(#bakeliOrangeGreen)"
+                />
+
+                {/* Grande forme organique vert -> sarcelle derrière l'épaule droite */}
+                <path
+                  d="M196,390 L214,228 C236,162 292,134 342,162 C388,188 378,314 346,390 Z"
+                  fill="url(#bakeliGreenTeal)"
+                />
+
+                {/* Pastille moyenne dégradée en haut à gauche */}
+                <circle cx="70" cy="112" r="22" fill="url(#bakeliDotGrad)" />
+
+                {/* Petit point dégradé en haut */}
+                <circle cx="152" cy="70" r="8" fill="url(#bakeliDotGrad)" />
+
+                {/* Forme goutte/feuille en haut à droite */}
+                <path
+                  d="M342,90 C342,68 378,60 386,78 C392,94 358,110 342,90 Z"
+                  fill="url(#bakeliDotGrad)"
+                />
+
+                {/* Forme goutte/feuille en bas à gauche */}
+                <path
+                  d="M28,312 C28,292 78,288 84,306 C90,322 44,332 28,312 Z"
+                  fill="url(#bakeliDotGrad)"
+                />
+
+                {/* Pastille dégradée en bas à droite */}
+                <circle cx="364" cy="364" r="25" fill="url(#bakeliDotGrad)" />
+              </svg>
+
+              {/* Photo détourée de M. Aliou Sow (fond transparent, posée net devant les formes) */}
+              <img
+                src={profPhoto}
+                alt="M. Aliou Sow, professeur de Mathématiques et Physique-Chimie"
+                className="relative z-10 w-[78%] max-h-[370px] sm:max-h-[410px] object-contain object-bottom drop-shadow-[0_10px_18px_rgba(15,23,42,0.06)] select-none"
+              />
             </div>
           </div>
         </div>

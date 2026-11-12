@@ -23,7 +23,6 @@ import {
   AlertCircle,
   X,
   ChevronLeft,
-  ChevronRight,
   ChevronDown,
   LogOut,
   User,
@@ -37,13 +36,15 @@ import {
   Globe,
   Layers,
   GraduationCap,
+  Menu,
+  Zap,
 } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 const ROLE_BADGES = {
-  admin: 'bg-teal-50 text-[#009688] border-teal-200',
-  teacher: 'bg-amber-50 text-[#f59d0e] border-amber-200',
-  student: 'bg-sky-50 text-sky-700 border-sky-200',
+  admin: 'bg-rose-500 text-white border-rose-500',
+  teacher: 'bg-amber-400 text-slate-900 border-amber-400',
+  student: 'bg-sky-500 text-white border-sky-500',
 };
 
 const ROLE_LABELS = {
@@ -106,7 +107,7 @@ const FEATURE_LIST = [
 ];
 
 const inputClass =
-  'w-full h-10 px-3.5 rounded-lg border border-slate-300 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#009688] focus:ring-2 focus:ring-[#009688]/15 transition';
+  'w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15 transition';
 
 const AdminDashboard = () => {
   const { user, loading: authLoading, logout } = useContext(AuthContext);
@@ -178,6 +179,8 @@ const AdminDashboard = () => {
     isActive: true,
   });
   const [savingUser, setSavingUser] = useState(false);
+  const [userAvatarFile, setUserAvatarFile] = useState(null);
+  const [userModalError, setUserModalError] = useState('');
 
   // Modal Abonnement manuel
   const [showSubModal, setShowSubModal] = useState(false);
@@ -255,8 +258,10 @@ const AdminDashboard = () => {
 
   if (authLoading || loading || !user || user.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="loader-spinner"></div>
+      <div className="theme-myschools min-h-screen flex items-center justify-center bg-gradient-to-br from-[#6372e8] via-[#6b5cc4] to-[#7c52a5]">
+        <div className="bg-white/95 rounded-2xl p-6 shadow-xl">
+          <div className="loader-spinner"></div>
+        </div>
       </div>
     );
   }
@@ -379,6 +384,8 @@ const AdminDashboard = () => {
       title: '',
       isActive: true,
     });
+    setUserAvatarFile(null);
+    setUserModalError('');
     setShowUserModal(true);
   };
 
@@ -393,27 +400,46 @@ const AdminDashboard = () => {
       title: u.title || '',
       isActive: u.isActive !== false,
     });
+    setUserAvatarFile(null);
+    setUserModalError('');
     setShowUserModal(true);
   };
 
   const handleSaveUser = async (e) => {
     e.preventDefault();
     setSavingUser(true);
+    setUserModalError('');
     try {
       if (editingUser) {
-        const payload = {
-          name: userForm.name,
-          email: userForm.email,
-          role: userForm.role,
-          phone: userForm.phone,
-          title: userForm.title,
-          isActive: userForm.isActive,
-        };
-        if (userForm.password.trim()) payload.password = userForm.password.trim();
-        await api(`/admin/users/${editingUser._id}`, {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        });
+        if (userAvatarFile) {
+          const formData = new FormData();
+          formData.append('name', userForm.name);
+          formData.append('email', userForm.email);
+          formData.append('role', userForm.role);
+          formData.append('phone', userForm.phone);
+          formData.append('title', userForm.title);
+          formData.append('isActive', String(userForm.isActive));
+          if (userForm.password.trim()) formData.append('password', userForm.password.trim());
+          formData.append('avatar', userAvatarFile);
+          await api(`/admin/users/${editingUser._id}`, {
+            method: 'PUT',
+            body: formData,
+          });
+        } else {
+          const payload = {
+            name: userForm.name,
+            email: userForm.email,
+            role: userForm.role,
+            phone: userForm.phone,
+            title: userForm.title,
+            isActive: userForm.isActive,
+          };
+          if (userForm.password.trim()) payload.password = userForm.password.trim();
+          await api(`/admin/users/${editingUser._id}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+          });
+        }
         showToast('success', 'Compte utilisateur mis à jour.');
       } else {
         await api('/admin/users', {
@@ -425,7 +451,9 @@ const AdminDashboard = () => {
       setShowUserModal(false);
       await fetchAllData();
     } catch (err) {
-      showToast('error', err.message || 'Erreur lors de la sauvegarde');
+      const msg = err.message || 'Erreur lors de la sauvegarde';
+      setUserModalError(msg);
+      showToast('error', msg);
     } finally {
       setSavingUser(false);
     }
@@ -695,14 +723,16 @@ const AdminDashboard = () => {
   });
 
   const sidebarItems = [
-    { key: 'overview', label: "Vue d'ensemble", icon: LayoutDashboard },
-    { key: 'courses', label: 'Modules & Cours', icon: BookOpen, count: courses.length },
-    { key: 'subscriptions', label: 'Abonnements', icon: CreditCard, count: subscriptions.length },
-    { key: 'users', label: 'Utilisateurs', icon: Users, count: usersList.length },
-    { key: 'features', label: 'Fonctionnalités', icon: Sliders },
-    { key: 'content', label: 'Contenu & Avis', icon: Megaphone },
-    { key: 'settings', label: 'Paramètres site', icon: Settings },
+    { key: 'overview', label: "Vue d'ensemble", icon: LayoutDashboard, group: 'TABLEAU DE BORD' },
+    { key: 'courses', label: 'Modules & Cours', icon: BookOpen, count: courses.length, group: 'GESTION' },
+    { key: 'subscriptions', label: 'Abonnements', icon: CreditCard, count: subscriptions.length, group: 'GESTION' },
+    { key: 'users', label: 'Utilisateurs', icon: Users, count: usersList.length, group: 'GESTION' },
+    { key: 'features', label: 'Fonctionnalités', icon: Sliders, group: 'CONFIGURATION' },
+    { key: 'content', label: 'Contenu & Avis', icon: Megaphone, group: 'CONFIGURATION' },
+    { key: 'settings', label: 'Paramètres site', icon: Settings, group: 'CONFIGURATION' },
   ];
+
+  const sidebarGroups = ['TABLEAU DE BORD', 'GESTION', 'CONFIGURATION'];
 
   const stats = overview?.stats || {
     users: { student: 0, teacher: 0, admin: 0, total: 0 },
@@ -714,181 +744,270 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900">
-      {/* Barre du haut */}
-      <header className="fixed top-0 inset-x-0 h-[72px] bg-white border-b border-slate-200 z-40 flex items-center justify-between gap-4 px-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto" />
-            <span className="hidden sm:block leading-tight">
-              <span className="block text-sm font-extrabold text-slate-900 tracking-wide">ALIOU SOW</span>
-              <span className="block text-[9px] font-bold tracking-[0.24em] text-[#009688]">ACADEMY</span>
-            </span>
-          </Link>
-          <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider bg-teal-50 text-[#009688] border border-teal-200 px-3 py-1 rounded-full">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            Back-Office Admin
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <Link
-            to="/"
-            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border border-slate-200 hover:border-[#009688] text-xs font-semibold text-slate-700 hover:text-[#009688] transition"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            Voir le site
-          </Link>
-
-          <button
-            onClick={openCreateCourse}
-            className="h-9 px-4 rounded-full bg-[#009688] hover:bg-[#00796b] text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 cursor-pointer transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Nouveau Module</span>
-          </button>
-
-          <div className="relative">
-            <button onClick={() => setMenuOpen((v) => !v)} className="flex items-center gap-2 cursor-pointer">
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  referrerPolicy="no-referrer"
-                  className="w-9 h-9 rounded-full object-cover border border-slate-200"
-                />
-              ) : (
-                <span className="w-9 h-9 rounded-full bg-[#009688] text-white flex items-center justify-center text-sm font-bold">
-                  {user.name?.charAt(0)?.toUpperCase() || 'A'}
-                </span>
-              )}
-              <span className="hidden md:block text-sm font-semibold text-slate-800 max-w-[140px] truncate">
-                {user.name}
-              </span>
-              <ChevronDown className="hidden md:block w-4 h-4 text-slate-400" />
-            </button>
-
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
-                <div className="absolute right-0 top-12 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-3 z-50">
-                  <div className="px-4 pb-3 border-b border-slate-100">
-                    <p className="text-xs font-bold text-[#009688] uppercase">Administrateur</p>
-                    <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                  </div>
-                  <Link
-                    to="/profile"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-slate-50"
-                  >
-                    <User className="w-4 h-4" />
-                    Mon profil &amp; paramètres
-                  </Link>
-                  <Link
-                    to="/teacher-dashboard"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-slate-50"
-                  >
-                    <GraduationCap className="w-4 h-4" />
-                    Vue Enseignant
-                  </Link>
-                  <button
-                    onClick={() => {
-                      logout();
-                      navigate('/');
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 cursor-pointer"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Se déconnecter
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Sidebar */}
+    <div className="theme-myschools min-h-screen bg-gradient-to-br from-[#6372e8] via-[#6b5cc4] to-[#7c52a5] text-slate-800 antialiased">
+      {/* Overlay mobile */}
       {sidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 top-[72px] bg-black/30 z-20"
+          className="md:hidden fixed inset-0 bg-slate-950/50 backdrop-blur-[1px] z-30"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
+
+      {/* Sidebar verticale violet-indigo style My Schools */}
       <aside
-        className={`fixed top-[72px] bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-30 px-4 py-6 overflow-y-auto transition-transform duration-300 ${
+        className={`fixed top-0 bottom-0 left-0 w-64 bg-gradient-to-b from-[#4c3882] via-[#5b4397] to-[#3f2d70] text-white z-40 flex flex-col shadow-2xl transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <p className="text-[11px] font-bold tracking-wider text-slate-400 px-2 mb-3">
-          ADMINISTRATION
-        </p>
-        <nav className="space-y-1.5">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const active = view === item.key;
-            return (
-              <button
-                key={item.key}
-                onClick={() => {
-                  setView(item.key);
-                  if (window.innerWidth < 768) setSidebarOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer ${
-                  active ? 'bg-teal-50 text-[#009688]' : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <span
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    active ? 'bg-[#009688] text-white' : 'bg-slate-100 text-slate-500'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
+        {/* Logo + Badge Rôle */}
+        <div className="px-5 pt-5 pb-4 border-b border-white/10">
+          <div className="flex items-center justify-between gap-2">
+            <Link to="/" className="flex items-center gap-2.5 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center shrink-0">
+                <img src={logo} alt="Aliou Sow Academy" className="w-full h-full object-contain" />
+              </div>
+              <div className="min-w-0 leading-tight">
+                <span className="block text-[15px] font-bold tracking-tight text-white truncate">
+                  Aliou Sow
                 </span>
-                <span className="flex-1 text-left truncate">{item.label}</span>
-                {typeof item.count === 'number' && (
-                  <span className="text-xs text-slate-400 font-bold">{item.count}</span>
-                )}
-              </button>
-            );
-          })}
+                <span className="block text-[10px] font-semibold tracking-[0.18em] text-indigo-200 uppercase">
+                  Academy
+                </span>
+              </div>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+              aria-label="Fermer le menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="mt-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ef4444] text-white text-xs font-semibold shadow-sm">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Administrateur
+            </span>
+          </div>
+        </div>
 
-          <div className="pt-3 mt-3 border-t border-slate-100">
+        {/* Navigation groupée */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+          {sidebarGroups.map((group) => (
+            <div key={group} className="space-y-1">
+              <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/55 px-3 pt-1 pb-1">
+                {group}
+              </p>
+              {sidebarItems
+                .filter((i) => i.group === group)
+                .map((item) => {
+                  const Icon = item.icon;
+                  const active = view === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => {
+                        setView(item.key);
+                        if (window.innerWidth < 768) setSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition cursor-pointer ${
+                        active
+                          ? 'bg-white/20 text-white font-semibold shadow-sm border-l-4 border-white'
+                          : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="flex-1 text-left truncate">{item.label}</span>
+                      {typeof item.count === 'number' && (
+                        <span
+                          className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full ${
+                            active ? 'bg-white text-[#4c3882]' : 'bg-white/15 text-white'
+                          }`}
+                        >
+                          {item.count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          ))}
+
+          <div className="space-y-1 pt-2 border-t border-white/10">
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/55 px-3 pt-1 pb-1">
+              RACCOURCIS
+            </p>
+            <Link
+              to="/teacher-dashboard"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium text-white/85 hover:bg-white/10 hover:text-white transition"
+            >
+              <GraduationCap className="w-4 h-4 shrink-0" />
+              <span className="flex-1 text-left truncate">Vue Enseignant</span>
+            </Link>
             <Link
               to="/profile"
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium text-white/85 hover:bg-white/10 hover:text-white transition"
             >
-              <span className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center">
-                <User className="w-4 h-4" />
-              </span>
-              <span className="flex-1 text-left">Mon profil complet</span>
+              <User className="w-4 h-4 shrink-0" />
+              <span className="flex-1 text-left truncate">Mon profil complet</span>
             </Link>
           </div>
         </nav>
+
+        {/* Profil épinglé en bas de la sidebar */}
+        <div className="border-t border-white/15 bg-black/15 p-3.5">
+          <div className="flex items-center gap-2.5">
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                referrerPolicy="no-referrer"
+                className="w-9 h-9 rounded-full object-cover border-2 border-white/30 shrink-0"
+              />
+            ) : (
+              <span className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-semibold shrink-0">
+                {user.name?.charAt(0)?.toUpperCase() || 'A'}
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-semibold text-white truncate">{user.name}</p>
+              <p className="text-[11px] text-white/70 truncate">{user.email}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                navigate('/');
+              }}
+              title="Se déconnecter"
+              className="p-2 rounded-lg bg-white/10 hover:bg-rose-500 text-white transition cursor-pointer shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </aside>
 
-      <button
-        onClick={() => setSidebarOpen((v) => !v)}
-        aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
-        className={`fixed top-[5.5rem] z-30 w-7 h-7 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center text-slate-600 hover:text-[#009688] cursor-pointer transition-all duration-300 ${
-          sidebarOpen ? 'left-[15.125rem]' : 'left-2'
-        }`}
-      >
-        {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-      </button>
-
       {/* Contenu principal */}
-      <main className={`pt-[72px] min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <main className={`min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+          {/* Barre supérieure flottante blanche */}
+          <header className="bg-white/95 backdrop-blur rounded-2xl shadow-lg px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 border border-white/70">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen((v) => !v)}
+                aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
+                className="w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center cursor-pointer transition shrink-0"
+              >
+                {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[15px] sm:text-base font-bold tracking-tight text-slate-800 truncate">
+                    Aliou Sow Academy
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#eef2fb] text-[#4c3882]">
+                    Back-Office
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 truncate">Administration centrale de la plateforme</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <Link
+                to="/"
+                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-slate-200 hover:border-[#2563eb] text-[13px] font-semibold text-slate-700 hover:text-[#2563eb] transition"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                Voir le site
+              </Link>
+
+              <button
+                onClick={openCreateCourse}
+                className="h-9 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Nouveau Module</span>
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-xl bg-[#eef2fb]/70 hover:bg-[#eef2fb] cursor-pointer transition"
+                >
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      referrerPolicy="no-referrer"
+                      className="w-8 h-8 rounded-full object-cover border border-indigo-200"
+                    />
+                  ) : (
+                    <span className="w-8 h-8 rounded-full bg-[#5c6be0] text-white flex items-center justify-center text-xs font-semibold">
+                      {user.name?.charAt(0)?.toUpperCase() || 'A'}
+                    </span>
+                  )}
+                  <span className="hidden md:block text-[13px] font-semibold text-slate-800 max-w-[130px] truncate">
+                    {user.name}
+                  </span>
+                  <span className="hidden lg:inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#ef4444] text-white">
+                    Admin
+                  </span>
+                  <ChevronDown className="hidden md:block w-3.5 h-3.5 text-slate-400" />
+                </button>
+
+                {menuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
+                    <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50">
+                      <div className="px-4 pb-3 border-b border-slate-100">
+                        <p className="text-[11px] font-bold text-[#ef4444] uppercase">Administrateur</p>
+                        <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                      </div>
+                      <Link
+                        to="/profile"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-[#eef2fb]/60"
+                      >
+                        <User className="w-4 h-4 text-[#5c6be0]" />
+                        Mon profil &amp; paramètres
+                      </Link>
+                      <Link
+                        to="/teacher-dashboard"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-[#eef2fb]/60"
+                      >
+                        <GraduationCap className="w-4 h-4 text-[#5c6be0]" />
+                        Vue Enseignant
+                      </Link>
+                      <button
+                        onClick={() => {
+                          logout();
+                          navigate('/');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Se déconnecter
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </header>
+
           {/* Notification Toast */}
           {toast.text && (
             <div
-              className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm font-medium shadow-sm ${
+              className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-sm font-semibold shadow-lg ${
                 toast.type === 'error'
-                  ? 'bg-red-50 border-red-200 text-red-700'
-                  : 'bg-teal-50 border-teal-200 text-[#009688]'
+                  ? 'bg-rose-50 border-rose-200 text-rose-700'
+                  : 'bg-emerald-50 border-emerald-200 text-emerald-800'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -903,25 +1022,31 @@ const AdminDashboard = () => {
 
           {/* ===================== 1. VUE D'ENSEMBLE ===================== */}
           {view === 'overview' && (
-            <div className="space-y-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <h1 className="text-2xl font-extrabold text-slate-900">Pilotage de la Plateforme</h1>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Vue globale en temps réel des revenus, utilisateurs, modules et fonctionnalités.
-                  </p>
+            <div className="space-y-5">
+              {/* Bannière titre de section */}
+              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white flex items-center justify-center shadow-sm shrink-0">
+                    <LayoutDashboard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">Pilotage de la Plateforme</h1>
+                    <p className="text-[13px] text-slate-500 mt-0.5">
+                      Vue globale en temps réel des revenus, utilisateurs, modules et fonctionnalités.
+                    </p>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
                   <button
                     onClick={openGrantSubModal}
-                    className="px-4 py-2.5 rounded-lg bg-[#f59d0e] hover:bg-[#e08b00] text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer transition"
+                    className="px-4 py-2.5 rounded-xl bg-[#f59d0e] hover:bg-[#e08b00] text-white text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
                   >
                     <CreditCard className="w-4 h-4" />
                     Accorder un abonnement
                   </button>
                   <button
                     onClick={() => setView('features')}
-                    className="px-4 py-2.5 rounded-lg bg-white border border-slate-200 hover:border-[#009688] text-slate-700 hover:text-[#009688] text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer transition"
+                    className="px-4 py-2.5 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition"
                   >
                     <Sliders className="w-4 h-4" />
                     Fonctionnalités sans code
@@ -929,68 +1054,111 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* 4 KPI Cards */}
+              {/* 4 KPI Cards Gradient */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Revenus totaux</span>
-                    <span className="w-9 h-9 rounded-xl bg-amber-50 text-[#f59d0e] flex items-center justify-center">
-                      <CreditCard className="w-5 h-5" />
-                    </span>
+                <div className="bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white rounded-2xl p-6 shadow-lg text-center">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-3">
+                    <CreditCard className="w-6 h-6" />
                   </div>
-                  <div className="text-2xl font-extrabold text-slate-900">
-                    {Number(stats.totalRevenue || 0).toLocaleString('fr-FR')} <span className="text-sm font-bold">FCFA</span>
+                  <div className="text-[26px] sm:text-[28px] font-bold tracking-tight tabular-nums leading-tight">
+                    {Number(stats.totalRevenue || 0).toLocaleString('fr-FR')} <span className="text-sm font-semibold">F</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {stats.subscriptions.active} abonnement{stats.subscriptions.active > 1 ? 's' : ''} actif
-                    {stats.subscriptions.active > 1 ? 's' : ''} / {stats.subscriptions.total}
+                  <div className="text-[13px] font-semibold text-white/95 mt-1">
+                    Revenus totaux
+                  </div>
+                  <p className="text-xs font-medium text-white/80 mt-1">
+                    {stats.subscriptions.active} actif{stats.subscriptions.active > 1 ? 's' : ''} / {stats.subscriptions.total}
                   </p>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Utilisateurs</span>
-                    <span className="w-9 h-9 rounded-xl bg-teal-50 text-[#009688] flex items-center justify-center">
-                      <Users className="w-5 h-5" />
-                    </span>
+                <div className="bg-gradient-to-br from-[#ec4899] to-[#f43f5e] text-white rounded-2xl p-6 shadow-lg text-center">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-3">
+                    <Users className="w-6 h-6" />
                   </div>
-                  <div className="text-2xl font-extrabold text-slate-900">{stats.users.total}</div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <div className="text-[26px] sm:text-[28px] font-bold tracking-tight tabular-nums leading-tight">{stats.users.total}</div>
+                  <div className="text-[13px] font-semibold text-white/95 mt-1">
+                    Utilisateurs
+                  </div>
+                  <p className="text-xs font-medium text-white/80 mt-1">
                     {stats.users.student} élèves • {stats.users.teacher} profs • {stats.users.admin} admin
                   </p>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Modules publiés</span>
-                    <span className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
-                      <BookOpen className="w-5 h-5" />
-                    </span>
+                <div className="bg-gradient-to-br from-[#06b6d4] to-[#0ea5e9] text-white rounded-2xl p-6 shadow-lg text-center">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-3">
+                    <BookOpen className="w-6 h-6" />
                   </div>
-                  <div className="text-2xl font-extrabold text-slate-900">{stats.courses.total}</div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <div className="text-[26px] sm:text-[28px] font-bold tracking-tight tabular-nums leading-tight">{stats.courses.total}</div>
+                  <div className="text-[13px] font-semibold text-white/95 mt-1">
+                    Modules publiés
+                  </div>
+                  <p className="text-xs font-medium text-white/80 mt-1">
                     {stats.courses.paid} payants • {stats.courses.free} gratuits
                   </p>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Quiz &amp; Activité</span>
-                    <span className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                      <Award className="w-5 h-5" />
-                    </span>
+                <div className="bg-gradient-to-br from-[#10b981] to-[#2dd4bf] text-white rounded-2xl p-6 shadow-lg text-center">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-3">
+                    <Award className="w-6 h-6" />
                   </div>
-                  <div className="text-2xl font-extrabold text-slate-900">{stats.quizResultsCount}</div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <div className="text-[26px] sm:text-[28px] font-bold tracking-tight tabular-nums leading-tight">{stats.quizResultsCount}</div>
+                  <div className="text-[13px] font-semibold text-white/95 mt-1">
+                    Quiz &amp; Activité
+                  </div>
+                  <p className="text-xs font-medium text-white/80 mt-1">
                     {stats.discussionsCount || 0} messages • {stats.reviewsCount || 0} avis
                   </p>
                 </div>
               </div>
 
+              {/* Actions rapides */}
+              <div className="bg-white rounded-2xl p-5 shadow-md space-y-3">
+                <div className="flex items-center gap-2 text-[15px] font-bold text-slate-800">
+                  <Zap className="w-4 h-4 text-[#f59d0e]" />
+                  <span>Actions rapides</span>
+                </div>
+                <div className="flex flex-wrap gap-2.5">
+                  <button
+                    type="button"
+                    onClick={openCreateCourse}
+                    className="px-4 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Créer un module
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openGrantSubModal}
+                    className="px-4 py-2.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-sm"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Activer un abonnement
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openCreateUser}
+                    className="px-4 py-2.5 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-sm"
+                  >
+                    <Users className="w-4 h-4" />
+                    Ajouter un utilisateur
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setView('settings')}
+                    className="px-4 py-2.5 rounded-xl bg-[#f59d0e] hover:bg-[#d97706] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-sm"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Paramètres du site
+                  </button>
+                </div>
+              </div>
+
               {/* Répartition paiements + État système */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                  <h3 className="text-base font-bold text-slate-900 mb-4">Répartition des encaissements</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="bg-white rounded-2xl p-6 shadow-md">
+                  <h3 className="text-base font-bold text-slate-800 mb-4 pb-2.5 border-b border-slate-100">
+                    Répartition des encaissements
+                  </h3>
                   <div className="space-y-3">
                     {Object.entries(stats.revenueByMethod || {}).length === 0 ? (
                       <p className="text-sm text-slate-400">Aucun paiement enregistré pour le moment.</p>
@@ -998,15 +1166,15 @@ const AdminDashboard = () => {
                       Object.entries(stats.revenueByMethod).map(([method, amount]) => {
                         const pct = stats.totalRevenue > 0 ? Math.round((amount / stats.totalRevenue) * 100) : 0;
                         return (
-                          <div key={method} className="space-y-1">
+                          <div key={method} className="space-y-1.5">
                             <div className="flex justify-between text-xs font-semibold">
                               <span className="text-slate-700">{method}</span>
-                              <span className="text-slate-900">
+                              <span className="text-slate-900 font-bold">
                                 {Number(amount).toLocaleString('fr-FR')} FCFA ({pct}%)
                               </span>
                             </div>
-                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                              <div className="h-full bg-[#009688] rounded-full" style={{ width: `${pct}%` }} />
+                            <div className="h-2.5 bg-[#eef2fb] rounded-full overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-[#5c6be0] to-[#2563eb] rounded-full" style={{ width: `${pct}%` }} />
                             </div>
                           </div>
                         );
@@ -1015,33 +1183,33 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-slate-900">État rapide de la plateforme</h3>
+                <div className="bg-white rounded-2xl p-6 shadow-md space-y-4">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                    <h3 className="text-base font-bold text-slate-800">État rapide de la plateforme</h3>
                     <button
                       onClick={() => setView('settings')}
-                      className="text-xs font-bold text-[#009688] hover:underline cursor-pointer"
+                      className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
                     >
                       Configurer
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                      <p className="text-slate-400 font-semibold">Matières configurées</p>
+                    <div className="p-3.5 rounded-xl bg-[#eef2fb]/60 border border-indigo-100">
+                      <p className="text-slate-500 font-semibold">Matières configurées</p>
                       <p className="text-sm font-bold text-slate-900 mt-1 truncate">{availableSubjects.join(', ')}</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                      <p className="text-slate-400 font-semibold">Niveaux configurés</p>
+                    <div className="p-3.5 rounded-xl bg-[#eef2fb]/60 border border-indigo-100">
+                      <p className="text-slate-500 font-semibold">Niveaux configurés</p>
                       <p className="text-sm font-bold text-slate-900 mt-1">{availableLevels.length} niveaux actifs</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                      <p className="text-slate-400 font-semibold">Bannière d&apos;annonce</p>
+                    <div className="p-3.5 rounded-xl bg-[#eef2fb]/60 border border-indigo-100">
+                      <p className="text-slate-500 font-semibold">Bannière d&apos;annonce</p>
                       <p className="text-sm font-bold text-slate-900 mt-1">
                         {draftSettings.announcement?.active ? 'Visible sur le site' : 'Désactivée'}
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                      <p className="text-slate-400 font-semibold">Maintenance</p>
+                    <div className="p-3.5 rounded-xl bg-[#eef2fb]/60 border border-indigo-100">
+                      <p className="text-slate-500 font-semibold">Maintenance</p>
                       <p className="text-sm font-bold text-slate-900 mt-1">
                         {draftSettings.siteInfo?.maintenanceMode ? 'Mode maintenance ON' : 'En ligne'}
                       </p>
@@ -1051,26 +1219,26 @@ const AdminDashboard = () => {
               </div>
 
               {/* Activité récente */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-bold text-slate-900">Derniers abonnements</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="bg-white rounded-2xl p-6 shadow-md">
+                  <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-slate-100">
+                    <h3 className="text-base font-bold text-slate-800">Derniers abonnements</h3>
                     <button
                       onClick={() => setView('subscriptions')}
-                      className="text-xs font-bold text-[#009688] hover:underline cursor-pointer"
+                      className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
                     >
                       Tout voir
                     </button>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {(overview?.recentSubscriptions || []).slice(0, 5).map((sub) => (
-                      <div key={sub._id} className="flex items-center justify-between text-sm bg-slate-50 p-3 rounded-xl">
+                      <div key={sub._id} className="flex items-center justify-between text-sm bg-[#eef2fb]/50 hover:bg-[#eef2fb] p-3 rounded-xl transition">
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-800 truncate">{sub.student?.name || 'Élève'}</p>
+                          <p className="font-bold text-slate-900 truncate">{sub.student?.name || 'Élève'}</p>
                           <p className="text-xs text-slate-500 truncate">{sub.course?.title || 'Module'}</p>
                         </div>
                         <div className="text-right shrink-0 ml-3">
-                          <p className="font-bold text-[#009688] text-xs">
+                          <p className="font-semibold text-[#059669] text-xs tabular-nums">
                             {Number(sub.amount || 0).toLocaleString('fr-FR')} F
                           </p>
                           <p className="text-[11px] text-slate-400">{sub.paymentMethod}</p>
@@ -1080,21 +1248,21 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-bold text-slate-900">Derniers comptes créés</h3>
+                <div className="bg-white rounded-2xl p-6 shadow-md">
+                  <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-slate-100">
+                    <h3 className="text-base font-bold text-slate-800">Derniers comptes créés</h3>
                     <button
                       onClick={() => setView('users')}
-                      className="text-xs font-bold text-[#009688] hover:underline cursor-pointer"
+                      className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
                     >
                       Tout voir
                     </button>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {(overview?.recentUsers || []).slice(0, 5).map((u) => (
-                      <div key={u._id} className="flex items-center justify-between text-sm bg-slate-50 p-3 rounded-xl">
+                      <div key={u._id} className="flex items-center justify-between text-sm bg-[#eef2fb]/50 hover:bg-[#eef2fb] p-3 rounded-xl transition">
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-800 truncate">{u.name}</p>
+                          <p className="font-bold text-slate-900 truncate">{u.name}</p>
                           <p className="text-xs text-slate-500 truncate">{u.email}</p>
                         </div>
                         <span
@@ -1114,54 +1282,61 @@ const AdminDashboard = () => {
 
           {/* ===================== 2. MODULES & COURS ===================== */}
           {view === 'courses' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-extrabold text-slate-900">Gestion des Modules &amp; Cours</h1>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Créez, modifiez, assignez un professeur ou ouvrez le gestionnaire de chapitres et quiz.
-                  </p>
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#06b6d4] to-[#0ea5e9] text-white flex items-center justify-center shadow-sm shrink-0">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">Gestion des Modules &amp; Cours</h1>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Créez, modifiez, assignez un professeur ou ouvrez le gestionnaire de chapitres et quiz.
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={openCreateCourse}
-                  className="px-5 py-2.5 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-sm font-bold flex items-center gap-2 cursor-pointer transition shrink-0"
+                  className="px-5 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold flex items-center gap-2 cursor-pointer transition shrink-0 shadow-sm"
                 >
                   <Plus className="w-4 h-4" />
                   Nouveau Module
                 </button>
               </div>
 
-              <div className="relative max-w-md">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={courseSearch}
-                  onChange={(e) => setCourseSearch(e.target.value)}
-                  placeholder="Rechercher un module, matière, professeur..."
-                  className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#009688]"
-                />
+              <div className="bg-white rounded-2xl p-4 shadow-md flex items-center">
+                <div className="relative w-full max-w-md">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={courseSearch}
+                    onChange={(e) => setCourseSearch(e.target.value)}
+                    placeholder="Rechercher un module, matière, professeur..."
+                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-[#eef2fb]/50 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                 {filteredCourses.map((c) => (
-                  <div key={c._id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
+                  <div key={c._id} className="bg-white rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between">
                     <div>
                       <div className="aspect-[16/9] bg-slate-100 relative overflow-hidden">
                         <img src={c.image} alt={c.title} className="w-full h-full object-cover" />
-                        <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-slate-800 px-2.5 py-1 rounded-full shadow-sm">
+                        <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-slate-800 px-3 py-1 rounded-full shadow">
                           {c.studentsCount || 0} inscrit{(c.studentsCount || 0) > 1 ? 's' : ''}
                         </span>
                       </div>
                       <div className="p-5 space-y-2">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[11px] font-semibold bg-sky-50 text-sky-700 px-2.5 py-0.5 rounded-full">
+                          <span className="text-[11px] font-bold bg-sky-500 text-white px-2.5 py-0.5 rounded-full">
                             {c.subject}
                           </span>
-                          <span className="text-[11px] font-semibold bg-amber-50 text-[#f59d0e] px-2.5 py-0.5 rounded-full">
+                          <span className="text-[11px] font-bold bg-amber-400 text-slate-900 px-2.5 py-0.5 rounded-full">
                             {formatLevel(c.level)}
                           </span>
                         </div>
-                        <h3 className="text-base font-bold text-slate-900 line-clamp-2">{c.title}</h3>
+                        <h3 className="text-base font-bold text-slate-800 line-clamp-2">{c.title}</h3>
                         <p className="text-xs text-slate-500 line-clamp-2">{c.description}</p>
                         <p className="text-xs text-slate-600 pt-1">
                           Prof : <strong>{c.teacher?.name || 'Non assigné'}</strong>
@@ -1169,28 +1344,28 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
-                    <div className="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <span className="text-xs font-extrabold text-[#009688]">
+                    <div className="px-5 py-3.5 bg-[#eef2fb]/50 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-[#2563eb] tabular-nums">
                         {c.isFree || c.price === 0 ? 'Gratuit' : `${Number(c.price).toLocaleString('fr-FR')} FCFA`}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => openEditCourse(c)}
-                          className="p-2 rounded-lg bg-amber-50 text-[#f59d0e] hover:bg-[#f59d0e] hover:text-white transition cursor-pointer"
+                          className="p-2 rounded-lg bg-amber-400 hover:bg-amber-500 text-slate-900 transition cursor-pointer shadow-sm"
                           title="Modifier"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteCourse(c._id)}
-                          className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition cursor-pointer"
+                          className="p-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white transition cursor-pointer shadow-sm"
                           title="Supprimer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                         <Link
                           to={`/courses/${c._id}`}
-                          className="p-2 rounded-lg bg-teal-50 text-[#009688] hover:bg-[#009688] hover:text-white transition"
+                          className="p-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition shadow-sm"
                           title="Gérer chapitres, leçons & quiz"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -1205,24 +1380,29 @@ const AdminDashboard = () => {
 
           {/* ===================== 3. ABONNEMENTS ===================== */}
           {view === 'subscriptions' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-extrabold text-slate-900">Abonnements &amp; Paiements</h1>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Suivez les paiements Wave / Orange Money, prolongez ou accordez des accès manuels.
-                  </p>
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#ec4899] to-[#f43f5e] text-white flex items-center justify-center shadow-sm shrink-0">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">Abonnements &amp; Paiements</h1>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Suivez les paiements Wave / Orange Money, prolongez ou accordez des accès manuels.
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={openGrantSubModal}
-                  className="px-5 py-2.5 rounded-lg bg-[#f59d0e] hover:bg-[#e08b00] text-white text-sm font-bold flex items-center gap-2 cursor-pointer transition shrink-0"
+                  className="px-5 py-2.5 rounded-xl bg-[#f59d0e] hover:bg-[#d97706] text-white text-sm font-bold flex items-center gap-2 cursor-pointer transition shrink-0 shadow-sm"
                 >
                   <Plus className="w-4 h-4" />
                   Accorder un abonnement
                 </button>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="bg-white rounded-2xl p-4 shadow-md flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 max-w-md">
                   <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
@@ -1230,7 +1410,7 @@ const AdminDashboard = () => {
                     value={subSearch}
                     onChange={(e) => setSubSearch(e.target.value)}
                     placeholder="Rechercher un élève, module, n° transaction..."
-                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#009688]"
+                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-[#eef2fb]/50 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -1242,10 +1422,10 @@ const AdminDashboard = () => {
                     <button
                       key={f.key}
                       onClick={() => setSubStatusFilter(f.key)}
-                      className={`px-4 h-10 rounded-xl text-xs font-bold border cursor-pointer transition ${
+                      className={`px-4 h-10 rounded-xl text-xs font-bold cursor-pointer transition ${
                         subStatusFilter === f.key
-                          ? 'bg-[#009688] text-white border-[#009688]'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                          ? 'bg-[#2563eb] text-white shadow-sm'
+                          : 'bg-[#eef2fb] text-slate-700 hover:bg-indigo-100'
                       }`}
                     >
                       {f.label}
@@ -1254,10 +1434,10 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-white rounded-2xl overflow-hidden shadow-lg">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                    <thead className="bg-[#eef2fb] border-b border-indigo-100 text-[11px] font-bold uppercase tracking-wider text-slate-600">
                       <tr>
                         <th className="px-5 py-3.5">Élève</th>
                         <th className="px-5 py-3.5">Module</th>
@@ -1271,7 +1451,7 @@ const AdminDashboard = () => {
                       {filteredSubs.map((s) => {
                         const active = s.status === 'active' && new Date(s.expiresAt) > now;
                         return (
-                          <tr key={s._id} className="hover:bg-slate-50/60">
+                          <tr key={s._id} className="hover:bg-[#f5f7ff] transition">
                             <td className="px-5 py-3.5">
                               <p className="font-bold text-slate-900">{s.student?.name || 'Supprimé'}</p>
                               <p className="text-xs text-slate-400">{s.student?.email}</p>
@@ -1291,8 +1471,8 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-5 py-3.5">
                               <span
-                                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
-                                  active ? 'bg-teal-50 text-[#009688]' : 'bg-red-50 text-red-600'
+                                className={`text-[11px] font-bold px-3 py-1 rounded-full ${
+                                  active ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
                                 }`}
                               >
                                 {active ? 'Actif' : 'Expiré'}
@@ -1304,7 +1484,7 @@ const AdminDashboard = () => {
                                   onClick={() =>
                                     handleUpdateSub(s._id, { extendMonths: 1 }, 'Abonnement prolongé de 1 mois.')
                                   }
-                                  className="px-2.5 py-1 rounded-lg bg-teal-50 text-[#009688] hover:bg-[#009688] hover:text-white text-xs font-bold cursor-pointer transition inline-flex items-center gap-1"
+                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold cursor-pointer transition inline-flex items-center gap-1 shadow-sm"
                                   title="Prolonger de 1 mois"
                                 >
                                   <CalendarPlus className="w-3.5 h-3.5" />
@@ -1318,13 +1498,13 @@ const AdminDashboard = () => {
                                       active ? 'Abonnement suspendu.' : 'Abonnement réactivé.'
                                     )
                                   }
-                                  className="px-2.5 py-1 rounded-lg bg-amber-50 text-[#f59d0e] hover:bg-[#f59d0e] hover:text-white text-xs font-bold cursor-pointer transition"
+                                  className="px-2.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-500 text-slate-900 text-xs font-bold cursor-pointer transition shadow-sm"
                                 >
                                   {active ? 'Expirer' : 'Activer'}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteSub(s._id)}
-                                  className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white cursor-pointer transition"
+                                  className="p-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white cursor-pointer transition shadow-sm"
                                   title="Supprimer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -1343,24 +1523,29 @@ const AdminDashboard = () => {
 
           {/* ===================== 4. UTILISATEURS ===================== */}
           {view === 'users' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-extrabold text-slate-900">Utilisateurs &amp; Rôles</h1>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Gérez les élèves, le compte professeur et les accès administrateurs.
-                  </p>
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white flex items-center justify-center shadow-sm shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">Utilisateurs &amp; Rôles</h1>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Gérez les élèves, le compte professeur et les accès administrateurs.
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={openCreateUser}
-                  className="px-5 py-2.5 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-sm font-bold flex items-center gap-2 cursor-pointer transition shrink-0"
+                  className="px-5 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold flex items-center gap-2 cursor-pointer transition shrink-0 shadow-sm"
                 >
                   <Plus className="w-4 h-4" />
                   Ajouter un utilisateur
                 </button>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="bg-white rounded-2xl p-4 shadow-md flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 max-w-md">
                   <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
@@ -1368,7 +1553,7 @@ const AdminDashboard = () => {
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
                     placeholder="Rechercher par nom, email ou téléphone..."
-                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#009688]"
+                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-[#eef2fb]/50 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
                   />
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -1381,10 +1566,10 @@ const AdminDashboard = () => {
                     <button
                       key={f.key}
                       onClick={() => setUserRoleFilter(f.key)}
-                      className={`px-4 h-10 rounded-xl text-xs font-bold border cursor-pointer transition ${
+                      className={`px-4 h-10 rounded-xl text-xs font-bold cursor-pointer transition ${
                         userRoleFilter === f.key
-                          ? 'bg-[#009688] text-white border-[#009688]'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                          ? 'bg-[#2563eb] text-white shadow-sm'
+                          : 'bg-[#eef2fb] text-slate-700 hover:bg-indigo-100'
                       }`}
                     >
                       {f.label}
@@ -1393,10 +1578,10 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-white rounded-2xl overflow-hidden shadow-lg">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                    <thead className="bg-[#eef2fb] border-b border-indigo-100 text-[11px] font-bold uppercase tracking-wider text-slate-600">
                       <tr>
                         <th className="px-5 py-3.5">Utilisateur</th>
                         <th className="px-5 py-3.5">Rôle</th>
@@ -1410,18 +1595,18 @@ const AdminDashboard = () => {
                         const active = u.isActive !== false;
                         const isSelf = u._id === user._id;
                         return (
-                          <tr key={u._id} className="hover:bg-slate-50/60">
+                          <tr key={u._id} className="hover:bg-[#f5f7ff] transition">
                             <td className="px-5 py-3.5">
                               <div className="flex items-center gap-3">
                                 <img
                                   src={u.avatar}
                                   alt={u.name}
                                   referrerPolicy="no-referrer"
-                                  className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
+                                  className="w-9 h-9 rounded-full object-cover border-2 border-indigo-100 shrink-0"
                                 />
                                 <div>
                                   <p className="font-bold text-slate-900">
-                                    {u.name} {isSelf && <span className="text-[10px] text-[#009688]">(Vous)</span>}
+                                    {u.name} {isSelf && <span className="text-[10px] text-[#2563eb]">(Vous)</span>}
                                   </p>
                                   <p className="text-xs text-slate-500">{u.email}</p>
                                 </div>
@@ -1429,22 +1614,22 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-5 py-3.5">
                               <span
-                                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                                className={`text-[11px] font-bold px-3 py-0.5 rounded-full border ${
                                   ROLE_BADGES[u.role] || ROLE_BADGES.student
                                 }`}
                               >
                                 {ROLE_LABELS[u.role] || u.role}
                               </span>
                             </td>
-                            <td className="px-5 py-3.5 text-xs text-slate-600">
+                            <td className="px-5 py-3.5 text-xs text-slate-600 font-semibold">
                               {u.role === 'teacher'
                                 ? `${u.coursesCount || 0} cours`
                                 : `${u.activeSubscriptionsCount || 0} abonnement(s)`}
                             </td>
                             <td className="px-5 py-3.5">
                               <span
-                                className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
-                                  active ? 'bg-teal-50 text-[#009688]' : 'bg-red-50 text-red-600'
+                                className={`inline-flex items-center gap-1 text-[11px] font-bold px-3 py-0.5 rounded-full ${
+                                  active ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
                                 }`}
                               >
                                 {active ? <CheckCircle2 className="w-3 h-3" /> : <Ban className="w-3 h-3" />}
@@ -1455,7 +1640,7 @@ const AdminDashboard = () => {
                               <div className="inline-flex items-center gap-1.5">
                                 <button
                                   onClick={() => openEditUser(u)}
-                                  className="p-2 rounded-lg bg-amber-50 text-[#f59d0e] hover:bg-[#f59d0e] hover:text-white transition cursor-pointer"
+                                  className="p-2 rounded-lg bg-amber-400 hover:bg-amber-500 text-slate-900 transition cursor-pointer shadow-sm"
                                   title="Modifier / Rôle / Mot de passe"
                                 >
                                   <Edit className="w-4 h-4" />
@@ -1464,13 +1649,13 @@ const AdminDashboard = () => {
                                   <>
                                     <button
                                       onClick={() => handleToggleUserActive(u)}
-                                      className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 cursor-pointer transition"
+                                      className="px-2.5 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-xs font-bold text-white cursor-pointer transition shadow-sm"
                                     >
                                       {active ? 'Suspendre' : 'Activer'}
                                     </button>
                                     <button
                                       onClick={() => handleDeleteUser(u)}
-                                      className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition cursor-pointer"
+                                      className="p-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white transition cursor-pointer shadow-sm"
                                       title="Supprimer"
                                     >
                                       <Trash2 className="w-4 h-4" />
@@ -1491,21 +1676,26 @@ const AdminDashboard = () => {
 
           {/* ===================== 5. FONCTIONNALITÉS NO-CODE ===================== */}
           {view === 'features' && (
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-2xl font-extrabold text-slate-900">
-                  Fonctionnalités &amp; Extensions (Sans Code)
-                </h1>
-                <p className="text-sm text-slate-500 mt-1">
-                  Activez des fonctionnalités, ajoutez de nouvelles matières, niveaux ou ressources à la demande du professeur sans modifier le code.
-                </p>
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#10b981] to-[#2dd4bf] text-white flex items-center justify-center shadow-sm shrink-0">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">
+                    Fonctionnalités &amp; Extensions (Sans Code)
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-500">
+                    Activez des fonctionnalités, ajoutez de nouvelles matières, niveaux ou ressources à la demande du professeur sans modifier le code.
+                  </p>
+                </div>
               </div>
 
               {/* Interrupteurs de fonctionnalités */}
-              <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+              <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
                 <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <Sparkles className="w-5 h-5 text-[#009688]" />
-                  <h2 className="text-base font-bold text-slate-900">Modules fonctionnels de la plateforme</h2>
+                  <Sparkles className="w-5 h-5 text-[#2563eb]" />
+                  <h2 className="text-base font-bold text-slate-800">Modules fonctionnels de la plateforme</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {FEATURE_LIST.map((f) => {
@@ -1515,7 +1705,7 @@ const AdminDashboard = () => {
                         key={f.key}
                         onClick={() => handleToggleFeature(f.key)}
                         className={`flex items-center justify-between gap-4 p-4 rounded-xl border cursor-pointer transition ${
-                          enabled ? 'bg-teal-50/40 border-teal-200' : 'bg-slate-50 border-slate-200'
+                          enabled ? 'bg-[#eef2fb]/70 border-indigo-200' : 'bg-slate-50 border-slate-200'
                         }`}
                       >
                         <div>
@@ -1524,7 +1714,7 @@ const AdminDashboard = () => {
                         </div>
                         <div
                           className={`w-11 h-6 rounded-full relative transition-colors duration-300 shrink-0 ${
-                            enabled ? 'bg-[#009688]' : 'bg-slate-300'
+                            enabled ? 'bg-[#2563eb]' : 'bg-slate-300'
                           }`}
                         >
                           <div
@@ -1540,22 +1730,22 @@ const AdminDashboard = () => {
               </section>
 
               {/* Matières & Niveaux dynamiques */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
                   <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <Layers className="w-5 h-5 text-[#009688]" />
-                    <h2 className="text-base font-bold text-slate-900">Matières proposées</h2>
+                    <Layers className="w-5 h-5 text-[#2563eb]" />
+                    <h2 className="text-base font-bold text-slate-800">Matières proposées</h2>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {availableSubjects.map((sub) => (
                       <span
                         key={sub}
-                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-[#009688] border border-teal-200 text-xs font-bold"
+                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#eef2fb] text-[#4c3882] border border-indigo-200 text-xs font-bold"
                       >
                         {sub}
                         <button
                           onClick={() => handleRemoveSubject(sub)}
-                          className="hover:text-red-600 cursor-pointer"
+                          className="hover:text-rose-600 cursor-pointer"
                           title="Retirer cette matière"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -1574,28 +1764,28 @@ const AdminDashboard = () => {
                     <button
                       type="submit"
                       disabled={savingSettings}
-                      className="px-4 h-10 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold shrink-0 cursor-pointer"
+                      className="px-4 h-10 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold shrink-0 cursor-pointer shadow-sm"
                     >
                       Ajouter
                     </button>
                   </form>
                 </section>
 
-                <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
                   <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
                     <GraduationCap className="w-5 h-5 text-[#f59d0e]" />
-                    <h2 className="text-base font-bold text-slate-900">Niveaux &amp; Classes</h2>
+                    <h2 className="text-base font-bold text-slate-800">Niveaux &amp; Classes</h2>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {availableLevels.map((lvl) => (
                       <span
                         key={lvl.value}
-                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 text-[#f59d0e] border border-amber-200 text-xs font-bold"
+                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/20 text-amber-900 border border-amber-300 text-xs font-bold"
                       >
                         {lvl.label || lvl.value}
                         <button
                           onClick={() => handleRemoveLevel(lvl.value)}
-                          className="hover:text-red-600 cursor-pointer"
+                          className="hover:text-rose-600 cursor-pointer"
                           title="Retirer ce niveau"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -1621,7 +1811,7 @@ const AdminDashboard = () => {
                     <button
                       type="submit"
                       disabled={savingSettings}
-                      className="h-10 rounded-lg bg-[#f59d0e] hover:bg-[#e08b00] text-white text-xs font-bold cursor-pointer"
+                      className="h-10 rounded-xl bg-[#f59d0e] hover:bg-[#d97706] text-white text-xs font-bold cursor-pointer shadow-sm"
                     >
                       Ajouter niveau
                     </button>
@@ -1630,9 +1820,9 @@ const AdminDashboard = () => {
               </div>
 
               {/* Extensions / Ressources personnalisées */}
-              <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+              <section className="bg-white rounded-2xl p-6 shadow-md space-y-5">
                 <div className="border-b border-slate-100 pb-3">
-                  <h2 className="text-base font-bold text-slate-900">
+                  <h2 className="text-base font-bold text-slate-800">
                     Nouveaux services &amp; ressources personnalisées (Affichés sur l&apos;accueil)
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
@@ -1645,11 +1835,11 @@ const AdminDashboard = () => {
                     {draftSettings.extraLinks.map((item, idx) => (
                       <div
                         key={idx}
-                        className="flex items-start justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50"
+                        className="flex items-start justify-between gap-3 p-4 rounded-xl border border-indigo-100 bg-[#eef2fb]/50"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold bg-[#009688] text-white px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-bold bg-[#2563eb] text-white px-2.5 py-0.5 rounded-full">
                               {item.badge || 'Nouveau'}
                             </span>
                             <p className="text-sm font-bold text-slate-900 truncate">{item.title}</p>
@@ -1657,20 +1847,20 @@ const AdminDashboard = () => {
                           {item.description && (
                             <p className="text-xs text-slate-500 mt-1">{item.description}</p>
                           )}
-                          <p className="text-[11px] text-[#009688] truncate mt-1">{item.url}</p>
+                          <p className="text-[11px] text-[#2563eb] truncate mt-1">{item.url}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             onClick={() => handleToggleExtraLink(idx)}
                             className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer ${
-                              item.active ? 'bg-teal-100 text-[#009688]' : 'bg-slate-200 text-slate-600'
+                              item.active ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-700'
                             }`}
                           >
                             {item.active ? 'Actif' : 'Masqué'}
                           </button>
                           <button
                             onClick={() => handleRemoveExtraLink(idx)}
-                            className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white cursor-pointer"
+                            className="p-1.5 rounded-lg bg-rose-500 hover:bg-rose-600 text-white cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1714,7 +1904,7 @@ const AdminDashboard = () => {
                     />
                     <button
                       type="submit"
-                      className="px-4 h-10 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold shrink-0 cursor-pointer"
+                      className="px-4 h-10 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold shrink-0 cursor-pointer shadow-sm"
                     >
                       Ajouter
                     </button>
@@ -1726,20 +1916,25 @@ const AdminDashboard = () => {
 
           {/* ===================== 6. CONTENU & AVIS ===================== */}
           {view === 'content' && (
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-2xl font-extrabold text-slate-900">Contenu, Annonces &amp; Modération</h1>
-                <p className="text-sm text-slate-500 mt-1">
-                  Pilotez la bannière d&apos;annonce, les FAQ, les témoignages de l&apos;accueil et modérez les avis.
-                </p>
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#ec4899] to-[#f43f5e] text-white flex items-center justify-center shadow-sm shrink-0">
+                  <Megaphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">Contenu, Annonces &amp; Modération</h1>
+                  <p className="text-xs sm:text-sm text-slate-500">
+                    Pilotez la bannière d&apos;annonce, les FAQ, les témoignages de l&apos;accueil et modérez les avis.
+                  </p>
+                </div>
               </div>
 
               {/* Bannière d'annonce */}
-              <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+              <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-2">
                     <Megaphone className="w-5 h-5 text-[#f59d0e]" />
-                    <h2 className="text-base font-bold text-slate-900">Bannière d&apos;annonce globale</h2>
+                    <h2 className="text-base font-bold text-slate-800">Bannière d&apos;annonce globale</h2>
                   </div>
                   <button
                     type="button"
@@ -1751,7 +1946,7 @@ const AdminDashboard = () => {
                     }
                     className={`px-3.5 py-1.5 rounded-full text-xs font-bold cursor-pointer transition ${
                       draftSettings.announcement?.active
-                        ? 'bg-[#009688] text-white'
+                        ? 'bg-emerald-500 text-white'
                         : 'bg-slate-200 text-slate-700'
                     }`}
                   >
@@ -1808,7 +2003,7 @@ const AdminDashboard = () => {
                     onClick={() =>
                       persistSettings({ announcement: draftSettings.announcement }, 'Bannière mise à jour !')
                     }
-                    className="px-5 py-2.5 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold cursor-pointer shadow-sm"
                   >
                     Enregistrer la bannière
                   </button>
@@ -1816,21 +2011,21 @@ const AdminDashboard = () => {
               </section>
 
               {/* FAQs & Témoignages */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                  <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
+                  <h2 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">
                     Foire aux Questions (FAQ)
                   </h2>
                   <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                     {(draftSettings.faqs || []).map((f, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex justify-between gap-3">
+                      <div key={idx} className="p-3 rounded-xl bg-[#eef2fb]/50 border border-indigo-100 flex justify-between gap-3">
                         <div>
                           <p className="text-xs font-bold text-slate-900">{f.question}</p>
                           <p className="text-xs text-slate-500 mt-1 line-clamp-2">{f.answer}</p>
                         </div>
                         <button
                           onClick={() => handleRemoveFaq(idx)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg self-start cursor-pointer"
+                          className="p-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg self-start cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1851,33 +2046,33 @@ const AdminDashboard = () => {
                       value={newFaq.answer}
                       onChange={(e) => setNewFaq({ ...newFaq, answer: e.target.value })}
                       placeholder="Réponse..."
-                      className="w-full h-20 p-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-[#009688]"
+                      className="w-full h-20 p-3 rounded-xl border border-slate-200 bg-slate-50/60 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2 rounded-lg bg-[#009688] text-white text-xs font-bold cursor-pointer"
+                      className="px-4 py-2 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold cursor-pointer shadow-sm"
                     >
                       Ajouter cette FAQ
                     </button>
                   </form>
                 </section>
 
-                <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                  <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
+                  <h2 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">
                     Témoignages de la page d&apos;accueil
                   </h2>
                   <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                     {(draftSettings.testimonials || []).map((t, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex justify-between gap-3">
+                      <div key={idx} className="p-3 rounded-xl bg-[#eef2fb]/50 border border-indigo-100 flex justify-between gap-3">
                         <div>
                           <p className="text-xs font-bold text-slate-900">
-                            {t.name} <span className="text-[#009688]">({t.level})</span>
+                            {t.name} <span className="text-[#2563eb]">({t.level})</span>
                           </p>
                           <p className="text-xs text-slate-500 mt-1 line-clamp-2">&ldquo;{t.quote}&rdquo;</p>
                         </div>
                         <button
                           onClick={() => handleRemoveTestimonial(idx)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg self-start cursor-pointer"
+                          className="p-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg self-start cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1908,11 +2103,11 @@ const AdminDashboard = () => {
                       value={newTestimonial.quote}
                       onChange={(e) => setNewTestimonial({ ...newTestimonial, quote: e.target.value })}
                       placeholder="Témoignage..."
-                      className="w-full h-20 p-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-[#009688]"
+                      className="w-full h-20 p-3 rounded-xl border border-slate-200 bg-slate-50/60 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2 rounded-lg bg-[#f59d0e] text-white text-xs font-bold cursor-pointer"
+                      className="px-4 py-2 rounded-xl bg-[#f59d0e] hover:bg-[#d97706] text-white text-xs font-bold cursor-pointer shadow-sm"
                     >
                       Ajouter ce témoignage
                     </button>
@@ -1921,21 +2116,21 @@ const AdminDashboard = () => {
               </div>
 
               {/* Modération des avis */}
-              <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+              <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
                 <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <MessageSquare className="w-5 h-5 text-[#009688]" />
-                  <h2 className="text-base font-bold text-slate-900">Avis des élèves ({reviews.length})</h2>
+                  <MessageSquare className="w-5 h-5 text-[#2563eb]" />
+                  <h2 className="text-base font-bold text-slate-800">Avis des élèves ({reviews.length})</h2>
                 </div>
                 {reviews.length === 0 ? (
                   <p className="text-sm text-slate-400">Aucun avis soumis sur les modules pour le moment.</p>
                 ) : (
                   <div className="space-y-3">
                     {reviews.map((r) => (
-                      <div key={r._id} className="flex items-start justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                      <div key={r._id} className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[#eef2fb]/50 border border-indigo-100">
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-slate-900">{r.student?.name || 'Élève'}</span>
-                            <span className="text-xs text-[#009688] font-semibold">• {r.course?.title}</span>
+                            <span className="text-xs text-[#2563eb] font-semibold">• {r.course?.title}</span>
                           </div>
                           <div className="flex items-center gap-0.5 my-1 text-[#f59d0e]">
                             {Array.from({ length: r.rating || 5 }).map((_, i) => (
@@ -1946,7 +2141,7 @@ const AdminDashboard = () => {
                         </div>
                         <button
                           onClick={() => handleDeleteReview(r._id)}
-                          className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white cursor-pointer"
+                          className="p-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white cursor-pointer shadow-sm"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1960,17 +2155,27 @@ const AdminDashboard = () => {
 
           {/* ===================== 7. PARAMÈTRES DU SITE ===================== */}
           {view === 'settings' && (
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-2xl font-extrabold text-slate-900">Paramètres Généraux du Site</h1>
-                <p className="text-sm text-slate-500 mt-1">
-                  Configurez l&apos;identité de la plateforme, les coordonnées, les numéros de paiement et les réseaux sociaux.
-                </p>
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white flex items-center justify-center shadow-sm shrink-0">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">Paramètres Généraux du Site</h1>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Configurez l&apos;identité de la plateforme, les coordonnées, les numéros de paiement et les réseaux sociaux.
+                    </p>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-[#ef4444] text-white text-xs font-bold">
+                  Administration
+                </span>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                  <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
+                  <h2 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">
                     Identité &amp; Tarification par défaut
                   </h2>
                   <div className="space-y-3">
@@ -2073,7 +2278,7 @@ const AdminDashboard = () => {
                           },
                         }))
                       }
-                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 bg-[#eef2fb]/50 cursor-pointer"
                     >
                       <div>
                         <p className="text-sm font-bold text-slate-900">Mode Maintenance</p>
@@ -2081,7 +2286,7 @@ const AdminDashboard = () => {
                       </div>
                       <div
                         className={`w-11 h-6 rounded-full relative transition-colors ${
-                          draftSettings.siteInfo?.maintenanceMode ? 'bg-red-500' : 'bg-slate-300'
+                          draftSettings.siteInfo?.maintenanceMode ? 'bg-rose-500' : 'bg-slate-300'
                         }`}
                       >
                         <div
@@ -2094,8 +2299,8 @@ const AdminDashboard = () => {
                   </div>
                 </section>
 
-                <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                  <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
+                  <h2 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">
                     Coordonnées &amp; Réseaux sociaux
                   </h2>
                   <div className="space-y-3">
@@ -2198,7 +2403,7 @@ const AdminDashboard = () => {
                       'Paramètres du site sauvegardés !'
                     )
                   }
-                  className="h-11 px-8 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-sm font-bold cursor-pointer transition"
+                  className="h-11 px-8 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold cursor-pointer transition shadow-md"
                 >
                   {savingSettings ? 'Enregistrement...' : 'Sauvegarder tous les paramètres'}
                 </button>
@@ -2218,7 +2423,7 @@ const AdminDashboard = () => {
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-lg font-extrabold text-slate-900 mb-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
               {editingCourse ? 'Modifier le module' : 'Créer un module de cours'}
             </h3>
             <form onSubmit={handleSaveCourse} className="space-y-3.5">
@@ -2238,7 +2443,7 @@ const AdminDashboard = () => {
                   required
                   value={courseForm.description}
                   onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
-                  className="w-full h-20 p-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-[#009688]"
+                  className="w-full h-20 p-3 rounded-xl border border-slate-200 bg-slate-50/60 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -2296,13 +2501,13 @@ const AdminDashboard = () => {
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#eef2fb]/60 border border-indigo-100">
                 <span className="text-sm font-semibold text-slate-700">Module gratuit</span>
                 <input
                   type="checkbox"
                   checked={courseForm.isFree}
                   onChange={(e) => setCourseForm({ ...courseForm, isFree: e.target.checked })}
-                  className="w-4 h-4 accent-[#009688]"
+                  className="w-4 h-4 accent-[#2563eb]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -2336,7 +2541,7 @@ const AdminDashboard = () => {
               <button
                 type="submit"
                 disabled={savingCourse}
-                className="w-full h-11 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-sm font-bold cursor-pointer mt-2"
+                className="w-full h-11 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold cursor-pointer mt-2 shadow-sm"
               >
                 {savingCourse ? 'Enregistrement...' : editingCourse ? 'Mettre à jour' : 'Créer le module'}
               </button>
@@ -2355,9 +2560,14 @@ const AdminDashboard = () => {
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-lg font-extrabold text-slate-900 mb-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
               {editingUser ? `Modifier : ${editingUser.name}` : 'Créer un compte utilisateur'}
             </h3>
+            {userModalError && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                {userModalError}
+              </div>
+            )}
             <form onSubmit={handleSaveUser} className="space-y-3.5">
               <div>
                 <label className="text-xs font-semibold text-slate-600">Nom complet</label>
@@ -2415,10 +2625,21 @@ const AdminDashboard = () => {
                   className={inputClass}
                 />
               </div>
+              {editingUser && (
+                <div>
+                  <label className="text-xs font-semibold text-slate-600">Photo de profil (optionnel)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setUserAvatarFile(e.target.files?.[0] || null)}
+                    className="block w-full text-xs text-slate-500 mt-1"
+                  />
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={savingUser}
-                className="w-full h-11 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-sm font-bold cursor-pointer mt-2"
+                className="w-full h-11 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold cursor-pointer mt-2 shadow-sm"
               >
                 {savingUser ? 'Enregistrement...' : 'Sauvegarder'}
               </button>
@@ -2437,7 +2658,7 @@ const AdminDashboard = () => {
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-lg font-extrabold text-slate-900 mb-4">Accorder un abonnement manuel</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-4">Accorder un abonnement manuel</h3>
             <form onSubmit={handleGrantSub} className="space-y-3.5">
               <div>
                 <label className="text-xs font-semibold text-slate-600">Élève</label>
@@ -2510,7 +2731,7 @@ const AdminDashboard = () => {
               <button
                 type="submit"
                 disabled={savingSub}
-                className="w-full h-11 rounded-lg bg-[#f59d0e] hover:bg-[#e08b00] text-white text-sm font-bold cursor-pointer mt-2"
+                className="w-full h-11 rounded-xl bg-[#f59d0e] hover:bg-[#d97706] text-white text-sm font-bold cursor-pointer mt-2 shadow-sm"
               >
                 {savingSub ? 'Activation...' : "Activer l'accès élève"}
               </button>

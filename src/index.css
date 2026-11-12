@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -27,6 +27,20 @@ body {
 
 h1, h2, h3, h4 {
   font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.theme-myschools,
+.theme-myschools h1,
+.theme-myschools h2,
+.theme-myschools h3,
+.theme-myschools h4,
+.theme-myschools button,
+.theme-myschools input,
+.theme-myschools select,
+.theme-myschools textarea {
+  font-family: 'Figtree', 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scrollbar */

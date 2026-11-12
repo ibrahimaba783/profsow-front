@@ -4,8 +4,10 @@ import { AuthContext } from '../context/AuthContext';
 import { SettingsContext } from '../context/SettingsContext';
 import api from '../utils/api';
 import ConfirmModal from '../components/ConfirmModal';
+import MathText from '../components/MathText';
+import ExerciseModal from '../components/ExerciseModal';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
-import { Play, FileText, Video, Send, Plus, Trash2, Check, AlertCircle, MessageSquare, Info, Award, GraduationCap, Lock, MessageCircle as MeetIcon, CreditCard, Smartphone, CheckCircle2, BookOpen, Clock, ChevronDown, Star, Search, LogOut, User, ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, LayoutGrid, LayoutDashboard, Settings, Users, BarChart2, X } from 'lucide-react';
+import { Play, FileText, Video, Send, Plus, Trash2, Check, AlertCircle, MessageSquare, Info, Award, GraduationCap, Lock, MessageCircle as MeetIcon, CreditCard, Smartphone, CheckCircle2, BookOpen, Clock, ChevronDown, Star, Search, LogOut, User, ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, LayoutGrid, LayoutDashboard, Settings, Users, BarChart2, X, Calculator, Lightbulb, Upload, HelpCircle, Edit3 } from 'lucide-react';
 
 // Cadre de l'espace connecté (comme sur Bakeli) : barre du haut + menu latéral repliable.
 // Pour un visiteur non connecté, on affiche simplement la page (la barre publique de l'app reste visible).
@@ -371,6 +373,12 @@ const CourseReviews = ({ courseId, canReview, isLoggedIn }) => {
                     {r.comment}
                   </p>
                 )}
+                {r.teacherReply && (
+                  <div className="mt-2 bg-teal-50/70 border border-teal-100 rounded-lg px-3 py-2 text-xs text-slate-700">
+                    <span className="font-bold text-[#009688]">Réponse du professeur : </span>
+                    {r.teacherReply}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -396,6 +404,32 @@ const formatRelativeTime = (dateValue) => {
 };
 
 const formatLevelLabel = (lvl) => (lvl === 'TS' ? 'Terminale S' : lvl);
+
+const exerciseTypeLabel = (type) => {
+  switch (type) {
+    case 'application':
+      return 'Application';
+    case 'probleme':
+      return 'Problème';
+    case 'devoir':
+      return 'Devoir à la maison';
+    case 'annale':
+      return 'Sujet de Bac / Annale';
+    default:
+      return 'Exercice';
+  }
+};
+
+const difficultyMeta = (diff) => {
+  switch (diff) {
+    case 'facile':
+      return { label: 'Facile', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    case 'difficile':
+      return { label: 'Difficile', cls: 'bg-rose-50 text-rose-700 border-rose-200' };
+    default:
+      return { label: 'Moyen', cls: 'bg-amber-50 text-amber-700 border-amber-200' };
+  }
+};
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -440,6 +474,18 @@ const CourseDetail = () => {
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const chatEndRef = useRef(null);
+
+  // Exercices & Devoirs
+  const [exercises, setExercises] = useState([]);
+  const [activeExercise, setActiveExercise] = useState(null);
+  const [showHints, setShowHints] = useState(false);
+  const [exAnswerText, setExAnswerText] = useState('');
+  const [exFile, setExFile] = useState(null);
+  const [exSelfPassed, setExSelfPassed] = useState(false);
+  const [submittingExercise, setSubmittingExercise] = useState(false);
+  const [exQuestionText, setExQuestionText] = useState('');
+  const [sendingExQuestion, setSendingExQuestion] = useState(false);
+  const [exerciseModalState, setExerciseModalState] = useState({ open: false, chapterId: '', editing: null });
 
   // Quizzes
   const [quizzes, setQuizzes] = useState([]);
@@ -495,12 +541,14 @@ const CourseDetail = () => {
 
   useEffect(() => {
     fetchCourseDetails();
+    fetchExercises();
   }, [id, user?._id]);
 
   useEffect(() => {
     if (isSubscribed || isStaff) {
       fetchDiscussions();
       fetchQuizzes();
+      fetchExercises();
     }
   }, [isSubscribed, isStaff, id]);
 
@@ -561,6 +609,119 @@ const CourseDetail = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const fetchExercises = async () => {
+    try {
+      const exData = await api(`/exercises/course/${id}`);
+      const list = Array.isArray(exData) ? exData : [];
+      setExercises(list);
+      setActiveExercise((prev) => {
+        if (!prev) return null;
+        return list.find((e) => e._id === prev._id) || prev;
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSelectExercise = (ex) => {
+    setActiveExercise(ex);
+    setActiveLesson(null);
+    setActiveQuiz(null);
+    setActiveTab('content');
+    setShowHints(false);
+    setExFile(null);
+    setExAnswerText(ex?.mySubmission?.answerText || '');
+    setExSelfPassed(Boolean(ex?.mySubmission?.isPassed));
+    setExQuestionText('');
+  };
+
+  const handleSubmitExercise = async (e) => {
+    e.preventDefault();
+    if (!activeExercise) return;
+    setSubmittingExercise(true);
+    try {
+      const formData = new FormData();
+      formData.append('answerText', exAnswerText);
+      if (activeExercise.exerciseType !== 'devoir') {
+        formData.append('isPassed', String(exSelfPassed));
+      }
+      if (exFile) {
+        formData.append('file', exFile);
+      }
+      const res = await api(`/exercises/${activeExercise._id}/submit`, {
+        method: 'POST',
+        body: formData,
+      });
+      const mergeUpdated = (ex) =>
+        ex._id === activeExercise._id
+          ? {
+              ...ex,
+              mySubmission: res.submission,
+              correctionAvailable: res.correctionAvailable,
+              correctionText: res.correctionText ?? ex.correctionText,
+              correctionPdf: res.correctionPdf ?? ex.correctionPdf,
+              correctionVideoUrl: res.correctionVideoUrl ?? ex.correctionVideoUrl,
+            }
+          : ex;
+      setExercises((prev) => prev.map(mergeUpdated));
+      setActiveExercise((prev) => (prev ? mergeUpdated(prev) : null));
+      setExFile(null);
+      showToast(
+        'success',
+        activeExercise.exerciseType === 'devoir'
+          ? 'Votre copie a bien été déposée !'
+          : 'Tentative enregistrée !'
+      );
+    } catch (err) {
+      showToast('error', err.message || "Erreur lors de l'envoi");
+    } finally {
+      setSubmittingExercise(false);
+    }
+  };
+
+  const handleSendExerciseQuestion = async (e) => {
+    e.preventDefault();
+    if (!activeExercise || !exQuestionText.trim()) return;
+    setSendingExQuestion(true);
+    try {
+      const savedMessage = await api(`/discussions/${id}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          message: exQuestionText.trim(),
+          exerciseId: activeExercise._id,
+          exerciseTitle: activeExercise.title,
+        }),
+      });
+      setMessages((prev) => [...prev, savedMessage]);
+      setExQuestionText('');
+      showToast('success', 'Question publiée et liée à cet exercice.');
+    } catch (err) {
+      showToast('error', err.message || "Impossible d'envoyer la question");
+    } finally {
+      setSendingExQuestion(false);
+    }
+  };
+
+  const handleDeleteExercise = (ex) => {
+    setConfirmState({
+      title: 'Supprimer cet exercice',
+      message: `Supprimer "${ex.title}" ?`,
+      details: 'L’énoncé, la correction et les copies déposées par les élèves seront supprimés.',
+      confirmLabel: 'Supprimer',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await api(`/exercises/${ex._id}`, { method: 'DELETE' });
+          setExercises((prev) => prev.filter((item) => item._id !== ex._id));
+          if (activeExercise?._id === ex._id) setActiveExercise(null);
+          showToast('success', 'Exercice supprimé.');
+        } catch (err) {
+          showToast('error', err.message || 'Erreur lors de la suppression');
+        }
+      },
+    });
   };
 
   // --- ACTIONS PROF ---
@@ -718,15 +879,21 @@ const CourseDetail = () => {
     if (isPreviewMode) {
       let score = 0;
       activeQuiz.questions.forEach((q, idx) => {
-        if (quizAnswers[idx] !== undefined && quizAnswers[idx] === q.correctAnswerIndex) {
+        const ans = quizAnswers[idx];
+        if (ans === undefined || ans === null) return;
+        if (q.questionType === 'text') {
+          if (String(ans).trim().toLowerCase() === String(q.correctAnswerText || '').trim().toLowerCase()) score++;
+        } else if (Number(ans) === Number(q.correctAnswerIndex)) {
           score++;
         }
       });
       const total = activeQuiz.questions.length;
+      const pct = total > 0 ? Math.round((score / total) * 100) : 0;
       setQuizScore({
         score,
         total,
-        percentage: Math.round((score / total) * 100),
+        percentage: pct,
+        passed: pct >= (activeQuiz.passingScore ?? 50),
       });
       return;
     }
@@ -741,7 +908,8 @@ const CourseDetail = () => {
       setQuizScore({
         score: res.score,
         total: res.totalQuestions,
-        percentage: res.percentage
+        percentage: res.percentage,
+        passed: res.passed,
       });
     } catch (err) {
       showToast('error', err.message);
@@ -1167,28 +1335,44 @@ const CourseDetail = () => {
                               />
                             </button>
 
-                            {isOpen && (
-                              <ul className="pb-3 bg-white">
-                                {lessons.length === 0 ? (
-                                  <li className="px-6 py-2.5 text-sm text-slate-400">
-                                    Aucune leçon pour le moment.
-                                  </li>
-                                ) : (
-                                  lessons.map((lesson) => (
-                                    <li
-                                      key={lesson._id}
-                                      className="flex items-center gap-3 px-6 sm:px-7 py-2 text-sm text-slate-600"
-                                    >
-                                      <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                      <span className="truncate">
-                                        {getLessonPrefix(lesson.contentType)}
-                                        {lesson.title}
-                                      </span>
+                            {isOpen && (() => {
+                              const chapterEx = exercises.filter((ex) => String(ex.chapterId) === String(chapter._id));
+                              return (
+                                <ul className="pb-3 bg-white">
+                                  {lessons.length === 0 && chapterEx.length === 0 ? (
+                                    <li className="px-6 py-2.5 text-sm text-slate-400">
+                                      Aucun contenu pour le moment.
                                     </li>
-                                  ))
-                                )}
-                              </ul>
-                            )}
+                                  ) : (
+                                    <>
+                                      {lessons.map((lesson) => (
+                                        <li
+                                          key={lesson._id}
+                                          className="flex items-center gap-3 px-6 sm:px-7 py-2 text-sm text-slate-600"
+                                        >
+                                          <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                          <span className="truncate">
+                                            {getLessonPrefix(lesson.contentType)}
+                                            {lesson.title}
+                                          </span>
+                                        </li>
+                                      ))}
+                                      {chapterEx.map((ex) => (
+                                        <li
+                                          key={ex._id}
+                                          className="flex items-center gap-3 px-6 sm:px-7 py-2 text-sm text-[#00796b] bg-teal-50/30"
+                                        >
+                                          <Calculator className="w-3.5 h-3.5 text-[#009688] shrink-0" />
+                                          <span className="truncate">
+                                            {exerciseTypeLabel(ex.exerciseType)} : {ex.title}
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </>
+                                  )}
+                                </ul>
+                              );
+                            })()}
                           </div>
                         );
                       })
@@ -1645,9 +1829,11 @@ const CourseDetail = () => {
     const ls = ch.lessons || [];
     const chCompletedCount = ls.filter((l) => completedSet.has(String(l._id))).length;
     const chDone = ls.length === 0 ? true : chCompletedCount === ls.length;
-    const unlocked = isStaff || !sequentialUnlock || prevChaptersDone;
+    const manuallyLocked = Boolean(ch.isLocked);
+    const unlocked = isStaff || (!manuallyLocked && (!sequentialUnlock || prevChaptersDone));
     chapterStatusList.push({
       unlocked,
+      manuallyLocked,
       done: ls.length > 0 && chDone,
       completedCount: chCompletedCount,
       totalCount: ls.length,
@@ -1688,6 +1874,7 @@ const CourseDetail = () => {
       showToast('error', 'Terminez toutes les sections pour débloquer le quiz final.');
       return;
     }
+    setActiveExercise(null);
     setActiveTab('quizzes');
     if (!isStaff && quizzes.length === 1) {
       handleSelectQuiz(quizzes[0]);
@@ -1888,19 +2075,34 @@ const CourseDetail = () => {
                             {isPreviewMode ? 'Aperçu du score obtenu avec ces réponses :' : 'Vous avez terminé le quiz avec le score de :'}
                           </p>
                           <div className="text-4xl font-black text-[#009688]">{quizScore.score} / {quizScore.total}</div>
-                          <p className="text-slate-400 text-xs">Pourcentage d&apos;exactitude : {quizScore.percentage}%</p>
+                          <p className="text-slate-500 text-xs">
+                            Pourcentage : <strong>{quizScore.percentage}%</strong> • Seuil de réussite : {activeQuiz.passingScore ?? 50}%{' '}
+                            {quizScore.passed !== undefined && (
+                              <span className={quizScore.passed ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}>
+                                ({quizScore.passed ? 'Réussi' : 'Non validé'})
+                              </span>
+                            )}
+                          </p>
 
                           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-left space-y-4 max-w-xl mx-auto text-xs max-h-60 overflow-y-auto">
                             <h5 className="font-bold text-slate-700">Correction :</h5>
-                            {activeQuiz.questions.map((q, idx) => (
-                              <div key={idx} className="border-b border-slate-200 pb-2">
-                                <p className="font-semibold text-slate-800">{idx + 1}. {q.questionText}</p>
-                                <p className="text-emerald-600 mt-1">Bonne réponse : {q.options[q.correctAnswerIndex]}</p>
-                                {quizAnswers[idx] !== q.correctAnswerIndex && (
-                                  <p className="text-red-600">Votre choix : {q.options[quizAnswers[idx]] || 'Aucun'}</p>
-                                )}
-                              </div>
-                            ))}
+                            {activeQuiz.questions.map((q, idx) => {
+                              const isText = q.questionType === 'text';
+                              const expected = isText ? q.correctAnswerText : q.options?.[q.correctAnswerIndex];
+                              const given = isText ? quizAnswers[idx] : q.options?.[quizAnswers[idx]];
+                              const isRight = isText
+                                ? String(quizAnswers[idx] || '').trim().toLowerCase() === String(q.correctAnswerText || '').trim().toLowerCase()
+                                : Number(quizAnswers[idx]) === Number(q.correctAnswerIndex);
+                              return (
+                                <div key={idx} className="border-b border-slate-200 pb-2">
+                                  <p className="font-semibold text-slate-800">{idx + 1}. {q.questionText}</p>
+                                  <p className="text-emerald-600 mt-1">Bonne réponse : {expected}</p>
+                                  {!isRight && (
+                                    <p className="text-red-600">Votre réponse : {given || 'Aucune'}</p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
 
                           <button
@@ -1915,22 +2117,32 @@ const CourseDetail = () => {
                           {activeQuiz.questions.map((q, idx) => (
                             <div key={idx} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
                               <h5 className="font-bold text-slate-800 text-sm">{idx + 1}. {q.questionText}</h5>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                {q.options.map((opt, oIdx) => (
-                                  <button
-                                    key={oIdx}
-                                    type="button"
-                                    onClick={() => handleSelectQuizAnswer(idx, oIdx)}
-                                    className={`p-3 rounded-xl text-left border transition font-medium cursor-pointer ${
-                                      quizAnswers[idx] === oIdx
-                                        ? 'bg-[#e0f2f1] border-[#009688] text-slate-900'
-                                        : 'bg-white border-slate-200 hover:border-slate-400 text-slate-600'
-                                    }`}
-                                  >
-                                    {opt}
-                                  </button>
-                                ))}
-                              </div>
+                              {q.questionType === 'text' ? (
+                                <input
+                                  type="text"
+                                  value={quizAnswers[idx] || ''}
+                                  onChange={(e) => handleSelectQuizAnswer(idx, e.target.value)}
+                                  placeholder="Saisissez votre réponse..."
+                                  className="w-full h-10 px-3.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-800 focus:outline-none focus:border-[#009688]"
+                                />
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                  {(q.questionType === 'true_false' ? ['Vrai', 'Faux'] : q.options || []).map((opt, oIdx) => (
+                                    <button
+                                      key={oIdx}
+                                      type="button"
+                                      onClick={() => handleSelectQuizAnswer(idx, oIdx)}
+                                      className={`p-3 rounded-xl text-left border transition font-medium cursor-pointer ${
+                                        quizAnswers[idx] === oIdx
+                                          ? 'bg-[#e0f2f1] border-[#009688] text-slate-900'
+                                          : 'bg-white border-slate-200 hover:border-slate-400 text-slate-600'
+                                      }`}
+                                    >
+                                      {opt}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           ))}
 
@@ -2060,6 +2272,20 @@ const CourseDetail = () => {
               </div>
             ) : (
               <>
+                {Array.isArray(course.announcements) && course.announcements.length > 0 && (
+                  <div className="bg-teal-50/80 border border-teal-200 rounded-2xl p-4 space-y-2">
+                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#009688]">
+                      Annonces du professeur ({course.announcements.length})
+                    </p>
+                    {course.announcements.slice(0, 2).map((ann) => (
+                      <div key={ann._id} className="bg-white border border-teal-100 rounded-xl p-3 text-xs">
+                        <p className="font-bold text-slate-900">{ann.title}</p>
+                        <p className="text-slate-600 mt-0.5 whitespace-pre-line">{ann.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* 1. CARTE PROGRESSION + LECTEUR PRINCIPAL (EXACT FORMAT BAKELI) */}
                 <section className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                   {/* En-tête Progression circulaire + titre de la leçon */}
@@ -2094,10 +2320,12 @@ const CourseDetail = () => {
 
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                          PROGRESSION DU MODULE
+                          {activeExercise
+                            ? `EXERCICE • ${exerciseTypeLabel(activeExercise.exerciseType).toUpperCase()}`
+                            : 'PROGRESSION DU MODULE'}
                         </p>
                         <h1 className="text-base sm:text-lg font-extrabold text-slate-900 truncate">
-                          {activeLesson?.title || course.title}
+                          {activeExercise ? activeExercise.title : activeLesson?.title || course.title}
                         </h1>
                       </div>
                     </div>
@@ -2252,9 +2480,371 @@ const CourseDetail = () => {
                     </div>
                   )}
 
-                  {/* Corps du lecteur vidéo / PDF / Meet / Jitsi / Texte */}
+                  {/* Corps du lecteur vidéo / PDF / Meet / Jitsi / Texte ou Exercice */}
                   <div className="p-4 sm:p-5">
-                    {activeLesson ? (
+                    {activeExercise ? (
+                      (() => {
+                        const diff = difficultyMeta(activeExercise.difficulty);
+                        const mySub = activeExercise.mySubmission;
+                        const exerciseQuestions = messages.filter(
+                          (m) => String(m.exercise?._id || m.exercise || '') === String(activeExercise._id)
+                        );
+                        const correctionVidId = extractYoutubeId(activeExercise.correctionVideoUrl);
+
+                        return (
+                          <div className="space-y-5">
+                            {/* Métadonnées + Actions Prof */}
+                            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-50 text-[#009688] border border-teal-200">
+                                  <Calculator className="w-3 h-3" />
+                                  {exerciseTypeLabel(activeExercise.exerciseType)}
+                                </span>
+                                <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${diff.cls}`}>
+                                  {diff.label}
+                                </span>
+                                <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                                  {activeExercise.isRequired !== false ? 'Obligatoire' : 'Facultatif'}
+                                </span>
+                                {activeExercise.deadline && (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <Clock className="w-3 h-3" />
+                                    À rendre le {new Date(activeExercise.deadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                                {mySub?.status === 'graded' && (
+                                  <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    Noté : {mySub.grade !== null && mySub.grade !== undefined ? `${mySub.grade}/20` : 'Corrigé'}
+                                  </span>
+                                )}
+                                {mySub?.isPassed && mySub?.status !== 'graded' && (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700">
+                                    <Check className="w-3 h-3" /> Réussi
+                                  </span>
+                                )}
+                              </div>
+
+                              {isStaff && (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExerciseModalState({
+                                        open: true,
+                                        chapterId: activeExercise.chapterId || '',
+                                        editing: activeExercise,
+                                      })
+                                    }
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-[#009688] text-[#009688] hover:text-white text-xs font-bold cursor-pointer transition"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    Modifier
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteExercise(activeExercise)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-600 text-red-600 hover:text-white text-xs font-bold cursor-pointer transition"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Supprimer
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Énoncé */}
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+                              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Énoncé</h3>
+                              {activeExercise.statementText ? (
+                                <div className="text-sm text-slate-800 leading-relaxed">
+                                  <MathText text={activeExercise.statementText} />
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 italic">Consultez les pièces jointes ci-dessous.</p>
+                              )}
+
+                              {activeExercise.statementImage && (
+                                <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                                  <img
+                                    src={activeExercise.statementImage}
+                                    alt="Figure de l'exercice"
+                                    className="max-h-80 mx-auto rounded-lg object-contain"
+                                  />
+                                  <div className="text-right">
+                                    <a
+                                      href={activeExercise.statementImage}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs font-semibold text-[#009688] hover:underline"
+                                    >
+                                      Agrandir la figure →
+                                    </a>
+                                  </div>
+                                </div>
+                              )}
+
+                              {activeExercise.statementPdf && (
+                                <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3">
+                                  <div className="flex items-center gap-2.5">
+                                    <FileText className="w-5 h-5 text-[#009688]" />
+                                    <span className="text-xs font-bold text-slate-800">Énoncé PDF joint</span>
+                                  </div>
+                                  <a
+                                    href={getInlinePdfUrl(activeExercise.statementPdf)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3.5 py-1.5 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition"
+                                  >
+                                    Ouvrir le PDF
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Indications / Indices */}
+                            {activeExercise.hints && (
+                              <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4 space-y-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowHints((v) => !v)}
+                                  className="inline-flex items-center gap-2 text-xs font-bold text-amber-800 hover:text-amber-900 cursor-pointer"
+                                >
+                                  <Lightbulb className="w-4 h-4 text-[#f59d0e]" />
+                                  <span>{showHints ? 'Masquer les indications' : 'Afficher une indication / piste de résolution'}</span>
+                                </button>
+                                {showHints && (
+                                  <div className="text-sm text-slate-700 pt-2 border-t border-amber-200/60">
+                                    <MathText text={activeExercise.hints} />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Espace travail & dépôt de copie (Élève) */}
+                            {!isStaff && (
+                              <form onSubmit={handleSubmitExercise} className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                                <div className="flex items-center justify-between gap-2">
+                                  <h3 className="text-sm font-bold text-slate-900">
+                                    {activeExercise.exerciseType === 'devoir'
+                                      ? 'Déposer votre copie (photo ou PDF)'
+                                      : 'Votre travail & tentative'}
+                                  </h3>
+                                  {mySub && (
+                                    <span className="text-[11px] font-semibold text-slate-500">
+                                      Dernier envoi : {new Date(mySub.submittedAt).toLocaleDateString('fr-FR')}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {mySub && (mySub.fileUrl || mySub.status === 'graded' || mySub.teacherComment) && (
+                                  <div className="bg-teal-50/70 border border-teal-200 rounded-xl p-3.5 space-y-1.5 text-xs">
+                                    {mySub.fileUrl && (
+                                      <p className="flex items-center justify-between gap-2">
+                                        <span className="font-semibold text-slate-700">Copie envoyée :</span>
+                                        <a
+                                          href={mySub.fileType === 'pdf' ? getInlinePdfUrl(mySub.fileUrl) : mySub.fileUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="font-bold text-[#009688] hover:underline"
+                                        >
+                                          Voir ma copie ({mySub.fileType === 'pdf' ? 'PDF' : 'Image'})
+                                        </a>
+                                      </p>
+                                    )}
+                                    {mySub.status === 'graded' && (
+                                      <p className="font-bold text-emerald-700">
+                                        Note du professeur : {mySub.grade !== null && mySub.grade !== undefined ? `${mySub.grade}/20` : 'Validé'}
+                                      </p>
+                                    )}
+                                    {mySub.teacherComment && (
+                                      <p className="text-slate-700">
+                                        <span className="font-bold">Commentaire : </span>
+                                        {mySub.teacherComment}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+
+                                <textarea
+                                  rows={3}
+                                  value={exAnswerText}
+                                  onChange={(e) => setExAnswerText(e.target.value)}
+                                  placeholder="Rédigez votre démarche, votre réponse ou un commentaire pour le professeur..."
+                                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 focus:outline-none focus:border-[#009688] focus:bg-white"
+                                />
+
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                  <label className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 hover:border-[#009688] text-xs font-semibold text-slate-700 cursor-pointer transition">
+                                    <Upload className="w-4 h-4 text-[#009688]" />
+                                    <span>{exFile ? exFile.name : 'Joindre une photo ou PDF de ma copie'}</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*,application/pdf"
+                                      className="hidden"
+                                      onChange={(e) => setExFile(e.target.files?.[0] || null)}
+                                    />
+                                  </label>
+
+                                  {activeExercise.exerciseType !== 'devoir' && (
+                                    <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={exSelfPassed}
+                                        onChange={(e) => setExSelfPassed(e.target.checked)}
+                                        className="rounded border-slate-300 text-[#009688]"
+                                      />
+                                      J&apos;ai réussi cet exercice
+                                    </label>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="submit"
+                                  disabled={submittingExercise}
+                                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#f59d0e] hover:bg-[#e08b00] disabled:opacity-60 text-white text-xs font-bold cursor-pointer transition"
+                                >
+                                  <Check className="w-4 h-4" />
+                                  <span>
+                                    {submittingExercise
+                                      ? 'Envoi en cours...'
+                                      : activeExercise.exerciseType === 'devoir'
+                                      ? 'Déposer ma copie'
+                                      : 'Enregistrer ma tentative'}
+                                  </span>
+                                </button>
+                              </form>
+                            )}
+
+                            {/* Correction détaillée */}
+                            {activeExercise.correctionAvailable || isStaff ? (
+                              (activeExercise.correctionText || activeExercise.correctionPdf || activeExercise.correctionVideoUrl) && (
+                                <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-5 space-y-4">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                      Correction détaillée
+                                    </h3>
+                                    {isStaff && !activeExercise.correctionAvailable && (
+                                      <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded-full border border-emerald-200 text-emerald-700">
+                                        Visible par le prof (aperçu)
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {activeExercise.correctionText && (
+                                    <div className="text-sm text-slate-800 leading-relaxed">
+                                      <MathText text={activeExercise.correctionText} />
+                                    </div>
+                                  )}
+
+                                  {activeExercise.correctionPdf && (
+                                    <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-emerald-200 rounded-xl px-4 py-3">
+                                      <div className="flex items-center gap-2.5">
+                                        <FileText className="w-5 h-5 text-emerald-600" />
+                                        <span className="text-xs font-bold text-slate-800">Corrigé PDF détaillé</span>
+                                      </div>
+                                      <a
+                                        href={getInlinePdfUrl(activeExercise.correctionPdf)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition"
+                                      >
+                                        Ouvrir le corrigé PDF
+                                      </a>
+                                    </div>
+                                  )}
+
+                                  {activeExercise.correctionVideoUrl && (
+                                    correctionVidId ? (
+                                      <div className="aspect-video w-full rounded-xl overflow-hidden border border-emerald-200 bg-black">
+                                        <iframe
+                                          className="w-full h-full"
+                                          src={`https://www.youtube.com/embed/${correctionVidId}`}
+                                          title={`Correction - ${activeExercise.title}`}
+                                          allowFullScreen
+                                        ></iframe>
+                                      </div>
+                                    ) : (
+                                      <a
+                                        href={activeExercise.correctionVideoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700 hover:underline"
+                                      >
+                                        <Video className="w-4 h-4" />
+                                        Voir la vidéo de correction →
+                                      </a>
+                                    )
+                                  )}
+                                </div>
+                              )
+                            ) : (
+                              <div className="border border-dashed border-slate-300 bg-slate-50 rounded-xl p-4 flex items-center gap-3 text-xs text-slate-600">
+                                <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                                <span>
+                                  {activeExercise.correctionVisibility === 'after_deadline'
+                                    ? `La correction sera débloquée automatiquement après la date limite (${
+                                        activeExercise.deadline
+                                          ? new Date(activeExercise.deadline).toLocaleDateString('fr-FR')
+                                          : 'à définir'
+                                      }).`
+                                    : 'Enregistrez votre tentative ci-dessus pour débloquer la correction détaillée.'}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Questions & Réponses liées directement à cet exercice */}
+                            <div className="border border-slate-200 rounded-xl p-4 space-y-3 bg-white">
+                              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                                <HelpCircle className="w-4 h-4 text-[#009688]" />
+                                Questions sur cet exercice ({exerciseQuestions.length})
+                              </h4>
+
+                              <form onSubmit={handleSendExerciseQuestion} className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={exQuestionText}
+                                  onChange={(e) => setExQuestionText(e.target.value)}
+                                  placeholder="Bloqué sur une étape ? Posez votre question directement sur cet exercice..."
+                                  className="flex-1 h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800 focus:outline-none focus:border-[#009688] focus:bg-white"
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={sendingExQuestion || !exQuestionText.trim()}
+                                  className="h-10 px-4 rounded-xl bg-[#009688] hover:bg-[#00796b] disabled:opacity-50 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition"
+                                >
+                                  <Send className="w-3.5 h-3.5" />
+                                  Envoyer
+                                </button>
+                              </form>
+
+                              {exerciseQuestions.length > 0 && (
+                                <div className="space-y-2 max-h-56 overflow-y-auto pt-1">
+                                  {exerciseQuestions.slice().reverse().map((q) => (
+                                    <div key={q._id} className="bg-slate-50 border border-slate-100 rounded-lg p-3 text-xs space-y-1.5">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <span className="font-bold text-slate-900">{q.sender?.name || 'Apprenant'}</span>
+                                        <span className="text-[10px] text-slate-400">{formatRelativeTime(q.createdAt)}</span>
+                                      </div>
+                                      <p className="text-slate-700">{q.message}</p>
+                                      {Array.isArray(q.replies) && q.replies.length > 0 && (
+                                        <div className="pl-3 border-l-2 border-[#009688]/40 space-y-1">
+                                          {q.replies.map((rep) => (
+                                            <p key={rep._id} className="text-[11px] text-slate-600">
+                                              <strong className="text-[#009688]">{rep.sender?.name || 'Professeur'} :</strong> {rep.message}
+                                            </p>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : activeLesson ? (
                       <div className="space-y-4">
                         {activeLesson.contentType === 'video' && activeLesson.youtubeUrl && (
                           <div className="aspect-video w-full rounded-xl overflow-hidden border border-slate-200 bg-black shadow-sm">
@@ -2353,7 +2943,10 @@ const CourseDetail = () => {
                           {prevLessonEntry ? (
                             <button
                               type="button"
-                              onClick={() => setActiveLesson(prevLessonEntry.lesson)}
+                              onClick={() => {
+                                setActiveExercise(null);
+                                setActiveLesson(prevLessonEntry.lesson);
+                              }}
                               className="inline-flex items-center gap-1 hover:text-[#009688] font-semibold cursor-pointer"
                             >
                               <ChevronLeft className="w-4 h-4" />
@@ -2371,6 +2964,7 @@ const CourseDetail = () => {
                                   showToast('error', 'Terminez la section en cours pour débloquer la suivante.');
                                   return;
                                 }
+                                setActiveExercise(null);
                                 setActiveLesson(nextLessonEntry.lesson);
                               }}
                               className="inline-flex items-center gap-1 hover:text-[#009688] font-semibold cursor-pointer"
@@ -2541,6 +3135,17 @@ const CourseDetail = () => {
                                                 {msg.sender?.role === 'admin' ? 'Admin' : 'Professeur'}
                                               </span>
                                             )}
+                                            {(msg.exercise?.title || msg.exerciseTitle) && (
+                                              <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full">
+                                                <Calculator className="w-3 h-3" />
+                                                Exercice : {msg.exercise?.title || msg.exerciseTitle}
+                                              </span>
+                                            )}
+                                            {msg.isResolved && (
+                                              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
+                                                Résolue
+                                              </span>
+                                            )}
                                           </div>
                                           <p className="text-sm font-medium text-slate-800 mt-0.5 break-words">
                                             {msg.message}
@@ -2551,6 +3156,23 @@ const CourseDetail = () => {
                                         {formatRelativeTime(msg.createdAt)}
                                       </span>
                                     </div>
+                                    {Array.isArray(msg.replies) && msg.replies.length > 0 && (
+                                      <div className="pl-4 border-l-2 border-teal-100 space-y-2 mt-2">
+                                        {msg.replies.map((rep) => (
+                                          <div key={rep._id} className="bg-slate-50 rounded-lg px-3 py-2 text-xs">
+                                            <div className="flex items-center gap-2">
+                                              <span className="font-bold text-slate-900">{rep.sender?.name || 'Professeur'}</span>
+                                              {(rep.sender?.role === 'teacher' || rep.sender?.role === 'admin') && (
+                                                <span className="text-[10px] font-bold bg-[#009688] text-white px-1.5 py-0.5 rounded-full">
+                                                  Professeur
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="text-slate-700 mt-0.5 whitespace-pre-wrap">{rep.message}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -2599,14 +3221,25 @@ const CourseDetail = () => {
                     PARCOURS DU MODULE
                   </span>
                   {isStaff && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAddChapter((v) => !v)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-[#009688] text-[#009688] hover:text-white text-[11px] font-bold transition cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Chapitre</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddChapter((v) => !v)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-teal-50 hover:bg-[#009688] text-[#009688] hover:text-white text-[11px] font-bold transition cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Chapitre</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setExerciseModalState({ open: true, chapterId: '', editing: null })}
+                        title="Ajouter un exercice au module"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 hover:bg-[#f59d0e] text-[#e08b00] hover:text-white text-[11px] font-bold transition cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Exercice</span>
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -2673,7 +3306,8 @@ const CourseDetail = () => {
               {/* Corps défilable de l'accordéon */}
               <div className="flex-1 overflow-y-auto p-3.5 space-y-3">
                 {curriculumTab === 'content' ? (
-                  chapters.length === 0 ? (
+                  <>
+                  {chapters.length === 0 ? (
                     <p className="text-xs text-slate-400 py-8 text-center">
                       Aucun chapitre créé pour ce module.
                     </p>
@@ -2745,9 +3379,21 @@ const CourseDetail = () => {
                                       setActiveTab('content');
                                     }}
                                     title="Ajouter une leçon"
-                                    className="p-1 text-[#009688] hover:bg-teal-50 rounded cursor-pointer"
+                                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-[#009688] bg-white border border-teal-200 hover:bg-teal-50 rounded cursor-pointer"
                                   >
-                                    <Plus className="w-3.5 h-3.5" />
+                                    <Plus className="w-3 h-3" />
+                                    Leçon
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExerciseModalState({ open: true, chapterId: chapter._id, editing: null })
+                                    }
+                                    title="Ajouter un exercice à ce chapitre"
+                                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-[#e08b00] bg-white border border-amber-200 hover:bg-amber-50 rounded cursor-pointer"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                    Ex.
                                   </button>
                                   <button
                                     type="button"
@@ -2788,7 +3434,7 @@ const CourseDetail = () => {
                               ) : (
                                 chapter.lessons.map((lesson) => {
                                   const isDone = completedSet.has(String(lesson._id));
-                                  const isSelected = activeLesson?._id === lesson._id && activeTab === 'content';
+                                  const isSelected = activeLesson?._id === lesson._id && !activeExercise && activeTab === 'content';
                                   const LessonIcon = getLessonTypeIcon(lesson.contentType);
                                   return (
                                     <div
@@ -2798,6 +3444,7 @@ const CourseDetail = () => {
                                           showToast('error', 'Terminez la section précédente pour débloquer celle-ci.');
                                           return;
                                         }
+                                        setActiveExercise(null);
                                         setActiveLesson(lesson);
                                         setActiveTab('content');
                                         setActiveQuiz(null);
@@ -2846,10 +3493,80 @@ const CourseDetail = () => {
                                 })
                               )}
 
+                              {/* Exercices liés à ce chapitre */}
+                              {exercises
+                                .filter((ex) => String(ex.chapterId) === String(chapter._id))
+                                .map((ex) => {
+                                  const isSelectedEx = activeExercise?._id === ex._id && activeTab === 'content';
+                                  const isExDone = Boolean(ex.mySubmission?.isPassed);
+                                  const isExSubmitted = Boolean(ex.mySubmission);
+                                  return (
+                                    <div
+                                      key={ex._id}
+                                      onClick={() => {
+                                        if (!status.unlocked) {
+                                          showToast('error', 'Terminez la section précédente pour débloquer cet exercice.');
+                                          return;
+                                        }
+                                        handleSelectExercise(ex);
+                                      }}
+                                      className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-xs transition ${
+                                        !status.unlocked
+                                          ? 'border-rose-100 bg-white/60 text-slate-400 cursor-not-allowed opacity-70'
+                                          : isSelectedEx
+                                          ? 'border-[#f59d0e] bg-amber-50/40 text-slate-900 font-bold shadow-xs cursor-pointer'
+                                          : 'border-amber-200/70 bg-white hover:border-[#f59d0e] text-slate-700 cursor-pointer'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <span
+                                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                            isExDone
+                                              ? 'bg-[#009688] border-[#009688] text-white'
+                                              : isExSubmitted
+                                              ? 'bg-[#f59d0e] border-[#f59d0e] text-white'
+                                              : 'border-amber-400 text-[#f59d0e]'
+                                          }`}
+                                        >
+                                          {isExDone || isExSubmitted ? (
+                                            <Check className="w-2.5 h-2.5" />
+                                          ) : (
+                                            <Calculator className="w-2.5 h-2.5" />
+                                          )}
+                                        </span>
+                                        <span className="truncate">{ex.title}</span>
+                                      </div>
+
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-50 text-[#e08b00]">
+                                          {ex.exerciseType === 'devoir' ? 'Devoir' : 'Exo'}
+                                        </span>
+                                        {isStaff && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteExercise(ex);
+                                            }}
+                                            className="p-0.5 text-red-400 hover:text-red-600 cursor-pointer"
+                                            title="Supprimer l'exercice"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+
                               {!status.unlocked && (
                                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-rose-300 bg-rose-50/70 text-[11px] font-medium text-rose-700">
                                   <Lock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                                  <span>Terminez la section précédente pour débloquer.</span>
+                                  <span>
+                                    {status.manuallyLocked
+                                      ? 'Chapitre verrouillé par votre professeur.'
+                                      : 'Terminez la section précédente pour débloquer.'}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -2857,7 +3574,53 @@ const CourseDetail = () => {
                         </div>
                       );
                     })
-                  )
+                  )}
+                  {exercises.some((ex) => !ex.chapterId) && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/30 p-3 space-y-1.5">
+                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#e08b00] px-1">
+                        Exercices &amp; Devoirs du module
+                      </p>
+                      {exercises
+                        .filter((ex) => !ex.chapterId)
+                        .map((ex) => {
+                          const isSelectedEx = activeExercise?._id === ex._id && activeTab === 'content';
+                          const isExDone = Boolean(ex.mySubmission?.isPassed);
+                          return (
+                            <div
+                              key={ex._id}
+                              onClick={() => handleSelectExercise(ex)}
+                              className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-xs cursor-pointer transition ${
+                                isSelectedEx
+                                  ? 'border-[#f59d0e] bg-white text-slate-900 font-bold shadow-xs'
+                                  : 'border-amber-200/70 bg-white hover:border-[#f59d0e] text-slate-700'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Calculator className="w-3.5 h-3.5 text-[#f59d0e] shrink-0" />
+                                <span className="truncate">{ex.title}</span>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {isExDone && <Check className="w-3.5 h-3.5 text-[#009688]" />}
+                                {isStaff && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteExercise(ex);
+                                    }}
+                                    className="p-0.5 text-red-400 hover:text-red-600 cursor-pointer"
+                                    title="Supprimer l'exercice"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </>
                 ) : (
                   /* Onglet Section : récapitulatif & progression par chapitre */
                   <div className="space-y-4 p-1">
@@ -2992,6 +3755,21 @@ const CourseDetail = () => {
         loading={confirmLoading}
         onConfirm={executeConfirm}
         onCancel={() => !confirmLoading && setConfirmState(null)}
+      />
+
+      <ExerciseModal
+        open={exerciseModalState.open}
+        onClose={() => setExerciseModalState({ open: false, chapterId: '', editing: null })}
+        courses={course ? [course] : []}
+        defaultCourseId={course?._id || id}
+        defaultChapterId={exerciseModalState.chapterId}
+        editingExercise={exerciseModalState.editing}
+        onSaved={async (saved, isEdit) => {
+          await fetchExercises();
+          setActiveExercise(saved);
+          setActiveLesson(null);
+          showToast('success', isEdit ? 'Exercice mis à jour !' : 'Exercice ajouté !');
+        }}
       />
     </CourseShell>
   );

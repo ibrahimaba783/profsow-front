@@ -128,7 +128,7 @@ const AdminSubscriptionsTab = ({
 
     setConfirmState?.({
       title: `${isActive ? 'Expirer' : 'Réactiver'} l'abonnement`,
-      message: `Voulez-vous vraiment ${actionLabel} l'abonnement de ${sub.student?.name || 'cet élève'} pour le module "${sub.course?.title || 'Module'}" ?`,
+      message: `Voulez-vous vraiment ${actionLabel} l'abonnement de ${sub.student?.name || 'cet élève'} pour la matière "${sub.course?.title || 'Matière'}" ?`,
       confirmText: isActive ? 'Forcer expiration' : 'Réactiver',
       danger: isActive,
       onConfirm: async () => {
@@ -275,7 +275,7 @@ const AdminSubscriptionsTab = ({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par élève, module, transaction ID..."
+            placeholder="Rechercher par élève, matière, transaction ID..."
             className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:bg-white focus:border-[#009688] transition"
           />
           {search && (
@@ -334,7 +334,7 @@ const AdminSubscriptionsTab = ({
             <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-600">
               <tr>
                 <th className="px-5 py-3.5">Élève</th>
-                <th className="px-5 py-3.5">Module & Sujet</th>
+                <th className="px-5 py-3.5">Matière & Niveau</th>
                 <th className="px-5 py-3.5">Paiement & Montant</th>
                 <th className="px-5 py-3.5">Période & Expiration</th>
                 <th className="px-5 py-3.5">Statut</th>
@@ -544,7 +544,7 @@ const AdminSubscriptionsTab = ({
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase">Module</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase">Matière</p>
                 <p className="font-bold text-slate-800 text-sm">{extendModalSub.course?.title}</p>
                 <p className="text-xs text-slate-500">
                   Expiration actuelle : {new Date(extendModalSub.expiresAt).toLocaleDateString('fr-FR')}
@@ -640,7 +640,7 @@ const AdminSubscriptionsTab = ({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-400 font-bold uppercase">Élève &amp; Module</p>
+                  <p className="text-xs text-slate-400 font-bold uppercase">Élève &amp; Matière</p>
                   <p className="text-sm font-bold text-slate-800 truncate">{historyModalSub.student?.name}</p>
                   <p className="text-xs text-slate-500 truncate">{historyModalSub.course?.title}</p>
                 </div>

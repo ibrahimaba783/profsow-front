@@ -412,15 +412,15 @@ const AdminDashboard = () => {
 
       if (editingCourse) {
         await api(`/courses/${editingCourse._id}`, { method: 'PUT', body: formData });
-        showToast('success', 'Module mis à jour avec succès.');
+        showToast('success', 'Matière mise à jour avec succès.');
       } else {
         await api('/courses', { method: 'POST', body: formData });
-        showToast('success', 'Nouveau module créé avec succès.');
+        showToast('success', 'Nouvelle matière créée avec succès.');
       }
       setShowCourseModal(false);
       await fetchAllData();
     } catch (err) {
-      showToast('error', err.message || "Erreur lors de l'enregistrement du module");
+      showToast('error', err.message || "Erreur lors de l'enregistrement de la matière");
     } finally {
       setSavingCourse(false);
     }
@@ -429,12 +429,12 @@ const AdminDashboard = () => {
   const handleDeleteCourse = (courseId) => {
     const target = courses.find((c) => c._id === courseId);
     setConfirmState({
-      title: 'Supprimer le module',
+      title: 'Supprimer la matière',
       message: target
-        ? `Voulez-vous vraiment supprimer le module "${target.title}" ?`
-        : 'Supprimer définitivement ce module ?',
-      details: 'Tous les chapitres, leçons, quiz et abonnements associés à ce module seront définitivement supprimés.',
-      confirmLabel: 'Supprimer le module',
+        ? `Voulez-vous vraiment supprimer la matière "${target.title}" ?`
+        : 'Supprimer définitivement cette matière ?',
+      details: 'Tous les chapitres, leçons, quiz et abonnements associés à cette matière seront définitivement supprimés.',
+      confirmLabel: 'Supprimer la matière',
       variant: 'danger',
       onConfirm: async () => {
         try {
@@ -803,7 +803,7 @@ const AdminDashboard = () => {
 
   const sidebarItems = [
     { key: 'overview', label: "Vue d'ensemble", icon: LayoutDashboard, group: 'TABLEAU DE BORD' },
-    { key: 'courses', label: 'Modules & Cours', icon: BookOpen, count: courses.length, group: 'GESTION' },
+    { key: 'courses', label: 'Matières & Cours', icon: BookOpen, count: courses.length, group: 'GESTION' },
     { key: 'subscriptions', label: 'Abonnements', icon: CreditCard, count: subscriptions.length, group: 'GESTION' },
     { key: 'users', label: 'Utilisateurs', icon: Users, count: usersList.length, group: 'GESTION' },
     {
@@ -1024,7 +1024,7 @@ const AdminDashboard = () => {
                 className="h-9 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
               >
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Nouveau Module</span>
+                <span className="hidden sm:inline">Nouvelle Matière</span>
               </button>
 
               {/* Cloche de notifications */}
@@ -1179,7 +1179,7 @@ const AdminDashboard = () => {
                     type="text"
                     value={courseSearch}
                     onChange={(e) => setCourseSearch(e.target.value)}
-                    placeholder="Rechercher un module, matière, professeur..."
+                    placeholder="Rechercher une matière, niveau, professeur..."
                     className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-[#eef2fb]/50 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
                   />
                 </div>
@@ -1888,11 +1888,11 @@ const AdminDashboard = () => {
               <X className="w-5 h-5" />
             </button>
             <h3 className="text-lg font-bold text-slate-800 mb-4">
-              {editingCourse ? 'Modifier le module' : 'Créer un module de cours'}
+              {editingCourse ? 'Modifier la matière' : 'Créer une nouvelle matière'}
             </h3>
             <form onSubmit={handleSaveCourse} className="space-y-3.5">
               <div>
-                <label className="text-xs font-semibold text-slate-600">Titre du module</label>
+                <label className="text-xs font-semibold text-slate-600">Titre de la matière</label>
                 <input
                   type="text"
                   required
@@ -2007,7 +2007,7 @@ const AdminDashboard = () => {
                 disabled={savingCourse}
                 className="w-full h-11 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold cursor-pointer mt-2 shadow-sm"
               >
-                {savingCourse ? 'Enregistrement...' : editingCourse ? 'Mettre à jour' : 'Créer le module'}
+                {savingCourse ? 'Enregistrement...' : editingCourse ? 'Mettre à jour' : 'Créer la matière'}
               </button>
             </form>
           </div>
@@ -2148,7 +2148,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setSubForm({ ...subForm, courseId: e.target.value })}
                   className={inputClass}
                 >
-                  <option value="">-- Choisir un module --</option>
+                  <option value="">-- Choisir une matière --</option>
                   {courses.map((c) => (
                     <option key={c._id} value={c._id}>
                       {c.title} ({c.subject} - {formatLevel(c.level)})

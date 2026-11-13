@@ -55,17 +55,17 @@ export const DEFAULT_SETTINGS = {
     {
       question: 'Comment fonctionne Aliou Sow Academy ?',
       answer:
-        "Inscrivez-vous en quelques secondes, choisissez votre module en Mathématiques ou Physique-Chimie selon votre classe (4ème à Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, cours rédigés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
+        "Inscrivez-vous en quelques secondes, choisissez votre matière en Mathématiques ou Physique-Chimie selon votre classe (de la 6ème à la Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, résumés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
     },
     {
       question: 'Les cours suivent-ils le programme officiel ?',
       answer:
-        "Oui, l'ensemble des modules est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (4ème, 3ème, 2nde S, 1ère S, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
+        "Oui, l'ensemble des matières est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (6ème, 5ème, 4ème, 3ème, Seconde, Première, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
     },
     {
-      question: "Quel est le tarif et la durée d'accès à un module ?",
+      question: "Quel est le tarif et la durée d'accès à une matière ?",
       answer:
-        "L'accès standard à un module est fixé à 6 000 FCFA (payable simplement par Wave ou Orange Money), avec des offres gratuites sur certains modules de découverte et un accès renouvelable pour accompagner votre progression.",
+        "L'accès standard à une matière est fixé à 6 000 FCFA (payable simplement par Wave ou Orange Money), avec des accès gratuits sur certaines matières de découverte et un accès renouvelable pour accompagner votre progression.",
     },
     {
       question: 'Puis-je accéder aux cours sur mobile ?',
@@ -75,7 +75,7 @@ export const DEFAULT_SETTINGS = {
     {
       question: "Y a-t-il un support disponible si j'ai des questions ?",
       answer:
-        "Oui ! Chaque module intègre un salon de discussion et de soutien pédagogique permettant d'échanger directement avec M. Aliou Sow et les autres élèves, en plus des séances en direct.",
+        "Oui ! Chaque matière intègre un salon de discussion et de soutien pédagogique permettant d'échanger directement avec M. Aliou Sow et les autres élèves, en plus des séances en direct.",
     },
   ],
   testimonials: [

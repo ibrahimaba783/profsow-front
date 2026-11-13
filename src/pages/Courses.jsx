@@ -1,10 +1,18 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Search, BookOpen, RotateCcw } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Search, BookOpen, RotateCcw, GraduationCap, ChevronRight, Layers } from 'lucide-react';
 import { SettingsContext } from '../context/SettingsContext';
 import api from '../utils/api';
 import CourseCard from '../components/CourseCard';
 import LevelSelect from '../components/LevelSelect';
+import {
+  CYCLES,
+  ALL_CLASSES,
+  matchesClassLevel,
+  getClassStats,
+  formatClassLabel,
+  getSubjectMeta,
+} from '../utils/education';
 
 const Courses = () => {
   const { settings } = useContext(SettingsContext);
@@ -25,9 +33,10 @@ const Courses = () => {
       return true;
     }
   });
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [activeSubject, setActiveSubject] = useState('Tous');
-  const [activeLevel, setActiveLevel] = useState('Tous');
+  const [activeLevel, setActiveLevel] = useState(searchParams.get('level') || 'Tous');
   const [priceFilter, setPriceFilter] = useState('Tous');
 
   const SUBJECTS =
@@ -44,7 +53,14 @@ const Courses = () => {
         ];
 
   useEffect(() => {
-    setSearchQuery(searchParams.get('search') || '');
+    const urlLevel = searchParams.get('level');
+    if (urlLevel) {
+      setActiveLevel(urlLevel);
+    }
+    const urlSearch = searchParams.get('search');
+    if (urlSearch !== null) {
+      setSearchQuery(urlSearch);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -58,7 +74,7 @@ const Courses = () => {
           } catch {}
         }
       } catch (err) {
-        console.error('Erreur de chargement des cours :', err);
+        console.error('Erreur de chargement des matières :', err);
       } finally {
         setLoading(false);
       }
@@ -68,11 +84,24 @@ const Courses = () => {
 
   const handleSearchChange = (value) => {
     setSearchQuery(value);
+    const params = new URLSearchParams(searchParams);
     if (value.trim()) {
-      setSearchParams({ search: value.trim() });
+      params.set('search', value.trim());
     } else {
-      setSearchParams({});
+      params.delete('search');
     }
+    setSearchParams(params);
+  };
+
+  const handleLevelChange = (levelValue) => {
+    setActiveLevel(levelValue);
+    const params = new URLSearchParams(searchParams);
+    if (levelValue && levelValue !== 'Tous') {
+      params.set('level', levelValue);
+    } else {
+      params.delete('level');
+    }
+    setSearchParams(params);
   };
 
   const resetFilters = () => {
@@ -83,11 +112,25 @@ const Courses = () => {
     setSearchParams({});
   };
 
+  // Trouver l'objet classe correspondante si un niveau précis est actif
+  const currentClassObj =
+    activeLevel !== 'Tous'
+      ? ALL_CLASSES.find((cls) => matchesClassLevel(activeLevel, cls)) || {
+          id: activeLevel,
+          name: formatClassLabel(activeLevel),
+          cycle: 'Collège & Lycée',
+        }
+      : null;
+
+  const currentClassStats = currentClassObj ? getClassStats(courses, currentClassObj) : null;
+
   const q = searchQuery.trim().toLowerCase();
   const filtered = courses.filter((c) => {
     const isFree = c.isFree || c.price === 0;
     const matchSubject = activeSubject === 'Tous' || c.subject === activeSubject;
-    const matchLevel = activeLevel === 'Tous' || c.level === activeLevel;
+    const matchLevel =
+      activeLevel === 'Tous' ||
+      (currentClassObj ? matchesClassLevel(c.level, currentClassObj) : c.level === activeLevel);
     const matchPrice =
       priceFilter === 'Tous' || (priceFilter === 'free' && isFree) || (priceFilter === 'paid' && !isFree);
     const matchSearch =
@@ -100,69 +143,156 @@ const Courses = () => {
 
   return (
     <div className="min-h-screen bg-white pt-[72px] text-slate-900">
-      <section className="bg-slate-50/80 border-b border-slate-100 py-10">
+      {/* 1. SÉLECTEUR DE CLASSE SAMA SCHOOL (COLLÈGE & LYCÉE) */}
+      <section className="bg-slate-50/90 border-b border-slate-200/80 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Catalogue des modules
-          </h1>
-          <p className="text-slate-600 mt-1.5 max-w-2xl">
-            Explorez tous les cours de Mathématiques et Physique-Chimie de{' '}
-            {settings.siteInfo?.teacherDisplayName || 'M. Aliou Sow'}, de la 4ème à la Terminale S.
-          </p>
-
-          {/* Barre de filtres */}
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[240px] max-w-md">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Rechercher un cours, chapitre, niveau..."
-                className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#009688]"
-              />
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
+                <Link to="/" className="hover:text-[#009688]">Accueil</Link>
+                <span>/</span>
+                <span className="text-slate-800 font-bold">
+                  {currentClassObj ? `Classe de ${currentClassObj.name}` : 'Toutes les matières'}
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                {currentClassObj
+                  ? `Matières — Classe de ${currentClassObj.name}`
+                  : 'Catalogue des matières'}
+              </h1>
+              <p className="text-slate-600 text-sm mt-1 max-w-2xl">
+                {currentClassObj
+                  ? `Retrouvez toutes les matières enseignées en classe de ${currentClassObj.name} avec leurs chapitres, leçons, exercices et quiz.`
+                  : 'Explorez toutes les matières de Mathématiques et Physique-Chimie de M. Aliou Sow, de la 6ème à la Terminale S.'}
+              </p>
             </div>
 
-            <LevelSelect
-              value={activeLevel}
-              onChange={setActiveLevel}
-              options={[{ value: 'Tous', label: 'Tous les niveaux' }, ...LEVELS]}
-              size="lg"
-            />
+            {currentClassStats && (
+              <div className="flex items-center gap-4 bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
+                <div className="text-center">
+                  <div className="text-xl font-black text-slate-900">{currentClassStats.subjectsCount}</div>
+                  <div className="text-[11px] text-slate-500 font-semibold uppercase">Matières</div>
+                </div>
+                <div className="h-8 w-px bg-slate-100"></div>
+                <div className="text-center">
+                  <div className="text-xl font-black text-[#009688]">{currentClassStats.totalChapters}</div>
+                  <div className="text-[11px] text-slate-500 font-semibold uppercase">Chapitres</div>
+                </div>
+              </div>
+            )}
+          </div>
 
-            {['Tous', ...SUBJECTS].map((subject) => (
+          {/* Barre de navigation rapide des classes (Modèle Sama School) */}
+          <div className="space-y-3 pt-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                key={subject}
-                onClick={() => setActiveSubject(subject)}
-                className={`h-10 px-4 rounded-full border text-sm font-medium transition cursor-pointer ${
-                  activeSubject === subject
-                    ? 'bg-[#009688] border-[#009688] text-white'
-                    : 'bg-white border-slate-300 text-slate-700 hover:border-[#009688]'
+                type="button"
+                onClick={() => handleLevelChange('Tous')}
+                className={`h-9 px-4 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                  activeLevel === 'Tous'
+                    ? 'bg-[#009688] text-white shadow-sm'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:border-[#009688]'
                 }`}
               >
-                {subject === 'Tous' ? 'Toutes les matières' : subject}
+                Toutes les classes
               </button>
-            ))}
 
-            <button
-              onClick={() => setPriceFilter((p) => (p === 'free' ? 'Tous' : 'free'))}
-              className={`h-10 px-4 rounded-full border text-sm font-medium transition cursor-pointer ${
-                priceFilter === 'free'
-                  ? 'bg-[#f59d0e] border-[#f59d0e] text-white'
-                  : 'bg-white border-slate-300 text-slate-700 hover:border-[#f59d0e]'
-              }`}
-            >
-              Gratuits
-            </button>
+              <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 hidden lg:inline mr-1">
+                Collège :
+              </span>
+              {CYCLES[0]?.classes.map((cls) => {
+                const isSelected = currentClassObj?.id === cls.id;
+                return (
+                  <button
+                    key={cls.id}
+                    type="button"
+                    onClick={() => handleLevelChange(cls.id)}
+                    className={`h-9 px-3.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500'
+                    }`}
+                  >
+                    {cls.name}
+                  </button>
+                );
+              })}
+
+              <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 hidden lg:inline mr-1">
+                Lycée :
+              </span>
+              {CYCLES[1]?.classes.map((cls) => {
+                const isSelected = currentClassObj?.id === cls.id;
+                return (
+                  <button
+                    key={cls.id}
+                    type="button"
+                    onClick={() => handleLevelChange(cls.id)}
+                    className={`h-9 px-3.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:border-indigo-500'
+                    }`}
+                  >
+                    {cls.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Barre de filtres (recherche, matières, gratuit) */}
+            <div className="flex flex-wrap items-center gap-3 pt-3">
+              <div className="relative flex-1 min-w-[220px] max-w-md">
+                <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Rechercher une matière, un chapitre..."
+                  className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#009688]"
+                />
+              </div>
+
+              {['Tous', ...SUBJECTS].map((subject) => (
+                <button
+                  key={subject}
+                  onClick={() => setActiveSubject(subject)}
+                  className={`h-10 px-4 rounded-xl border text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                    activeSubject === subject
+                      ? 'bg-[#009688] border-[#009688] text-white shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-[#009688]'
+                  }`}
+                >
+                  {subject === 'Tous' ? 'Toutes les disciplines' : subject}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setPriceFilter((p) => (p === 'free' ? 'Tous' : 'free'))}
+                className={`h-10 px-4 rounded-xl border text-xs sm:text-sm font-semibold transition cursor-pointer ${
+                  priceFilter === 'free'
+                    ? 'bg-[#f59d0e] border-[#f59d0e] text-white shadow-sm'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-[#f59d0e]'
+                }`}
+              >
+                Matières gratuites
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* 2. LISTE DES MATIÈRES */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-slate-500">
-            <span className="font-bold text-slate-900">{filtered.length}</span> module
-            {filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
+            <span className="font-bold text-slate-900">{filtered.length}</span> matière
+            {filtered.length > 1 ? 's' : ''} disponible{filtered.length > 1 ? 's' : ''}
+            {currentClassObj && ` en classe de ${currentClassObj.name}`}
           </p>
           {(searchQuery || activeSubject !== 'Tous' || activeLevel !== 'Tous' || priceFilter !== 'Tous') && (
             <button
@@ -170,7 +300,7 @@ const Courses = () => {
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009688] hover:underline cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Réinitialiser les filtres
+              Réinitialiser tous les filtres
             </button>
           )}
         </div>
@@ -178,7 +308,7 @@ const Courses = () => {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="rounded-xl border border-slate-200 overflow-hidden animate-pulse">
+              <div key={i} className="rounded-xl border border-slate-200 overflow-hidden animate-pulse bg-white">
                 <div className="aspect-[16/10] bg-slate-100"></div>
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-slate-100 rounded w-5/6"></div>
@@ -189,19 +319,21 @@ const Courses = () => {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="border border-dashed border-slate-300 rounded-xl py-16 px-6 text-center">
-            <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-700 font-semibold mb-1">
-              Aucun module ne correspond à votre recherche.
-            </p>
-            <p className="text-slate-400 text-sm mb-4">
-              Essayez un autre mot-clé ou réinitialisez les filtres.
+          <div className="border border-dashed border-slate-300 rounded-2xl py-16 px-6 text-center bg-slate-50/50">
+            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-slate-800 font-bold text-lg mb-1">
+              Aucune matière ne correspond à votre recherche
+            </h3>
+            <p className="text-slate-500 text-sm max-w-md mx-auto mb-5 leading-relaxed">
+              {currentClassObj
+                ? `Le programme de la classe de ${currentClassObj.name} est en cours d'enrichissement par M. Aliou Sow.`
+                : 'Essayez un autre mot-clé ou réinitialisez les filtres pour voir toutes les matières.'}
             </p>
             <button
               onClick={resetFilters}
-              className="px-5 py-2 rounded-full bg-[#009688] text-white text-sm font-semibold hover:bg-[#00796b] transition cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#009688] text-white text-sm font-bold hover:bg-[#00796b] transition cursor-pointer shadow-sm"
             >
-              Voir tous les modules
+              Voir toutes les matières
             </button>
           </div>
         ) : (

@@ -8,8 +8,8 @@ const COURSES_PATH = '/courses';
 const PROFILE_PATH = '/profile';
 
 const ANCHOR_LINKS = [
-  { id: 'catalogue', label: 'Nos modules' },
-  { id: 'trending', label: 'Modules tendances' },
+  { id: 'catalogue', label: 'Nos matières' },
+  { id: 'trending', label: 'Matières tendances' },
 ];
 
 const Navbar = () => {
@@ -90,7 +90,7 @@ const Navbar = () => {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Qu'est-ce que vous souhaitez apprendre ?"
-        aria-label="Rechercher un cours"
+        aria-label="Rechercher une matière"
         className="flex-1 min-w-0 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
       />
       <button
@@ -281,7 +281,7 @@ const Navbar = () => {
               to={COURSES_PATH}
               className="py-3 text-sm font-medium text-slate-800 border-b border-slate-100 hover:text-[#009688]"
             >
-              Catalogue des cours
+              Catalogue des matières
             </Link>
           </nav>
 

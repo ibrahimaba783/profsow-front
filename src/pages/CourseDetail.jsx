@@ -42,8 +42,8 @@ const CourseShell = ({ children }) => {
           : []),
       ]
     : [
-        { label: 'Tous les cours', icon: LayoutGrid, to: dashboardPath, state: { view: 'all' } },
-        { label: 'Mes cours', icon: BookOpen, to: dashboardPath, state: { view: 'mine' } },
+        { label: 'Toutes les matières', icon: LayoutGrid, to: dashboardPath, state: { view: 'all' } },
+        { label: 'Mes matières', icon: BookOpen, to: dashboardPath, state: { view: 'mine' } },
       ];
 
   const handleSearch = (e) => {
@@ -152,7 +152,7 @@ const CourseShell = ({ children }) => {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <p className="text-[11px] font-bold tracking-wider text-slate-400 px-2 mb-3">MES COURS</p>
+        <p className="text-[11px] font-bold tracking-wider text-slate-400 px-2 mb-3">MES MATIÈRES</p>
         <nav className="space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -266,7 +266,7 @@ const CourseReviews = ({ courseId, canReview, isLoggedIn }) => {
           <Link to="/login" className="font-semibold text-[#009688] hover:underline">
             Connectez-vous
           </Link>{' '}
-          pour laisser un avis sur ce module.
+          pour laisser un avis sur cette matière.
         </div>
       )}
 
@@ -309,7 +309,7 @@ const CourseReviews = ({ courseId, canReview, isLoggedIn }) => {
               onChange={(e) => setComment(e.target.value)}
               rows={4}
               maxLength={1000}
-              placeholder="Partagez votre expérience avec ce module..."
+              placeholder="Partagez votre expérience avec cette matière..."
               className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#009688] focus:ring-2 focus:ring-[#009688]/20 resize-none"
             ></textarea>
           </div>
@@ -335,7 +335,7 @@ const CourseReviews = ({ courseId, canReview, isLoggedIn }) => {
           </h3>
           {reviews.length === 0 && (
             <p className="text-sm text-slate-400 mt-1">
-              Soyez le premier à donner votre avis sur ce module !
+              Soyez le premier à donner votre avis sur cette matière !
             </p>
           )}
         </div>
@@ -1194,10 +1194,10 @@ const CourseDetail = () => {
     return (
       <CourseShell>
         <div className="min-h-[70vh] flex flex-col items-center justify-center pt-24 px-4 text-center">
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Module introuvable</h2>
-          <p className="text-sm text-slate-500 mb-6">Ce module n'existe pas ou a été supprimé.</p>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Matière introuvable</h2>
+          <p className="text-sm text-slate-500 mb-6">Cette matière n'existe pas ou a été supprimée.</p>
           <Link to="/courses" className="px-6 py-2.5 rounded-full bg-[#009688] hover:bg-[#00796b] text-white text-sm font-semibold transition">
-            Voir tous les modules
+            Voir toutes les matières
           </Link>
         </div>
       </CourseShell>
@@ -1270,7 +1270,7 @@ const CourseDetail = () => {
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 mt-6 text-sm text-white/95">
                   <span className="inline-flex items-center gap-2">
                     <LayoutGrid className="w-4 h-4 text-white/85" />
-                    {chaptersCount} section{chaptersCount > 1 ? 's' : ''}
+                    {chaptersCount} chapitre{chaptersCount > 1 ? 's' : ''}
                   </span>
                   <span className="inline-flex items-center gap-2">
                     <Users className="w-4 h-4 text-white/85" />
@@ -1386,7 +1386,7 @@ const CourseDetail = () => {
                   <div className="p-5 sm:p-6 space-y-6 text-sm">
                     {course.description && (
                       <div>
-                        <h3 className="font-bold text-slate-900 mb-2">À propos de ce module</h3>
+                        <h3 className="font-bold text-slate-900 mb-2">À propos de cette matière</h3>
                         <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{course.description}</p>
                       </div>
                     )}
@@ -1397,7 +1397,7 @@ const CourseDetail = () => {
                         { label: 'Niveau', value: levelLabel },
                         {
                           label: 'Contenu',
-                          value: `${chaptersCount} section${chaptersCount > 1 ? 's' : ''} • ${lessonsCount} leçon${
+                          value: `${chaptersCount} chapitre${chaptersCount > 1 ? 's' : ''} • ${lessonsCount} leçon${
                             lessonsCount > 1 ? 's' : ''
                           }`,
                         },
@@ -1427,7 +1427,7 @@ const CourseDetail = () => {
                     </div>
                     <h3 className="font-bold text-slate-900 mb-1">Questions &amp; Réponses avec M. Aliou Sow</h3>
                     <p className="text-sm text-slate-500 max-w-md mx-auto">
-                      Inscrivez-vous à ce module pour poser vos questions directement à M. Aliou Sow et
+                      Inscrivez-vous à cette matière pour poser vos questions directement à M. Aliou Sow et
                       échanger avec les autres élèves dans le salon de discussion.
                     </p>
                   </div>
@@ -1722,7 +1722,7 @@ const CourseDetail = () => {
                   <CreditCard className="w-5 h-5" />
                 </span>
                 <div>
-                  <h3 className="text-lg font-extrabold text-slate-900">Débloquer ce module</h3>
+                  <h3 className="text-lg font-extrabold text-slate-900">Débloquer cette matière</h3>
                   <p className="text-xs text-slate-500">{course.title}</p>
                 </div>
               </div>
@@ -1872,7 +1872,7 @@ const CourseDetail = () => {
       return;
     }
     if (!quizUnlocked) {
-      showToast('error', 'Terminez toutes les sections pour débloquer le quiz final.');
+      showToast('error', 'Terminez tous les chapitres pour débloquer le quiz final.');
       return;
     }
     setActiveExercise(null);
@@ -2218,7 +2218,7 @@ const CourseDetail = () => {
                       {quizzes.length === 0 ? (
                         <div className="text-center py-12 text-slate-400">
                           <GraduationCap className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                          <p className="text-sm">Aucune évaluation programmée pour ce module.</p>
+                          <p className="text-sm">Aucune évaluation programmée pour cette matière.</p>
                         </div>
                       ) : (
                         quizzes.map((quiz) => (
@@ -2323,7 +2323,7 @@ const CourseDetail = () => {
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           {activeExercise
                             ? `EXERCICE • ${exerciseTypeLabel(activeExercise.exerciseType).toUpperCase()}`
-                            : 'PROGRESSION DU MODULE'}
+                            : 'PROGRESSION DE LA MATIÈRE'}
                         </p>
                         <h1 className="text-base sm:text-lg font-extrabold text-slate-900 truncate">
                           {activeExercise ? activeExercise.title : activeLesson?.title || course.title}
@@ -2962,7 +2962,7 @@ const CourseDetail = () => {
                               onClick={() => {
                                 const targetChapter = chapterStatusList[nextLessonEntry.chapterIndex];
                                 if (targetChapter && !targetChapter.unlocked) {
-                                  showToast('error', 'Terminez la section en cours pour débloquer la suivante.');
+                                  showToast('error', 'Terminez le chapitre en cours pour débloquer le suivant.');
                                   return;
                                 }
                                 setActiveExercise(null);
@@ -2982,8 +2982,8 @@ const CourseDetail = () => {
                         <p className="text-sm font-semibold text-slate-600">Aucune leçon sélectionnée.</p>
                         <p className="text-xs mt-1">
                           {isStaff
-                            ? 'Ajoutez un chapitre dans "Parcours du module" à droite puis créez vos leçons.'
-                            : 'Sélectionnez une leçon dans le parcours du module à droite.'}
+                            ? 'Ajoutez un chapitre dans "Parcours de la matière" à droite puis créez vos leçons.'
+                            : 'Sélectionnez une leçon dans le parcours de la matière à droite.'}
                         </p>
                       </div>
                     )}
@@ -3046,7 +3046,7 @@ const CourseDetail = () => {
                             className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-[#009688]/60 hover:bg-teal-50/60 text-[#009688] text-sm font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
                           >
                             <Send className="w-4 h-4" />
-                            <span>Poser une question sur ce module</span>
+                            <span>Poser une question sur cette matière</span>
                           </button>
                         ) : (
                           <form
@@ -3085,7 +3085,7 @@ const CourseDetail = () => {
                         )}
 
                         <p className="text-xs font-semibold text-slate-500">
-                          {filteredQaMessages.length} question(s) sur ce module
+                          {filteredQaMessages.length} question(s) sur cette matière
                         </p>
 
                         {/* Liste des questions / discussions */}
@@ -3219,7 +3219,7 @@ const CourseDetail = () => {
               <div className="p-4 border-b border-slate-100 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    PARCOURS DU MODULE
+                    PARCOURS DE LA MATIÈRE
                   </span>
                   {isStaff && (
                     <div className="flex items-center gap-1.5">
@@ -3234,7 +3234,7 @@ const CourseDetail = () => {
                       <button
                         type="button"
                         onClick={() => setExerciseModalState({ open: true, chapterId: '', editing: null })}
-                        title="Ajouter un exercice au module"
+                        title="Ajouter un exercice à la matière"
                         className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 hover:bg-[#f59d0e] text-[#e08b00] hover:text-white text-[11px] font-bold transition cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -3300,7 +3300,7 @@ const CourseDetail = () => {
                       : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  Section
+                  Chapitre
                 </button>
               </div>
 
@@ -3310,7 +3310,7 @@ const CourseDetail = () => {
                   <>
                   {chapters.length === 0 ? (
                     <p className="text-xs text-slate-400 py-8 text-center">
-                      Aucun chapitre créé pour ce module.
+                      Aucun chapitre créé pour cette matière.
                     </p>
                   ) : (
                     chapters.map((chapter, idx) => {
@@ -3430,7 +3430,7 @@ const CourseDetail = () => {
                             <div className="px-3 pb-3 space-y-1.5">
                               {(!chapter.lessons || chapter.lessons.length === 0) ? (
                                 <p className="text-[11px] text-slate-400 px-2 py-1">
-                                  Aucune leçon dans cette section.
+                                  Aucune leçon dans ce chapitre.
                                 </p>
                               ) : (
                                 chapter.lessons.map((lesson) => {
@@ -3442,7 +3442,7 @@ const CourseDetail = () => {
                                       key={lesson._id}
                                       onClick={() => {
                                         if (!status.unlocked) {
-                                          showToast('error', 'Terminez la section précédente pour débloquer celle-ci.');
+                                          showToast('error', 'Terminez le chapitre précédent pour débloquer celui-ci.');
                                           return;
                                         }
                                         setActiveExercise(null);
@@ -3506,7 +3506,7 @@ const CourseDetail = () => {
                                       key={ex._id}
                                       onClick={() => {
                                         if (!status.unlocked) {
-                                          showToast('error', 'Terminez la section précédente pour débloquer cet exercice.');
+                                          showToast('error', 'Terminez le chapitre précédent pour débloquer cet exercice.');
                                           return;
                                         }
                                         handleSelectExercise(ex);
@@ -3566,7 +3566,7 @@ const CourseDetail = () => {
                                   <span>
                                     {status.manuallyLocked
                                       ? 'Chapitre verrouillé par votre professeur.'
-                                      : 'Terminez la section précédente pour débloquer.'}
+                                      : 'Terminez le chapitre précédent pour débloquer.'}
                                   </span>
                                 </div>
                               )}
@@ -3579,7 +3579,7 @@ const CourseDetail = () => {
                   {exercises.some((ex) => !ex.chapterId) && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50/30 p-3 space-y-1.5">
                       <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#e08b00] px-1">
-                        Exercices &amp; Devoirs du module
+                        Exercices &amp; Devoirs de la matière
                       </p>
                       {exercises
                         .filter((ex) => !ex.chapterId)
@@ -3685,7 +3685,7 @@ const CourseDetail = () => {
                         <p className="font-bold text-slate-900">
                           {course.teacher?.name || settings.siteInfo?.teacherDisplayName || 'M. Aliou Sow'}
                         </p>
-                        <p className="text-slate-500">Auteur du module</p>
+                        <p className="text-slate-500">Enseignant responsable</p>
                       </div>
                     </div>
                   </div>
@@ -3719,8 +3719,8 @@ const CourseDetail = () => {
                       }`}
                     >
                       {quizUnlocked
-                        ? 'Cliquez ici pour accéder aux quiz du module →'
-                        : 'Terminez toutes les sections pour débloquer le quiz.'}
+                        ? 'Cliquez ici pour accéder aux quiz de la matière →'
+                        : 'Terminez tous les chapitres pour débloquer le quiz.'}
                     </p>
                   </div>
                 </div>

@@ -331,7 +331,7 @@ const TeacherOverviewTab = ({
             className="px-3.5 py-2 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            Nouveau cours
+            Nouvelle matière
           </button>
           <button
             type="button"
@@ -394,7 +394,7 @@ const TeacherOverviewTab = ({
           className="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Cours &amp; Chapitres</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Matières &amp; Chapitres</span>
             <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center group-hover:scale-110 transition-transform">
               <BookOpen className="w-5 h-5" />
             </div>
@@ -513,7 +513,7 @@ const TeacherOverviewTab = ({
             <p className="text-xl sm:text-2xl font-black text-[#4c3882] mt-1 tabular-nums">
               {financialStats.total.toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500">FCFA</span>
             </p>
-            <p className="text-[11px] text-[#4c3882] font-semibold mt-0.5">Tous les modules</p>
+            <p className="text-[11px] text-[#4c3882] font-semibold mt-0.5">Toutes les matières</p>
           </div>
         </div>
 
@@ -706,7 +706,7 @@ const TeacherOverviewTab = ({
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-[#4c3882]" />
-              <h3 className="text-base font-extrabold text-slate-900">Suivi Pédagogique par Module</h3>
+              <h3 className="text-base font-extrabold text-slate-900">Suivi Pédagogique par Matière</h3>
             </div>
             <button
               type="button"

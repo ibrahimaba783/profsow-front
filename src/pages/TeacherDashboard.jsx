@@ -477,10 +477,10 @@ const TeacherDashboard = () => {
     try {
       if (editingCourse) {
         await api(`/courses/${editingCourse._id}`, { method: 'PUT', body: formData });
-        showToast('success', 'Cours mis à jour.');
+        showToast('success', 'Matière mise à jour.');
       } else {
         await api('/courses', { method: 'POST', body: formData });
-        showToast('success', 'Nouveau cours créé.');
+        showToast('success', 'Nouvelle matière créée.');
       }
       resetCourseForm();
       setShowCourseModal(false);
@@ -1141,7 +1141,7 @@ const TeacherDashboard = () => {
 
   const sidebarItems = [
     { key: 'overview', label: 'Tableau de bord', icon: LayoutDashboard, group: 'TABLEAU DE BORD' },
-    { key: 'courses', label: 'Cours & Contenu', icon: BookOpen, count: courses.length, group: 'PÉDAGOGIE' },
+    { key: 'courses', label: 'Matières & Contenu', icon: BookOpen, count: courses.length, group: 'PÉDAGOGIE' },
     {
       key: 'exercises',
       label: 'Exercices & Devoirs',
@@ -3394,7 +3394,7 @@ const TeacherDashboard = () => {
                 className="h-9 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
               >
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Nouveau Cours</span>
+                <span className="hidden sm:inline">Nouvelle Matière</span>
               </button>
 
               {/* Cloche de notifications enseignant (identique à Admin) */}
@@ -3626,7 +3626,7 @@ const TeacherDashboard = () => {
                 <Sparkles className="w-5 h-5" />
               </div>
               <h3 className="text-xl font-bold text-slate-800">
-                {editingCourse ? 'Modifier le cours' : 'Créer un nouveau cours'}
+                {editingCourse ? 'Modifier la matière' : 'Créer une nouvelle matière'}
               </h3>
             </div>
 
@@ -3641,7 +3641,7 @@ const TeacherDashboard = () => {
               <div>
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5 mb-1">
                   <BookOpen className="w-3.5 h-3.5 text-[#5c6be0]" />
-                  Titre du cours
+                  Titre de la matière
                 </label>
                 <input
                   type="text"

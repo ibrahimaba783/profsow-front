@@ -94,7 +94,7 @@ const Footer = () => {
             </li>
             <li>
               <Link to="/courses" className="hover:text-[#009688] transition-colors">
-                Tous nos modules
+                Toutes nos matières
               </Link>
             </li>
             <li>

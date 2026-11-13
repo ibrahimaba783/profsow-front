@@ -304,8 +304,8 @@ const StudentDashboard = () => {
   }
 
   const sidebarItems = [
-    { key: 'all', label: 'Tous les cours', icon: LayoutGrid },
-    { key: 'mine', label: 'Mes cours', icon: BookOpen, count: myCourses.length },
+    { key: 'all', label: 'Toutes les matières', icon: LayoutGrid },
+    { key: 'mine', label: 'Mes matières', icon: BookOpen, count: myCourses.length },
     { key: 'progress', label: 'Mes résultats & quiz', icon: Award, count: quizResults.length },
   ];
 
@@ -489,7 +489,7 @@ const StudentDashboard = () => {
                 <section className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                      {myCourses.length > 0 ? 'Reprendre & découvrir' : 'Cours recommandés'}
+                      {myCourses.length > 0 ? 'Reprendre & découvrir' : 'Matières recommandées'}
                     </h2>
                     <span className="text-xs font-medium text-slate-400">
                       Mathématiques &amp; Physique-Chimie • 4ème à Terminale S
@@ -523,7 +523,7 @@ const StudentDashboard = () => {
                               </span>
                             ) : (course.isFree || course.price === 0) ? (
                               <span className="absolute top-2.5 left-2.5 text-[10px] font-extrabold uppercase tracking-wider bg-rose-600 text-white px-2 py-0.5 rounded-md shadow-xs">
-                                MODULE GRATUIT
+                                MATIÈRE GRATUITE
                               </span>
                             ) : null}
                           </div>
@@ -562,7 +562,7 @@ const StudentDashboard = () => {
               {/* 2. CATALOGUE DES COURS (FORMAT BAKELI) */}
               <section className="space-y-5">
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                  Catalogue des cours
+                  Catalogue des matières
                 </h2>
 
                 {/* Barre de recherche + bouton Filtres */}
@@ -573,7 +573,7 @@ const StudentDashboard = () => {
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Rechercher un cours..."
+                      placeholder="Rechercher une matière..."
                       className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
                     />
                   </div>
@@ -633,7 +633,7 @@ const StudentDashboard = () => {
                           : 'bg-white border-slate-200 text-slate-600 hover:border-[#f59d0e]'
                       }`}
                     >
-                      Gratuits uniquement
+                      Matières gratuites uniquement
                     </button>
 
                     {activeFiltersCount > 0 && (
@@ -660,7 +660,7 @@ const StudentDashboard = () => {
 
                 {filteredTrending.length === 0 ? (
                   <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center text-slate-500">
-                    Aucun module ne correspond à votre recherche.
+                    Aucune matière ne correspond à votre recherche.
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -678,13 +678,13 @@ const StudentDashboard = () => {
             <div className="space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-extrabold text-slate-900">Mes cours</h1>
+                  <h1 className="text-2xl font-extrabold text-slate-900">Mes matières</h1>
                   <p className="text-sm text-slate-500 mt-1">
                     Suivez votre progression leçon par leçon et consultez vos abonnements actifs.
                   </p>
                 </div>
                 <span className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-semibold text-slate-700 self-start">
-                  Cours actifs : <strong className="text-[#009688]">{myCourses.length}</strong>
+                  Matières actives : <strong className="text-[#009688]">{myCourses.length}</strong>
                 </span>
               </div>
 
@@ -692,14 +692,14 @@ const StudentDashboard = () => {
                 <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-slate-500">
                   <p className="font-semibold text-slate-700">
                     {myCourses.length === 0
-                      ? "Vous n'avez aucun cours débloqué pour le moment."
-                      : 'Aucun de vos cours ne correspond à cette recherche.'}
+                      ? "Vous n'avez aucune matière débloquée pour le moment."
+                      : 'Aucune de vos matières ne correspond à cette recherche.'}
                   </p>
                   <button
                     onClick={() => setView('all')}
                     className="mt-3 text-[#009688] font-bold hover:underline cursor-pointer text-sm"
                   >
-                    Découvrir tous les cours
+                    Découvrir toutes les matières
                   </button>
                 </div>
               ) : (
@@ -857,7 +857,7 @@ const StudentDashboard = () => {
                                 {res.quiz?.title || 'Quiz'}
                               </p>
                               <p className="text-xs text-slate-500 mt-0.5">
-                                {res.quiz?.course?.title || 'Module'} •{' '}
+                                {res.quiz?.course?.title || 'Matière'} •{' '}
                                 {new Date(res.createdAt).toLocaleDateString('fr-FR')}
                               </p>
                             </div>
@@ -896,7 +896,7 @@ const StudentDashboard = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900">Abonnement Réussi !</h3>
                 <p className="text-slate-600 text-sm">
-                  Le module <strong>{selectedCourse.title}</strong> est désormais débloqué.
+                  La matière <strong>{selectedCourse.title}</strong> est désormais débloquée.
                 </p>
 
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-left text-xs space-y-1 font-mono">
@@ -929,7 +929,7 @@ const StudentDashboard = () => {
                   }}
                   className="w-full bg-[#009688] hover:bg-[#00796b] text-white font-bold py-3 rounded-xl cursor-pointer transition"
                 >
-                  Accéder au cours
+                  Accéder à la matière
                 </button>
               </div>
             ) : (
@@ -939,7 +939,7 @@ const StudentDashboard = () => {
                   <span>Paiement Mobile FCFA</span>
                 </h3>
                 <p className="text-slate-500 text-xs mb-3">
-                  Réglez votre abonnement Wave ou Orange Money pour le module :{' '}
+                  Réglez votre abonnement Wave ou Orange Money pour la matière :{' '}
                   <strong>{selectedCourse.title}</strong> ({selectedCourse.price ?? 6000} FCFA).
                 </p>
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 mb-5 space-y-1">

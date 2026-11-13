@@ -239,7 +239,7 @@ const AdminUsersTab = ({
                 <th className="py-3.5 px-4">Utilisateur</th>
                 <th className="py-3.5 px-4">Rôle</th>
                 <th className="py-3.5 px-4">Statut &amp; Sécurité</th>
-                <th className="py-3.5 px-4">Modules / Abonnements</th>
+                <th className="py-3.5 px-4">Matières / Abonnements</th>
                 <th className="py-3.5 px-4">Dernière Connexion</th>
                 <th className="py-3.5 px-4 text-right">Actions de Contrôle</th>
               </tr>

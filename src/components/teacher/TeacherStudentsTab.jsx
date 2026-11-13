@@ -235,7 +235,7 @@ const TeacherStudentsTab = ({
             onChange={(e) => setCourseFilter(e.target.value)}
             className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#4c3882]"
           >
-            <option value="all">Tous les cours</option>
+            <option value="all">Toutes les matières</option>
             {courses.map((c) => (
               <option key={c._id} value={c._id}>
                 {c.title}

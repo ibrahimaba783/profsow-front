@@ -24,8 +24,11 @@ import {
   Wrench,
   ExternalLink,
   Download,
+  Layers,
+  ArrowRight,
 } from 'lucide-react';
 import profPhoto from '../assets/prof-aliou-sow-cutout.png';
+import { CYCLES, getClassStats } from '../utils/education';
 
 const COURSES_PREVIEW_COUNT = 8;
 const TRENDING_PREVIEW_COUNT = 4;
@@ -39,12 +42,12 @@ const INSTALL_FEATURES = [
   {
     icon: WifiOff,
     title: 'Mode hors ligne',
-    text: 'Consultez vos cours même sans connexion internet',
+    text: 'Consultez vos matières et chapitres même sans connexion internet',
   },
   {
     icon: Bell,
     title: 'Notifications',
-    text: 'Recevez des alertes pour vos nouveaux cours et séances en direct',
+    text: 'Recevez des alertes pour vos nouveaux chapitres et séances en direct',
   },
   {
     icon: Smartphone,
@@ -73,9 +76,9 @@ const INSTALL_STEPS = [
 
 const STEPS = [
   "S'inscrire",
-  'Choisir un module',
+  'Choisir une matière',
   'Tester vos connaissances',
-  'Suivre les cours et séances en direct',
+  'Suivre les chapitres et séances en direct',
 ];
 
 const TESTIMONIALS = [
@@ -83,7 +86,7 @@ const TESTIMONIALS = [
     name: 'FATOU DIAGNE',
     level: 'Élève en Terminale S',
     quote:
-      "Grâce à Aliou Sow Academy, j'ai pu maîtriser les fonctions, les suites et la mécanique. Les cours sont très structurés et les quiz corrigés m'ont permis de réussir mon Baccalauréat sereinement.",
+      "Grâce à Aliou Sow Academy, j'ai pu maîtriser les fonctions, les suites et la mécanique. Les chapitres sont très structurés et les quiz corrigés m'ont permis de réussir mon Baccalauréat sereinement.",
   },
   {
     name: 'MOUSSA KA',
@@ -103,27 +106,27 @@ const FAQS = [
   {
     question: 'Comment fonctionne Aliou Sow Academy ?',
     answer:
-      "Inscrivez-vous en quelques secondes, choisissez votre module en Mathématiques ou Physique-Chimie selon votre classe (4ème à Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, cours rédigés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
+      "Inscrivez-vous en quelques secondes, choisissez votre matière en Mathématiques ou Physique-Chimie selon votre classe (de la 6ème à la Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, résumés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
   },
   {
-    question: 'Les cours suivent-ils le programme officiel ?',
+    question: 'Les cours suivent-ils le programme officiel sénégalais ?',
     answer:
-      "Oui, l'ensemble des modules est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (4ème, 3ème, 2nde S, 1ère S, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
+      "Oui, l'ensemble des matières est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (6ème, 5ème, 4ème, 3ème, Seconde, Première, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
   },
   {
-    question: "Quel est le tarif et la durée d'accès à un module ?",
+    question: "Quel est le tarif et la durée d'accès à une matière ?",
     answer:
-      "L'accès standard à un module est fixé à 6 000 FCFA (payable simplement par Wave ou Orange Money), avec des offres gratuites sur certains modules de découverte et un accès renouvelable pour accompagner votre progression.",
+      "L'accès standard à une matière complète est fixé à 6 000 FCFA (payable simplement par Wave ou Orange Money), avec des accès gratuits sur certaines matières de découverte et un accès renouvelable pour accompagner votre progression.",
   },
   {
-    question: 'Puis-je accéder aux cours sur mobile ?',
+    question: 'Puis-je accéder aux matières sur mobile ?',
     answer:
       "Oui, la plateforme est entièrement responsive et optimisée pour smartphones, tablettes et ordinateurs. Vous pouvez même l'installer sur votre écran d'accueil pour un accès rapide.",
   },
   {
     question: "Y a-t-il un support disponible si j'ai des questions ?",
     answer:
-      "Oui ! Chaque module intègre un salon de discussion et de soutien pédagogique permettant d'échanger directement avec M. Aliou Sow et les autres élèves, en plus des séances en direct.",
+      "Oui ! Chaque matière intègre un salon de discussion et de soutien pédagogique permettant d'échanger directement avec M. Aliou Sow et les autres élèves, en plus des séances en direct.",
   },
 ];
 
@@ -220,6 +223,7 @@ const Landing = () => {
       return true;
     }
   });
+  const [activeCycleTab, setActiveCycleTab] = useState('tous'); // 'tous' | 'college' | 'lycee'
   const [activeSubject, setActiveSubject] = useState('Tous');
   const [activeLevel, setActiveLevel] = useState('Tous');
   const [onlyFree, setOnlyFree] = useState(false);
@@ -267,7 +271,7 @@ const Landing = () => {
           } catch {}
         }
       } catch (err) {
-        console.error('Erreur de chargement des cours :', err);
+        console.error('Erreur de chargement des matières :', err);
       } finally {
         setLoading(false);
       }
@@ -325,7 +329,7 @@ const Landing = () => {
     setOnlyFree(false);
   };
 
-  // Cours tendance : triés par nombre d'élèves puis récence
+  // Matières tendances : triées par nombre d'élèves puis récence
   const trendingCourses = [...courses]
     .sort((a, b) => (b.studentsCount || 0) - (a.studentsCount || 0))
     .slice(0, TRENDING_PREVIEW_COUNT);
@@ -342,6 +346,11 @@ const Landing = () => {
     : filteredCourses.slice(0, COURSES_PREVIEW_COUNT);
   const canToggleCourses = filteredCourses.length > COURSES_PREVIEW_COUNT;
 
+  const displayedCycles =
+    activeCycleTab === 'tous'
+      ? CYCLES
+      : CYCLES.filter((cycle) => cycle.id === activeCycleTab);
+
   const prevTestimonial = () =>
     setActiveTestimonial((i) =>
       dynamicTestimonials.length ? (i - 1 + dynamicTestimonials.length) % dynamicTestimonials.length : 0
@@ -351,7 +360,6 @@ const Landing = () => {
       dynamicTestimonials.length ? (i + 1) % dynamicTestimonials.length : 0
     );
 
-  // Ordre cyclique pour afficher les témoignages comme sur les captures Bakeli
   const orderedTestimonials = dynamicTestimonials.map(
     (_, idx) => dynamicTestimonials[(activeTestimonial + idx) % dynamicTestimonials.length]
   );
@@ -400,10 +408,10 @@ const Landing = () => {
           </div>
         </div>
       )}
-      {/* 1. BANNIÈRE D'ACCUEIL (Format exact Capture 1 Bakeli) */}
+
+      {/* 1. BANNIÈRE D'ACCUEIL */}
       <header className="w-full bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-          {/* Texte à gauche */}
           <div>
             {isLoggedIn ? (
               <>
@@ -411,9 +419,9 @@ const Landing = () => {
                   RAVI DE VOUS RETROUVER{firstName ? `, ${firstName.toUpperCase()} !` : ' !'}
                 </h1>
                 <p className="text-slate-600 text-base leading-relaxed max-w-xl mb-8">
-                  Poursuivez vos cours de Mathématiques et de Physique-Chimie avec M. Aliou Sow,
-                  téléchargez vos fiches PDF, participez aux séances en direct et évaluez vos
-                  connaissances avec les quiz interactifs.
+                  Poursuivez vos matières en Mathématiques et Physique-Chimie avec M. Aliou Sow,
+                  consultez vos chapitres, téléchargez vos fiches PDF, participez aux séances en direct
+                  et évaluez vos connaissances avec les quiz interactifs.
                 </p>
                 <div className="flex flex-wrap items-center gap-4">
                   <Link
@@ -423,10 +431,10 @@ const Landing = () => {
                     Accéder à mon espace
                   </Link>
                   <a
-                    href="#catalogue"
+                    href="#classes"
                     className="inline-block border border-[#009688] text-[#009688] hover:bg-[#009688] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
                   >
-                    Explorer les modules
+                    Explorer les matières
                   </a>
                 </div>
               </>
@@ -436,25 +444,31 @@ const Landing = () => {
                   APPRENEZ À VOTRE RYTHME ET RÉUSSISSEZ EN SCIENCES
                 </h1>
                 <p className="text-slate-600 text-base leading-relaxed max-w-xl mb-8">
-                  Avec la plateforme d&apos;apprentissage en ligne de M. Aliou Sow, accédez à des
-                  cours structurés en Mathématiques et Physique-Chimie, adaptés de la 4ème à la
-                  Terminale S. Avancez à votre propre rythme grâce aux vidéos, documents PDF, quiz et
-                  séances en direct pour réussir le BFEM et le Baccalauréat.
+                  Avec la plateforme d&apos;apprentissage de M. Aliou Sow inspirée du modèle Sama School,
+                  accédez à des matières structurées en chapitres (Mathématiques et Physique-Chimie),
+                  de la 6ème à la Terminale S. Progressez à votre rythme grâce aux leçons vidéos, résumés PDF,
+                  exercices corrigés et quiz pour réussir le BFEM et le Baccalauréat.
                 </p>
-                <Link
-                  to={openRegistration ? '/register' : '/courses'}
-                  className="inline-block border border-[#f59d0e] text-[#f59d0e] hover:bg-[#f59d0e] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
-                >
-                  {openRegistration ? 'Inscrivez-vous dès maintenant !' : 'Découvrir nos modules'}
-                </Link>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Link
+                    to={openRegistration ? '/register' : '/courses'}
+                    className="inline-block border border-[#f59d0e] text-[#f59d0e] hover:bg-[#f59d0e] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
+                  >
+                    {openRegistration ? 'Inscrivez-vous dès maintenant !' : 'Découvrir nos matières'}
+                  </Link>
+                  <a
+                    href="#classes"
+                    className="inline-block border border-[#009688] text-[#009688] hover:bg-[#009688] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
+                  >
+                    Choisir ma classe
+                  </a>
+                </div>
               </>
             )}
           </div>
 
-          {/* Portrait détouré du professeur + formes organiques orange/vert sarcelle (Format exact Bakeli) */}
           <div className="flex justify-center lg:justify-end lg:pr-4">
             <div className="relative w-[300px] sm:w-[360px] lg:w-[410px] pt-2 flex items-end justify-center">
-              {/* Formes organiques SVG exactes (style Bakeli : deux lobes dégradés + pastilles flottantes) */}
               <svg
                 viewBox="0 0 420 390"
                 aria-hidden="true"
@@ -477,47 +491,31 @@ const Landing = () => {
                   </linearGradient>
                 </defs>
 
-                {/* Lobe beige doux à gauche */}
                 <path
                   d="M72,218 C25,216 14,265 32,298 C48,326 95,332 130,305 L130,220 Z"
                   fill="#efe8dd"
                 />
-
-                {/* Grande forme organique orange -> vert derrière l'épaule gauche */}
                 <path
                   d="M84,390 C72,300 94,164 148,144 C194,126 238,176 266,262 L272,390 Z"
                   fill="url(#bakeliOrangeGreen)"
                 />
-
-                {/* Grande forme organique vert -> sarcelle derrière l'épaule droite */}
                 <path
                   d="M196,390 L214,228 C236,162 292,134 342,162 C388,188 378,314 346,390 Z"
                   fill="url(#bakeliGreenTeal)"
                 />
-
-                {/* Pastille moyenne dégradée en haut à gauche */}
                 <circle cx="70" cy="112" r="22" fill="url(#bakeliDotGrad)" />
-
-                {/* Petit point dégradé en haut */}
                 <circle cx="152" cy="70" r="8" fill="url(#bakeliDotGrad)" />
-
-                {/* Forme goutte/feuille en haut à droite */}
                 <path
                   d="M342,90 C342,68 378,60 386,78 C392,94 358,110 342,90 Z"
                   fill="url(#bakeliDotGrad)"
                 />
-
-                {/* Forme goutte/feuille en bas à gauche */}
                 <path
                   d="M28,312 C28,292 78,288 84,306 C90,322 44,332 28,312 Z"
                   fill="url(#bakeliDotGrad)"
                 />
-
-                {/* Pastille dégradée en bas à droite */}
                 <circle cx="364" cy="364" r="25" fill="url(#bakeliDotGrad)" />
               </svg>
 
-              {/* Photo détourée de M. Aliou Sow (fond transparent, posée net devant les formes) */}
               <img
                 src={profPhoto}
                 alt="M. Aliou Sow, professeur de Mathématiques et Physique-Chimie"
@@ -528,12 +526,141 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* 2. NOS MODULES TENDANCE (Capture 2 Bakeli) */}
-      <section id="trending" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 scroll-mt-24">
+      {/* 2. SÉLECTION PAR CLASSE : COLLÈGE (6e à 3e) & LYCÉE (Seconde à Terminale) — MODÈLE SAMA SCHOOL */}
+      <section id="classes" className="w-full bg-slate-50/70 py-16 scroll-mt-24 border-y border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider mb-2.5">
+                <GraduationCap className="w-3.5 h-3.5 text-emerald-600" />
+                Programme officiel sénégalais
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Explorez les programmes par Classe
+              </h2>
+              <p className="text-slate-600 text-sm sm:text-base mt-1.5 max-w-2xl">
+                Sélectionnez votre classe pour découvrir l&apos;ensemble des matières, chapitres,
+                leçons vidéos et exercices corrigés conformes aux programmes nationaux.
+              </p>
+            </div>
+
+            {/* Sélecteur de cycle Collège / Lycée */}
+            <div className="inline-flex items-center p-1 bg-white border border-slate-200 rounded-2xl shadow-sm self-start md:self-auto shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveCycleTab('tous')}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                  activeCycleTab === 'tous'
+                    ? 'bg-[#009688] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Toutes les classes
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveCycleTab('college')}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                  activeCycleTab === 'college'
+                    ? 'bg-[#009688] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Collège (6e à 3e)
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveCycleTab('lycee')}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                  activeCycleTab === 'lycee'
+                    ? 'bg-[#009688] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Lycée (2nde à Tle)
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-10">
+            {displayedCycles.map((cycle) => (
+              <div key={cycle.id} className="space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${cycle.badgeColor}`}>
+                      {cycle.label}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-600">{cycle.subtitle}</span>
+                  </div>
+                  <span className="text-xs font-medium text-slate-400">
+                    {cycle.classes.length} classes
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {cycle.classes.map((cls) => {
+                    const stats = getClassStats(courses, cls);
+                    const isKeyExam = cls.name === '3ème' || cls.name === 'Terminale';
+                    return (
+                      <Link
+                        key={cls.id}
+                        to={`/courses?level=${encodeURIComponent(cls.id)}`}
+                        className="group relative bg-white border border-slate-200 hover:border-[#009688] rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-start justify-between gap-2 mb-4">
+                            <span className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-100 text-[#00796b] font-black text-lg flex items-center justify-center group-hover:bg-[#009688] group-hover:text-white group-hover:border-[#009688] transition-colors shadow-sm">
+                              {cls.short}
+                            </span>
+                            {isKeyExam && (
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                {cls.name === '3ème' ? 'Examen BFEM' : 'Examen Bac'}
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#009688] transition-colors">
+                            Classe de {cls.name}
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
+                            {cls.desc}
+                          </p>
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                          <div className="space-y-0.5">
+                            <div className="font-bold text-slate-900">
+                              {stats.subjectsCount} matière{stats.subjectsCount > 1 ? 's' : ''}
+                            </div>
+                            <div className="text-slate-500">
+                              {stats.totalChapters} chapitre{stats.totalChapters > 1 ? 's' : ''}
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center gap-1 font-bold text-[#009688] group-hover:translate-x-1 transition-transform">
+                            Accéder <ChevronRight className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. NOS MATIÈRES TENDANCES */}
+      <section id="trending" className="max-w-7xl mx-auto px-4 sm:px-6 py-14 scroll-mt-24">
         <div className="flex items-center justify-between gap-4 mb-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Nos Modules Tendance
-          </h2>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              Nos Matières Tendances
+            </h2>
+            <p className="text-slate-500 text-sm mt-1">
+              Les matières les plus suivies par les élèves de l&apos;académie cette année.
+            </p>
+          </div>
           <Link
             to="/courses"
             className="text-sm sm:text-base font-semibold text-[#009688] hover:underline shrink-0"
@@ -547,7 +674,7 @@ const Landing = () => {
         ) : trendingCourses.length === 0 ? (
           <div className="border border-dashed border-slate-300 rounded-xl py-14 px-6 text-center">
             <p className="text-slate-700 font-semibold mb-1">
-              Les premiers modules arrivent bientôt.
+              Les premières matières arrivent bientôt.
             </p>
             <p className="text-slate-400 text-sm">
               Revenez très prochainement sur Aliou Sow Academy.
@@ -562,11 +689,11 @@ const Landing = () => {
         )}
       </section>
 
-      {/* 3. CHIFFRES CLÉS (Capture 3 Bakeli - Données réelles de la BD) */}
+      {/* 4. CHIFFRES CLÉS */}
       <section ref={statsRef} className="w-full bg-[#f8fafc] py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-slate-900 mb-10">
-            Découvrez les chiffres des élèves ayant suivi nos cours
+            Découvrez les chiffres des élèves ayant suivi nos matières
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
@@ -580,20 +707,20 @@ const Landing = () => {
               icon={BookOpen}
               target={platformStats.coursesCount}
               suffix="+"
-              label="Cours disponibles"
+              label="Matières & chapitres disponibles"
               start={statsVisible}
             />
             <StatCard
               icon={Briefcase}
-              target={platformStats.modulesCount}
-              label="Matières scientifiques proposées"
+              target={platformStats.modulesCount || platformStats.coursesCount}
+              label="Programmes scientifiques complets"
               start={statsVisible}
             />
           </div>
         </div>
       </section>
 
-      {/* 4. APPRENEZ PARTOUT, MÊME HORS LIGNE + COMMENT INSTALLER ? (Captures 4 & 5 Bakeli) */}
+      {/* 5. APPRENEZ PARTOUT, MÊME HORS LIGNE */}
       {settings.features?.enableAppInstall !== false && (
         <section id="install" className="w-full bg-white py-16 scroll-mt-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -603,7 +730,7 @@ const Landing = () => {
               </h2>
               <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed">
                 Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez
-                à vos cours rapidement, même sans connexion internet.
+                à vos chapitres et exercices rapidement, même sans connexion internet.
               </p>
 
               <div className="mt-8 space-y-5">
@@ -637,7 +764,7 @@ const Landing = () => {
             <hr className="border-slate-100 my-14" />
 
             <h3 className="text-xl font-bold text-slate-900 text-center mb-8">
-              Comment installer ?
+              Comment installer l&apos;application ?
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {INSTALL_STEPS.map((step) => (
@@ -655,23 +782,22 @@ const Landing = () => {
         </section>
       )}
 
-      {/* 5. TROUVER LE MODULE QUI VOUS CORRESPOND (Captures 5 & 6 Bakeli) */}
+      {/* 6. TROUVER LA MATIÈRE QUI VOUS CORRESPOND */}
       <section id="catalogue" className="w-full bg-white pb-16 pt-4 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Trouver le module qui vous correspond
+            Trouver la matière qui vous correspond
           </h2>
           <p className="text-slate-600 mt-2 mb-7">
             Choisissez la matière qui vous passionne et adaptez le niveau d&apos;étude selon vos
             objectifs pour avancer à votre rythme.
           </p>
 
-          {/* Barre de filtres exacte Bakeli */}
           <div className="flex flex-wrap items-center gap-3 mb-8">
             <LevelSelect
               value={activeLevel}
               onChange={setActiveLevel}
-              options={[{ value: 'Tous', label: 'Tous les niveaux' }, ...LEVELS]}
+              options={[{ value: 'Tous', label: 'Toutes les classes' }, ...LEVELS]}
               size="md"
             />
 
@@ -697,7 +823,7 @@ const Landing = () => {
                   : 'bg-white border-slate-300 text-slate-700 hover:border-[#f59d0e]'
               }`}
             >
-              Cours gratuits
+              Matières gratuites
             </button>
 
             {canToggleCourses ? (
@@ -722,7 +848,7 @@ const Landing = () => {
           ) : courses.length === 0 ? (
             <div className="border border-dashed border-slate-300 rounded-xl py-16 px-6 text-center">
               <p className="text-slate-700 font-semibold mb-1">
-                Les premiers cours arrivent bientôt.
+                Les premières matières arrivent bientôt.
               </p>
               <p className="text-slate-400 text-sm">
                 Revenez très prochainement sur Aliou Sow Academy.
@@ -731,7 +857,7 @@ const Landing = () => {
           ) : filteredCourses.length === 0 ? (
             <div className="border border-slate-200 rounded-xl py-14 px-6 text-center">
               <p className="text-slate-700 font-semibold mb-1">
-                Aucun module ne correspond à cette sélection.
+                Aucune matière ne correspond à cette sélection.
               </p>
               <button
                 onClick={resetFilters}
@@ -750,7 +876,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* 6. CE QUE DISENT NOS ÉLÈVES (Captures 7 & 8 Bakeli) */}
+      {/* 7. CE QUE DISENT NOS ÉLÈVES */}
       <section id="testimonials" className="w-full bg-[#f8fafc] py-16 scroll-mt-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-8">
@@ -803,7 +929,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* 7. DÉVELOPPER DES COMPÉTENCES (Capture 8 Bakeli) */}
+      {/* 8. DÉVELOPPER DES COMPÉTENCES */}
       <section className="w-full bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
@@ -828,11 +954,10 @@ const Landing = () => {
               to="/courses"
               className="inline-flex items-center h-12 px-7 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white font-semibold transition"
             >
-              Explorer nos cours
+              Explorer nos matières
             </Link>
           </div>
 
-          {/* Illustration éducative (Capture 8 Bakeli) */}
           <div className="flex justify-center">
             <svg
               viewBox="0 0 360 280"
@@ -841,34 +966,28 @@ const Landing = () => {
               aria-label="Illustration étudiant en apprentissage"
             >
               <circle cx="185" cy="145" r="108" fill="#eef4ff" />
-              {/* Feuille A+ */}
               <rect x="115" y="42" width="46" height="58" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="2" />
               <text x="123" y="62" fontSize="14" fontWeight="bold" fill="#4f46e5">A+</text>
               <line x1="123" y1="73" x2="152" y2="73" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
               <line x1="123" y1="82" x2="148" y2="82" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
               <line x1="123" y1="91" x2="144" y2="91" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
-              {/* Engrenages */}
               <circle cx="72" cy="148" r="20" fill="#ffffff" stroke="#6366f1" strokeWidth="4" strokeDasharray="7 5" />
               <circle cx="72" cy="148" r="7" fill="#a5b4fc" />
               <circle cx="102" cy="122" r="12" fill="#ffffff" stroke="#6366f1" strokeWidth="3" strokeDasharray="5 4" />
               <circle cx="102" cy="122" r="4" fill="#a5b4fc" />
-              {/* Chapeau de diplômé */}
               <polygon points="240,58 278,72 240,86 202,72" fill="#4f6ef7" />
               <path d="M216,78 L216,96 C216,96 240,104 264,96 L264,78" fill="#6366f1" />
               <line x1="274" y1="74" x2="274" y2="100" stroke="#f59d0e" strokeWidth="2.5" />
               <circle cx="274" cy="102" r="3" fill="#f59d0e" />
-              {/* Ampoule */}
               <circle cx="290" cy="142" r="16" fill="#dbeafe" stroke="#60a5fa" strokeWidth="2" />
               <rect x="284" y="157" width="12" height="7" rx="2" fill="#64748b" />
               <line x1="290" y1="118" x2="290" y2="111" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
               <line x1="312" y1="142" x2="319" y2="142" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
               <line x1="306" y1="125" x2="311" y2="120" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
-              {/* Étudiant avec livre */}
               <circle cx="185" cy="134" r="28" fill="#0f172a" />
               <circle cx="185" cy="139" r="17" fill="#f8cbb8" />
               <path d="M168,136 C172,126 198,126 202,136 C198,123 172,123 168,136 Z" fill="#0f172a" />
               <path d="M126,232 C132,190 156,174 185,174 C214,174 238,190 244,232 Z" fill="#c7d2fe" />
-              {/* Livre ouvert */}
               <polygon points="145,196 185,204 185,244 145,235" fill="#4f6ef7" />
               <polygon points="225,196 185,204 185,244 225,235" fill="#6366f1" />
               <circle cx="152" cy="222" r="9" fill="#f8cbb8" />
@@ -919,7 +1038,7 @@ const Landing = () => {
         </section>
       )}
 
-      {/* 8. BANDEAU D'APPEL À L'ACTION VERT SARCELLE (Capture 9 Bakeli) */}
+      {/* 9. BANDEAU D'APPEL À L'ACTION */}
       <section className="relative w-full bg-[#009688] text-white overflow-hidden">
         <GraduationCap className="hidden md:block absolute -right-8 top-6 w-56 h-56 text-white/10 -rotate-12 pointer-events-none" />
         <Award className="hidden md:block absolute -left-8 bottom-4 w-48 h-48 text-white/10 rotate-12 pointer-events-none" />
@@ -929,19 +1048,19 @@ const Landing = () => {
             Commençons avec Aliou Sow Academy
           </h2>
           <p className="text-white/90 text-sm sm:text-base max-w-2xl mx-auto mb-8 leading-relaxed">
-            Reconnue pour ses cours structurés de Mathématiques et Physique-Chimie qui transforment
+            Reconnue pour ses matières structurées en Mathématiques et Physique-Chimie qui transforment
             les élèves ambitieux en lauréats au BFEM et au Baccalauréat.
           </p>
           <Link
             to="/courses"
             className="inline-flex items-center h-11 px-8 rounded-lg border border-white text-white hover:bg-white hover:text-[#009688] text-sm font-semibold transition"
           >
-            Découvrez nos cours
+            Découvrez nos matières
           </Link>
         </div>
       </section>
 
-      {/* 9. QUESTIONS FRÉQUENTES (Captures 9 & 10 Bakeli) */}
+      {/* 10. QUESTIONS FRÉQUENTES */}
       <section id="faq" className="w-full bg-[#f8fafc] py-16 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-8">

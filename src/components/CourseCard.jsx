@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, LayoutGrid } from 'lucide-react';
+import { Clock, LayoutGrid, GraduationCap } from 'lucide-react';
+import { formatClassLabel, getSubjectMeta } from '../utils/education';
 
-export const formatLevel = (level) => (level === 'TS' ? 'Terminale S' : level);
+export const formatLevel = (level) => formatClassLabel(level);
 
 export const getInitials = (name) =>
   (name || 'Aliou Sow')
@@ -14,12 +15,15 @@ export const getInitials = (name) =>
 
 const CourseCard = ({ course, footerRight, topRightBadge, onClick }) => {
   const teacherName = course.teacher?.name || 'Aliou Sow';
-  const sectionsCount = course.chaptersCount ?? course.chapters?.length ?? 0;
+  const chaptersCount = course.chaptersCount ?? course.chapters?.length ?? 0;
   const studentsCount = course.studentsCount ?? 0;
   const courseIsFree = course.isFree || course.price === 0;
   const displayPrice = courseIsFree
     ? 'Gratuit'
     : `${(course.price ?? 6000).toLocaleString('fr-FR')} FCFA`;
+
+  const subjectMeta = getSubjectMeta(course.subject);
+  const SubjectIcon = subjectMeta?.icon || GraduationCap;
 
   const cardContent = (
     <>
@@ -34,28 +38,29 @@ const CourseCard = ({ course, footerRight, topRightBadge, onClick }) => {
       </div>
 
       <div className="flex flex-col flex-1 p-4">
-        {/* Badges matière et niveau (format Bakeli) */}
+        {/* En-tête : Matière + Classe (clair, sans badges redondants) */}
         <div className="flex items-center justify-between gap-2 mb-3">
-          <span className="text-[11px] font-semibold bg-sky-50 text-sky-600 rounded-full px-2.5 py-0.5 truncate">
-            {course.subject}
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-100 rounded-full px-2.5 py-0.5 truncate">
+            <SubjectIcon className="w-3 h-3 shrink-0 text-sky-600" />
+            <span className="truncate">{course.subject || 'Matière'}</span>
           </span>
-          <span className="text-[11px] font-semibold bg-orange-50 text-[#f59d0e] rounded-full px-2.5 py-0.5 shrink-0">
-            {formatLevel(course.level)}
+          <span className="text-[11px] font-semibold bg-amber-50 text-[#d97706] border border-amber-100 rounded-full px-2.5 py-0.5 shrink-0">
+            {formatClassLabel(course.level)}
           </span>
         </div>
 
-        {/* Titre du module */}
+        {/* Titre de la matière / programme */}
         <h3 className="text-[15px] font-bold text-slate-900 leading-snug line-clamp-2 min-h-[2.6rem] group-hover:text-[#009688] transition-colors">
           {course.title}
         </h3>
 
-        {/* Nombre d'élèves aligné à droite comme sur Bakeli */}
+        {/* Nombre d'élèves */}
         <div className="text-right text-xs text-slate-500 mt-2.5">
           <span className="font-semibold text-slate-700">{studentsCount}</span>{' '}
           élève{studentsCount > 1 ? 's' : ''}
         </div>
 
-        {/* Durée & sections */}
+        {/* Durée & chapitres */}
         <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
           <span className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
@@ -63,13 +68,13 @@ const CourseCard = ({ course, footerRight, topRightBadge, onClick }) => {
           </span>
           <span className="flex items-center gap-1.5">
             <LayoutGrid className="w-3.5 h-3.5 text-[#f59d0e] shrink-0" />
-            <span>
-              {sectionsCount} section{sectionsCount > 1 ? 's' : ''}
+            <span className="font-medium text-slate-700">
+              {chaptersCount} chapitre{chaptersCount > 1 ? 's' : ''}
             </span>
           </span>
         </div>
 
-        {/* Pied de carte : professeur à gauche, prix ou action à droite */}
+        {/* Pied de carte : enseignant à gauche, prix ou action à droite */}
         <div className="mt-auto pt-3.5">
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
             <span className="flex items-center gap-2 min-w-0">

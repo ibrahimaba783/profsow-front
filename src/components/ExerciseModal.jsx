@@ -159,7 +159,7 @@ const ExerciseModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {courses.length > 1 && (
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Module / Cours</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Matière</label>
                 <select
                   value={courseId}
                   onChange={(e) => {
@@ -183,7 +183,7 @@ const ExerciseModal = ({
                 onChange={(e) => setChapterId(e.target.value)}
                 className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white"
               >
-                <option value="">Module entier (hors chapitre spécifique)</option>
+                <option value="">Matière entière (hors chapitre spécifique)</option>
                 {(selectedCourse?.chapters || []).map((ch) => (
                   <option key={ch._id} value={ch._id}>
                     {ch.title}

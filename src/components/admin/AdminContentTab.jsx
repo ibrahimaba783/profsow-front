@@ -169,7 +169,7 @@ const AdminContentTab = ({
 
             {reviews.length === 0 ? (
               <div className="text-center py-8 text-slate-400 text-xs">
-                Aucun avis d'élève n'a encore été publié sur les modules.
+                Aucun avis d'élève n'a encore été publié sur les matières.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -211,7 +211,7 @@ const AdminContentTab = ({
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-[#009688]" />
                 <h2 className="text-base font-bold text-slate-900">
-                  Modération des Discussions de cours ({discussions.length})
+                  Modération des Discussions des matières ({discussions.length})
                 </h2>
               </div>
 

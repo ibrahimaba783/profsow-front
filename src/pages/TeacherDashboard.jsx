@@ -141,10 +141,12 @@ const TeacherDashboard = () => {
   const [managingCourseId, setManagingCourseId] = useState(null);
   const [newChapterTitle, setNewChapterTitle] = useState('');
   const [newChapterLocked, setNewChapterLocked] = useState(false);
+  const [newChapterIsFree, setNewChapterIsFree] = useState(false);
   const [editingChapterId, setEditingChapterId] = useState(null);
   const [editingChapterTitle, setEditingChapterTitle] = useState('');
   const [lessonModal, setLessonModal] = useState(null); // { courseId, chapterId, lesson? }
   const [lessonTitle, setLessonTitle] = useState('');
+  const [lessonIsFree, setLessonIsFree] = useState(false);
   const [lessonType, setLessonType] = useState('video');
   const [lessonYoutube, setLessonYoutube] = useState('');
   const [lessonMeet, setLessonMeet] = useState('');
@@ -536,11 +538,12 @@ const TeacherDashboard = () => {
     try {
       const updated = await api(`/courses/${managedCourse._id}/chapters`, {
         method: 'POST',
-        body: JSON.stringify({ title: newChapterTitle.trim(), isLocked: newChapterLocked }),
+        body: JSON.stringify({ title: newChapterTitle.trim(), isLocked: newChapterLocked, isFree: newChapterIsFree }),
       });
       replaceCourseInState(updated);
       setNewChapterTitle('');
       setNewChapterLocked(false);
+      setNewChapterIsFree(false);
       showToast('success', 'Chapitre ajouté.');
     } catch (err) {
       showToast('error', err.message || "Erreur lors de l'ajout du chapitre");
@@ -573,6 +576,25 @@ const TeacherDashboard = () => {
       showToast(
         'success',
         !chapter.isLocked ? `Chapitre "${chapter.title}" verrouillé.` : `Chapitre "${chapter.title}" débloqué.`
+      );
+    } catch (err) {
+      showToast('error', err.message);
+    }
+  };
+
+  const handleToggleChapterFree = async (courseId, chapter) => {
+    try {
+      const nextFree = !chapter.isFree;
+      const updated = await api(`/courses/${courseId}/chapters/${chapter._id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isFree: nextFree }),
+      });
+      replaceCourseInState(updated);
+      showToast(
+        'success',
+        nextFree
+          ? `Chapitre "${chapter.title}" désormais gratuit (Freemium).`
+          : `Chapitre "${chapter.title}" désormais payant (réservé aux abonnés).`
       );
     } catch (err) {
       showToast('error', err.message);
@@ -621,6 +643,7 @@ const TeacherDashboard = () => {
     setLessonYoutube(lesson?.youtubeUrl || '');
     setLessonMeet(lesson?.meetLink || '');
     setLessonContent(lesson?.content || '');
+    setLessonIsFree(Boolean(lesson?.isFree));
     setLessonPdf(null);
   };
 
@@ -637,6 +660,7 @@ const TeacherDashboard = () => {
     if (lessonType === 'meet') formData.append('meetLink', lessonMeet.trim());
     if (lessonType === 'text') formData.append('content', lessonContent);
     if (lessonType === 'pdf' && lessonPdf) formData.append('pdf', lessonPdf);
+    formData.append('isFree', String(lessonIsFree));
 
     try {
       const url = lesson
@@ -1272,6 +1296,14 @@ const TeacherDashboard = () => {
                 />
                 Verrouillé par défaut
               </label>
+              <label className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newChapterIsFree}
+                  onChange={(e) => setNewChapterIsFree(e.target.checked)}
+                />
+                Gratuit (Freemium)
+              </label>
               <button
                 type="submit"
                 className="h-10 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
@@ -1335,6 +1367,15 @@ const TeacherDashboard = () => {
                               >
                                 {chapter.isLocked ? 'Verrouillé' : 'Débloqué'}
                               </span>
+                              <span
+                                className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shrink-0 ${
+                                  cIdx === 0 || chapter.isFree
+                                    ? 'bg-teal-600 text-white'
+                                    : 'bg-indigo-600 text-white'
+                                }`}
+                              >
+                                {cIdx === 0 || chapter.isFree ? 'Gratuit' : 'Payant'}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -1370,6 +1411,19 @@ const TeacherDashboard = () => {
                           >
                             {chapter.isLocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                             <span>{chapter.isLocked ? 'Débloquer' : 'Verrouiller'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleChapterFree(managedCourse._id, chapter)}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 cursor-pointer transition ${
+                              cIdx === 0 || chapter.isFree
+                                ? 'bg-slate-700 hover:bg-slate-800 text-white'
+                                : 'bg-teal-600 hover:bg-teal-700 text-white'
+                            }`}
+                            title="Basculer entre gratuit et payant"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>{cIdx === 0 || chapter.isFree ? 'Rendre payant' : 'Rendre gratuit'}</span>
                           </button>
 
                           <button
@@ -3916,6 +3970,14 @@ const TeacherDashboard = () => {
                   />
                 </div>
               )}
+              <label className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={lessonIsFree}
+                  onChange={(e) => setLessonIsFree(e.target.checked)}
+                />
+                Leçon gratuite (Freemium — accessible sans abonnement)
+              </label>
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"

@@ -232,8 +232,6 @@ const StudentDashboard = () => {
     (subjectFilter !== 'Tous' ? 1 : 0) + (levelFilter !== 'Tous' ? 1 : 0) + (freeOnly ? 1 : 0);
 
   const renderCard = (course, enrolled) => {
-    const courseIsFree = course.isFree || course.price === 0;
-
     return (
       <CourseCard
         course={course}
@@ -241,55 +239,20 @@ const StudentDashboard = () => {
         topRightBadge={
           enrolled ? (
             <span className="text-[10px] font-bold bg-[#009688] text-white px-2.5 py-1 rounded-full shadow-sm">
-              Accès actif
+              Accès complet
             </span>
           ) : (
-            <span className="w-7 h-7 rounded-full bg-white/90 text-slate-500 flex items-center justify-center shadow-sm">
-              <Lock className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
+              1er chap. gratuit
             </span>
           )
         }
         footerRight={
           enrolled ? (
             <span className="text-[#009688] text-xs font-bold flex items-center gap-0.5 shrink-0">
-              Voir <ChevronRight className="w-3.5 h-3.5" />
+              Continuer <ChevronRight className="w-3.5 h-3.5" />
             </span>
-          ) : courseIsFree ? (
-            features.enableFreeEnrollment === false ? (
-              <span className="text-[11px] font-semibold text-slate-400">Sur validation</span>
-            ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEnrollFree(course);
-                }}
-                disabled={enrollingFreeId === course._id}
-                className="px-3 py-1.5 bg-[#009688] hover:bg-[#00796b] disabled:opacity-60 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition shrink-0"
-              >
-                {enrollingFreeId === course._id ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <Sparkles className="w-3 h-3" />
-                    <span>Gratuit</span>
-                  </>
-                )}
-              </button>
-            )
-          ) : features.enablePayments === false ? (
-            <span className="text-[11px] font-semibold text-slate-400">En pause</span>
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                startPayment(course);
-              }}
-              className="px-3 py-1.5 bg-[#f59d0e] hover:bg-[#e08b00] text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition shrink-0"
-            >
-              <CreditCard className="w-3 h-3" />
-              <span>{(course.price ?? 6000).toLocaleString('fr-FR')} F</span>
-            </button>
-          )
+          ) : null
         }
       />
     );

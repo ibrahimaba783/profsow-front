@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { SettingsContext } from '../context/SettingsContext';
 import { AlertCircle, Sparkles, MailOpen, Eye, EyeOff, Check, ArrowLeft } from 'lucide-react';
@@ -29,6 +29,8 @@ const Register = () => {
   const { register } = useContext(AuthContext);
   const { settings } = useContext(SettingsContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,7 +44,7 @@ const Register = () => {
       if (data?.emailPreviewUrl) {
         setEmailPreview(data.emailPreviewUrl);
       } else {
-        navigate('/student-dashboard');
+        navigate(redirectUrl || '/student-dashboard');
       }
     } catch (err) {
       setError(err.message || 'Erreur lors de la création du compte');
@@ -51,7 +53,7 @@ const Register = () => {
   };
 
   const handleProceed = () => {
-    navigate('/student-dashboard');
+    navigate(redirectUrl || '/student-dashboard');
   };
 
   return (
@@ -112,7 +114,7 @@ const Register = () => {
                 Les nouvelles inscriptions publiques sont momentanément désactivées par l&apos;administrateur.
               </p>
               <Link
-                to="/login"
+                to={redirectUrl ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : "/login"}
                 className="inline-block px-5 py-2 rounded-lg bg-[#009688] text-white text-xs sm:text-sm font-bold hover:bg-[#00796b] transition"
               >
                 Se connecter à un compte existant
@@ -254,7 +256,7 @@ const Register = () => {
 
               <div className="text-center mt-3 text-xs sm:text-sm text-slate-500">
                 <span>Vous avez déjà un compte ? </span>
-                <Link to="/login" className="font-bold text-[#f59d0e] hover:underline">
+                <Link to={redirectUrl ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : "/login"} className="font-bold text-[#f59d0e] hover:underline">
                   Connectez-vous
                 </Link>
               </div>

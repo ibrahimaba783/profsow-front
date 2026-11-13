@@ -1466,14 +1466,14 @@ const AdminDashboard = () => {
                       type="text"
                       value={newLevelValue}
                       onChange={(e) => setNewLevelValue(e.target.value)}
-                      placeholder="Code (ex: 6ème)"
+                      placeholder="Code (ex: 4ème)"
                       className={inputClass}
                     />
                     <input
                       type="text"
                       value={newLevelLabel}
                       onChange={(e) => setNewLevelLabel(e.target.value)}
-                      placeholder="Nom affiché (ex: 6ème)"
+                      placeholder="Nom affiché (ex: 4ème)"
                       className={inputClass}
                     />
                     <button

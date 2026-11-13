@@ -1,17 +1,24 @@
 import React, { useContext, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
-const GoogleLoginButton = ({ onError }) => {
+const GoogleLoginButton = ({ onError, onSuccessRedirect }) => {
   const { googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
   const [loading, setLoading] = useState(false);
 
   const handleSuccess = async (response) => {
     setLoading(true);
     try {
       const data = await googleLogin(response.credential);
+      const target = onSuccessRedirect || redirectParam;
+      if (target && data?.role === 'student') {
+        navigate(target);
+        return;
+      }
       navigate(
         data?.role === 'admin'
           ? '/admin-dashboard'

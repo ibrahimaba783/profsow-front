@@ -163,7 +163,7 @@ const Courses = () => {
               <p className="text-slate-600 text-sm mt-1 max-w-2xl">
                 {currentClassObj
                   ? `Retrouvez toutes les matières enseignées en classe de ${currentClassObj.name} avec leurs chapitres, leçons, exercices et quiz.`
-                  : 'Explorez toutes les matières de Mathématiques et Physique-Chimie de M. Aliou Sow, de la 6ème à la Terminale S.'}
+                  : 'Explorez toutes les matières de Mathématiques et Physique-Chimie de M. Aliou Sow, de la 4ème à la Terminale S.'}
               </p>
             </div>
 

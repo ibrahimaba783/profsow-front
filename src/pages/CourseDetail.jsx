@@ -7,7 +7,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import MathText from '../components/MathText';
 import ExerciseModal from '../components/ExerciseModal';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
-import { Play, FileText, Video, Send, Plus, Trash2, Check, AlertCircle, MessageSquare, Info, Award, GraduationCap, Lock, MessageCircle as MeetIcon, CreditCard, Smartphone, CheckCircle2, BookOpen, Clock, ChevronDown, Star, Search, LogOut, User, ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, LayoutGrid, LayoutDashboard, Settings, Users, BarChart2, X, Calculator, Lightbulb, Upload, HelpCircle, Edit3 } from 'lucide-react';
+import { Play, FileText, Video, Send, Plus, Trash2, Check, AlertCircle, MessageSquare, Info, Award, GraduationCap, Lock, MessageCircle as MeetIcon, CreditCard, Smartphone, CheckCircle2, BookOpen, Clock, ChevronDown, Star, Search, LogOut, User, ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, LayoutGrid, LayoutDashboard, Settings, Users, BarChart2, X, Calculator, Lightbulb, Upload, HelpCircle, Edit3, Sparkles } from 'lucide-react';
 
 // Cadre de l'espace connecté (comme sur Bakeli) : barre du haut + menu latéral repliable.
 // Pour un visiteur non connecté, on affiche simplement la page (la barre publique de l'app reste visible).
@@ -451,6 +451,7 @@ const CourseDetail = () => {
   const [paymentMethod, setPaymentMethod] = useState('Wave');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [paying, setPaying] = useState(false);
+  const [enrollingDirect, setEnrollingDirect] = useState(false);
   const [payError, setPayError] = useState('');
   const [payEmailPreview, setPayEmailPreview] = useState('');
 
@@ -546,12 +547,12 @@ const CourseDetail = () => {
   }, [id, user?._id]);
 
   useEffect(() => {
-    if (isSubscribed || isStaff) {
+    if (user || isSubscribed || isStaff) {
       fetchDiscussions();
       fetchQuizzes();
       fetchExercises();
     }
-  }, [isSubscribed, isStaff, id]);
+  }, [user?._id, isSubscribed, isStaff, id]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1119,6 +1120,20 @@ const CourseDetail = () => {
     }
   };
 
+  const handleDirectEnroll = async () => {
+    setEnrollingDirect(true);
+    try {
+      await api(`/courses/${id}/enroll`, { method: 'POST' });
+      setIsSubscribed(true);
+      await fetchCourseDetails();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Erreur lors de l'inscription au cours");
+    } finally {
+      setEnrollingDirect(false);
+    }
+  };
+
   const handleEnrollFree = async () => {
     setEnrollingFree(true);
     setFreeEnrollError('');
@@ -1204,11 +1219,120 @@ const CourseDetail = () => {
     );
   }
 
-  // IMPORTANT : on affiche un APERÇU public (page de présentation du cours, comme sur Bakeli)
-  // à tous ceux qui n'ont pas d'accès complet — y compris les visiteurs non connectés
-  // (user === null). Le contenu pédagogique réel (vidéos, PDF, liens Meet) reste caché :
-  // seuls les titres des chapitres/leçons sont visibles, avec un cadenas.
-  if (!isSubscribed && !isStaff) {
+  
+  const renderUnlockModal = () => {
+    if (!showPayModal) return null;
+    const coursePrice = (course?.isFree || course?.price === 0) ? 0 : (course?.price || 6000);
+    return (
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative">
+          <button
+            type="button"
+            onClick={() => setShowPayModal(false)}
+            aria-label="Fermer"
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="flex items-center gap-3 mb-5">
+            <span className="w-11 h-11 rounded-xl bg-amber-50 text-[#f59d0e] flex items-center justify-center shrink-0">
+              <CreditCard className="w-5 h-5" />
+            </span>
+            <div>
+              <h3 className="text-lg font-extrabold text-slate-900">Débloquer cette matière</h3>
+              <p className="text-xs text-slate-500 truncate">{course?.title}</p>
+            </div>
+          </div>
+
+          {payError && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg text-xs mb-4">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{payError}</span>
+            </div>
+          )}
+
+          {payEmailPreview && (
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-700 p-3 rounded-lg text-xs mb-4">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>Paiement confirmé ! Redirection...</span>
+            </div>
+          )}
+
+          <form onSubmit={handlePayCourse} className="space-y-4">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Tarif d&apos;accès complet</span>
+                <span className="text-lg font-extrabold text-[#009688]">
+                  {Number(coursePrice).toLocaleString('fr-FR')} FCFA
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-200/60">
+                <span>Durée de validité</span>
+                <span className="font-semibold text-slate-800">{course?.duration || '3 mois (Accès illimité)'}</span>
+              </div>
+              <p className="text-[11px] text-slate-500 pt-1">
+                Wave : <strong>{settings.siteInfo?.waveNumber || '+221 77 102 33 99'}</strong> • OM :{' '}
+                <strong>{settings.siteInfo?.orangeMoneyNumber || '+221 77 102 33 99'}</strong>
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-2">
+                Mode de paiement Mobile Money
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {['Wave', 'Orange Money'].map((method) => (
+                  <button
+                    key={method}
+                    type="button"
+                    onClick={() => setPaymentMethod(method)}
+                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition ${
+                      paymentMethod === method
+                        ? 'bg-teal-50 border-[#009688] text-[#00796b]'
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                    }`}
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    {method}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Numéro {paymentMethod}
+              </label>
+              <input
+                type="tel"
+                required
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="77 123 45 67"
+                className="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#009688] focus:ring-2 focus:ring-[#009688]/20"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={paying}
+              className="w-full bg-[#f59d0e] hover:bg-[#e08b00] disabled:opacity-60 text-white font-bold px-6 py-3 rounded-xl text-sm text-center flex items-center justify-center gap-2 transition cursor-pointer shadow-sm"
+            >
+              {paying ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span>Débloquer avec {paymentMethod}</span>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // Visiteur non connecté OU élève non inscrit : page publique de présentation
+  if (!isStaff && !isSubscribed) {
     const toggleChapter = (chapterId, currentlyOpen) => {
       setOpenPreviewChapters((prev) => ({ ...prev, [chapterId]: !currentlyOpen }));
     };
@@ -1280,6 +1404,48 @@ const CourseDetail = () => {
                     <BarChart2 className="w-4 h-4 text-white/85" />
                     {levelLabel}
                   </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-white/85" />
+                    {course.duration || '3 mois'}
+                  </span>
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  {!user ? (
+                    <Link
+                      to={`/register?redirect=${encodeURIComponent(`/courses/${id}`)}`}
+                      className="inline-flex items-center gap-2 bg-[#f59d0e] hover:bg-[#e08b00] text-white font-bold px-6 py-3 rounded-xl text-sm transition shadow-md"
+                    >
+                      <span>{courseIsFree ? 'Commencer gratuitement' : "S'inscrire au cours"}</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  ) : user.role === 'student' ? (
+                    <button
+                      type="button"
+                      onClick={handleDirectEnroll}
+                      disabled={enrollingDirect}
+                      className="inline-flex items-center gap-2 bg-[#f59d0e] hover:bg-[#e08b00] text-white font-bold px-6 py-3 rounded-xl text-sm transition shadow-md cursor-pointer disabled:opacity-60"
+                    >
+                      {enrollingDirect ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <>
+                          <span>{courseIsFree ? 'Commencer gratuitement' : "S'inscrire à ce cours"}</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  ) : null}
+                  {course.previewLesson && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTab('content')}
+                      className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white font-semibold px-5 py-3 rounded-xl text-sm transition cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-current text-amber-300" />
+                      <span>Leçon d&apos;aperçu gratuite</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1308,76 +1474,124 @@ const CourseDetail = () => {
                   ))}
                 </div>
 
-                {/* --- Onglet Contenu : sections ouvertes, leçons verrouillées avec cadenas --- */}
+                {/* --- Onglet Contenu : liste des chapitres (titres uniquement) + éventuelle leçon d'aperçu --- */}
                 {previewTab === 'content' && (
-                  <div className="divide-y divide-slate-200">
-                    {!course.chapters || course.chapters.length === 0 ? (
-                      <p className="text-sm text-slate-400 py-12 px-6 text-center">
-                        Le contenu de ce module sera bientôt disponible.
-                      </p>
-                    ) : (
-                      course.chapters.map((chapter) => {
-                        const isOpen = openPreviewChapters[chapter._id] ?? true;
-                        const lessons = chapter.lessons || [];
-                        return (
-                          <div key={chapter._id}>
+                  <div className="p-5 sm:p-6 space-y-6">
+                    {/* Éventuelle leçon d'aperçu gratuite */}
+                    {course.previewLesson && (
+                      <div className="p-4 sm:p-5 rounded-2xl bg-teal-50/70 border border-teal-200 shadow-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#009688] text-white px-2.5 py-0.5 rounded-full">
+                              <Play className="w-3 h-3 fill-current" />
+                              Aperçu gratuit
+                            </span>
+                            <span className="text-xs font-bold text-teal-950 truncate">
+                              {course.previewLesson.chapterTitle ? `${course.previewLesson.chapterTitle} • ` : ''}
+                              {course.previewLesson.title}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-teal-700 font-medium">Accessible sans inscription</span>
+                        </div>
+
+                        {course.previewLesson.contentType === 'video' && course.previewLesson.youtubeUrl && (
+                          <div className="aspect-video w-full rounded-xl overflow-hidden border border-teal-200 bg-black shadow-sm mb-3">
+                            {extractYoutubeId(course.previewLesson.youtubeUrl) ? (
+                              <iframe
+                                className="w-full h-full"
+                                src={`https://www.youtube.com/embed/${extractYoutubeId(course.previewLesson.youtubeUrl)}`}
+                                title={course.previewLesson.title}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              ></iframe>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+                                Vidéo d&apos;aperçu non disponible.
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {course.previewLesson.content && (
+                          <div className="bg-white p-3.5 rounded-xl border border-teal-100 text-xs text-slate-700 leading-relaxed max-h-40 overflow-y-auto mb-3">
+                            {course.previewLesson.content}
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-teal-100">
+                          <p className="text-xs text-teal-900">
+                            Rejoignez la classe pour débloquer tous les chapitres, fiches PDF et devoirs corrigés.
+                          </p>
+                          {!user ? (
+                            <Link
+                              to={`/register?redirect=${encodeURIComponent(`/courses/${id}`)}`}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#f59d0e] hover:bg-[#e08b00] text-white text-xs font-bold transition shadow-xs"
+                            >
+                              <span>{courseIsFree ? 'Commencer gratuitement' : "S'inscrire au cours"}</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </Link>
+                          ) : user.role === 'student' ? (
                             <button
                               type="button"
-                              onClick={() => toggleChapter(chapter._id, isOpen)}
-                              className="w-full flex items-center justify-between gap-3 px-5 sm:px-6 py-4 bg-white hover:bg-slate-50/80 text-left cursor-pointer transition"
+                              onClick={handleDirectEnroll}
+                              disabled={enrollingDirect}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#f59d0e] hover:bg-[#e08b00] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
                             >
-                              <span className="font-bold text-sm sm:text-[15px] text-slate-900">
-                                {chapter.title}
-                              </span>
-                              <ChevronDown
-                                className={`w-4 h-4 text-slate-500 shrink-0 transition-transform ${
-                                  isOpen ? 'rotate-180' : ''
-                                }`}
-                              />
+                              <span>{courseIsFree ? 'Commencer gratuitement' : "S'inscrire à ce cours"}</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
                             </button>
-
-                            {isOpen && (() => {
-                              const chapterEx = exercises.filter((ex) => String(ex.chapterId) === String(chapter._id));
-                              return (
-                                <ul className="pb-3 bg-white">
-                                  {lessons.length === 0 && chapterEx.length === 0 ? (
-                                    <li className="px-6 py-2.5 text-sm text-slate-400">
-                                      Aucun contenu pour le moment.
-                                    </li>
-                                  ) : (
-                                    <>
-                                      {lessons.map((lesson) => (
-                                        <li
-                                          key={lesson._id}
-                                          className="flex items-center gap-3 px-6 sm:px-7 py-2 text-sm text-slate-600"
-                                        >
-                                          <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                          <span className="truncate">
-                                            {getLessonPrefix(lesson.contentType)}
-                                            {lesson.title}
-                                          </span>
-                                        </li>
-                                      ))}
-                                      {chapterEx.map((ex) => (
-                                        <li
-                                          key={ex._id}
-                                          className="flex items-center gap-3 px-6 sm:px-7 py-2 text-sm text-[#00796b] bg-teal-50/30"
-                                        >
-                                          <Calculator className="w-3.5 h-3.5 text-[#009688] shrink-0" />
-                                          <span className="truncate">
-                                            {exerciseTypeLabel(ex.exerciseType)} : {ex.title}
-                                          </span>
-                                        </li>
-                                      ))}
-                                    </>
-                                  )}
-                                </ul>
-                              );
-                            })()}
-                          </div>
-                        );
-                      })
+                          ) : null}
+                        </div>
+                      </div>
                     )}
+
+                    <div>
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                          Programme de la matière ({chaptersCount} chapitre{chaptersCount > 1 ? 's' : ''})
+                        </span>
+                        <span className="text-xs text-slate-400 font-medium">
+                          Titres des chapitres
+                        </span>
+                      </div>
+
+                      {!course.chapters || course.chapters.length === 0 ? (
+                        <p className="text-sm text-slate-400 py-10 text-center">
+                          Le programme de cette matière sera bientôt disponible.
+                        </p>
+                      ) : (
+                        <div className="space-y-2.5">
+                          {course.chapters.map((chapter, cIdx) => (
+                            <div
+                              key={chapter._id || cIdx}
+                              className="flex items-center justify-between gap-4 p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 text-[#00796b] font-black text-xs flex items-center justify-center shrink-0">
+                                  {cIdx + 1}
+                                </span>
+                                <span className="font-bold text-sm text-slate-800 truncate">
+                                  {chapter.title}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0 text-xs">
+                                {chapter.hasPreview || (course.previewLesson && String(course.previewLesson.chapterId) === String(chapter._id)) ? (
+                                  <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-full px-2.5 py-0.5">
+                                    <Play className="w-3 h-3 fill-current" />
+                                    Aperçu gratuit
+                                  </span>
+                                ) : (
+                                  <div className="flex items-center gap-1.5 text-slate-400">
+                                    <Lock className="w-3.5 h-3.5 text-slate-400" />
+                                    <span className="hidden sm:inline font-medium">Réservé aux inscrits</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1455,10 +1669,16 @@ const CourseDetail = () => {
                 <div className="p-5 space-y-3.5">
                   <div>
                     <div className="flex items-baseline gap-2.5 flex-wrap">
-                      <p className="text-2xl font-extrabold text-slate-900">
-                        {Number(coursePrice).toLocaleString('fr-FR')} <span className="text-base font-bold">FCFA</span>
+                      <p className="text-2xl font-black text-slate-900">
+                        {courseIsFree || course.price === 0 ? (
+                          <span className="text-emerald-600">Gratuit</span>
+                        ) : (
+                          <>
+                            {Number(course.price || 6000).toLocaleString('fr-FR')} <span className="text-base font-bold text-slate-600">FCFA</span>
+                          </>
+                        )}
                       </p>
-                      {!courseIsFree && course.originalPrice > coursePrice && (
+                      {!courseIsFree && course.originalPrice > (course.price || 6000) && (
                         <span className="text-sm text-slate-400 line-through">
                           {Number(course.originalPrice).toLocaleString('fr-FR')} FCFA
                         </span>
@@ -1466,87 +1686,59 @@ const CourseDetail = () => {
                     </div>
                     <p className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      {course.duration
-                        ? `Accès pendant ${course.duration}`
-                        : courseIsFree
-                        ? 'Accès libre après inscription'
-                        : 'Accès 1 mois (renouvelable)'}
+                      {course.duration ? `Accès : ${course.duration}` : 'Accès annuel complet'}
                     </p>
                   </div>
 
-                  {freeEnrollError && (
-                    <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                      {freeEnrollError}
-                    </p>
-                  )}
-
-                  {courseIsFree ? (
-                    user ? (
-                      user.role === 'student' ? (
-                        features.enableFreeEnrollment === false ? (
-                          <div className="w-full bg-slate-100 text-slate-600 font-semibold px-4 py-3 rounded-lg text-xs text-center">
-                            Inscription libre temporairement désactivée.
-                          </div>
-                        ) : (
-                          <button
-                            onClick={handleEnrollFree}
-                            disabled={enrollingFree}
-                            className={orangeBtn}
-                          >
-                            {enrollingFree ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <span>Explorez maintenant !</span>
-                            )}
-                          </button>
-                        )
-                      ) : (
-                        <Link to={user.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard'} className={orangeBtn}>
-                          {user.role === 'admin' ? 'Back-Office Admin' : 'Tableau de bord enseignant'}
-                        </Link>
-                      )
-                    ) : (
-                      <Link to="/login" className={orangeBtn}>
-                        Explorez maintenant !
+                  {!user ? (
+                    // 1. Visiteur non connecté
+                    <div className="space-y-3 pt-2">
+                      <Link
+                        to={`/register?redirect=${encodeURIComponent(`/courses/${id}`)}`}
+                        className={orangeBtn}
+                      >
+                        <span>{courseIsFree || course.price === 0 ? 'Commencer gratuitement' : "S'inscrire au cours"}</span>
+                        <ChevronRight className="w-4 h-4" />
                       </Link>
-                    )
-                  ) : user ? (
-                    user.role === 'student' ? (
-                      features.enablePayments === false ? (
-                        <div className="w-full bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-4 py-3 rounded-lg text-xs text-center">
-                          Paiements en ligne momentanément en pause. Contactez le {settings.channels?.contactPhone || '+221 77 102 33 99'}.
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPayError('');
-                            setPhoneNumber('');
-                            setShowPayModal(true);
-                          }}
-                          className={orangeBtn}
+                      <p className="text-xs text-slate-500 text-center">
+                        Déjà un compte ?{' '}
+                        <Link
+                          to={`/login?redirect=${encodeURIComponent(`/courses/${id}`)}`}
+                          className="text-[#009688] font-bold hover:underline"
                         >
-                          S&apos;abonner maintenant !
-                        </button>
-                      )
-                    ) : (
-                      <Link to={user.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard'} className={orangeBtn}>
-                        {user.role === 'admin' ? 'Back-Office Admin' : 'Tableau de bord enseignant'}
-                      </Link>
-                    )
+                          Se connecter
+                        </Link>
+                      </p>
+                    </div>
+                  ) : user.role === 'student' ? (
+                    // 2. Élève connecté mais pas inscrit au cours
+                    <div className="space-y-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleDirectEnroll}
+                        disabled={enrollingDirect}
+                        className={orangeBtn}
+                      >
+                        {enrollingDirect ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <>
+                            <span>{courseIsFree || course.price === 0 ? 'Commencer gratuitement' : "S'inscrire au cours"}</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                      <p className="text-[11px] text-slate-500 text-center">
+                        Accès immédiat en 1 clic à l&apos;ensemble des leçons, vidéos et exercices.
+                      </p>
+                    </div>
                   ) : (
-                    <Link to="/login" className={orangeBtn}>
-                      Explorez maintenant !
+                    <Link
+                      to={user.role === 'admin' ? '/admin-dashboard' : '/teacher-dashboard'}
+                      className={orangeBtn}
+                    >
+                      {user.role === 'admin' ? 'Back-Office Admin' : 'Tableau de bord enseignant'}
                     </Link>
-                  )}
-
-                  {!user && (
-                    <p className="text-xs text-slate-400 text-center">
-                      Pas encore de compte ?{' '}
-                      <Link to="/register" className="text-[#009688] hover:underline font-semibold">
-                        Inscrivez-vous
-                      </Link>
-                    </p>
                   )}
                 </div>
               </div>
@@ -1704,8 +1896,9 @@ const CourseDetail = () => {
           </div>
         </div>
 
-        {/* Modale de paiement Wave / Orange Money directement depuis la fiche module */}
-        {showPayModal && (
+        {/* Modale de déblocage Wave / Orange Money */}
+        {renderUnlockModal()}
+        {false && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative">
               <button
@@ -1826,14 +2019,16 @@ const CourseDetail = () => {
 
   const chapterStatusList = [];
   let prevChaptersDone = true;
-  chapters.forEach((ch) => {
+  chapters.forEach((ch, cIdx) => {
     const ls = ch.lessons || [];
     const chCompletedCount = ls.filter((l) => completedSet.has(String(l._id))).length;
     const chDone = ls.length === 0 ? true : chCompletedCount === ls.length;
     const manuallyLocked = Boolean(ch.isLocked);
-    const unlocked = isStaff || (!manuallyLocked && (!sequentialUnlock || prevChaptersDone));
+    const isChapterFree = cIdx === 0 || Boolean(ch.isFree) || course.isFree || course.price === 0;
+    const unlocked = isStaff || isSubscribed || isChapterFree;
     chapterStatusList.push({
       unlocked,
+      isFree: isChapterFree,
       manuallyLocked,
       done: ls.length > 0 && chDone,
       completedCount: chCompletedCount,
@@ -1885,6 +2080,47 @@ const CourseDetail = () => {
   return (
     <CourseShell>
       <div className="min-h-screen bg-[#f8fafc] pt-5 pb-12 px-4 sm:px-6 text-slate-800">
+        <div className="max-w-[1400px] mx-auto">
+          {!isSubscribed && !isStaff && (
+            <div className="bg-gradient-to-r from-teal-700 via-[#009688] to-emerald-600 text-white rounded-2xl p-4 sm:p-5 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">
+                      Accès Freemium
+                    </span>
+                    <span className="text-xs text-white/90">Chapitre 1 en accès libre</span>
+                  </div>
+                  <p className="text-sm font-bold text-white mt-1">
+                    Débloquez l&apos;intégralité des chapitres, devoirs et quiz pour{' '}
+                    <span className="text-amber-200">
+                      {Number(course.price || 6000).toLocaleString('fr-FR')} FCFA
+                    </span>
+                    <span className="text-white/80 font-normal text-xs ml-2">
+                      ({course.duration || '3 mois'})
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPayError('');
+                  setPhoneNumber('');
+                  setShowPayModal(true);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-[#f59d0e] hover:bg-[#e08b00] text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm shrink-0"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Débloquer la matière complète</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* ================= COLONNE PRINCIPALE GAUCHE (LECTEUR + Q&R / AVIS OU QUIZ) ================= */}
           <div className="lg:col-span-8 space-y-5">
@@ -2962,7 +3198,9 @@ const CourseDetail = () => {
                               onClick={() => {
                                 const targetChapter = chapterStatusList[nextLessonEntry.chapterIndex];
                                 if (targetChapter && !targetChapter.unlocked) {
-                                  showToast('error', 'Terminez le chapitre en cours pour débloquer le suivant.');
+                                  setPayError('');
+                                  setPhoneNumber('');
+                                  setShowPayModal(true);
                                   return;
                                 }
                                 setActiveExercise(null);
@@ -3257,6 +3495,28 @@ const CourseDetail = () => {
                     </p>
                   </div>
                 </div>
+                {!isSubscribed && !isStaff && (
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-[10px] text-slate-400 font-semibold uppercase">Accès complet</div>
+                      <div className="text-xs font-bold text-[#009688]">
+                        {Number(course.price || 6000).toLocaleString('fr-FR')} FCFA
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPayError('');
+                        setPhoneNumber('');
+                        setShowPayModal(true);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-[#f59d0e] hover:bg-[#e08b00] text-white text-[11px] font-bold cursor-pointer transition shadow-2xs"
+                    >
+                      Débloquer
+                    </button>
+                  </div>
+                )}
+
 
                 {showAddChapter && isStaff && (
                   <form onSubmit={handleAddChapter} className="flex gap-2 pt-1">
@@ -3355,21 +3615,35 @@ const CourseDetail = () => {
                             </button>
 
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span
-                                className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                                  !status.unlocked
-                                    ? 'bg-rose-500 text-white'
-                                    : status.done
-                                    ? 'bg-[#009688] text-white'
-                                    : 'bg-[#f59d0e] text-white'
-                                }`}
-                              >
-                                {!status.unlocked
-                                  ? 'VERROUILLÉ'
-                                  : status.done
-                                  ? 'TERMINÉ'
-                                  : 'DÉBLOQUÉ'}
-                              </span>
+                              {!status.unlocked ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPayError('');
+                                    setPhoneNumber('');
+                                    setShowPayModal(true);
+                                  }}
+                                  className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                                >
+                                  <Lock className="w-2.5 h-2.5" />
+                                  <span>VERROUILLÉ</span>
+                                </button>
+                              ) : !isSubscribed && !isStaff && status.isFree ? (
+                                <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500 text-white">
+                                  GRATUIT
+                                </span>
+                              ) : (
+                                <span
+                                  className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                    status.done
+                                      ? 'bg-[#009688] text-white'
+                                      : 'bg-[#f59d0e] text-white'
+                                  }`}
+                                >
+                                  {status.done ? 'TERMINÉ' : 'DÉBLOQUÉ'}
+                                </span>
+                              )}
 
                               {isStaff && (
                                 <>
@@ -3441,8 +3715,10 @@ const CourseDetail = () => {
                                     <div
                                       key={lesson._id}
                                       onClick={() => {
-                                        if (!status.unlocked) {
-                                          showToast('error', 'Terminez le chapitre précédent pour débloquer celui-ci.');
+                                        if (!status.unlocked && !lesson.isFree) {
+                                          setPayError('');
+                                          setPhoneNumber('');
+                                          setShowPayModal(true);
                                           return;
                                         }
                                         setActiveExercise(null);
@@ -3474,7 +3750,11 @@ const CourseDetail = () => {
                                       </div>
 
                                       <div className="flex items-center gap-1.5 shrink-0">
-                                        <LessonIcon className="w-3.5 h-3.5 text-slate-400" />
+                                        {!status.unlocked && !lesson.isFree ? (
+                                          <Lock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                        ) : (
+                                          <LessonIcon className="w-3.5 h-3.5 text-slate-400" />
+                                        )}
                                         {isStaff && (
                                           <button
                                             type="button"
@@ -3505,12 +3785,14 @@ const CourseDetail = () => {
                                     <div
                                       key={ex._id}
                                       onClick={() => {
-                                        if (!status.unlocked) {
-                                          showToast('error', 'Terminez le chapitre précédent pour débloquer cet exercice.');
-                                          return;
-                                        }
-                                        handleSelectExercise(ex);
-                                      }}
+                                         if (!status.unlocked && ex.locked) {
+                                           setPayError('');
+                                           setPhoneNumber('');
+                                           setShowPayModal(true);
+                                           return;
+                                         }
+                                         handleSelectExercise(ex);
+                                       }}
                                       className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-xs transition ${
                                         !status.unlocked
                                           ? 'border-rose-100 bg-white/60 text-slate-400 cursor-not-allowed opacity-70'
@@ -3772,6 +4054,8 @@ const CourseDetail = () => {
           showToast('success', isEdit ? 'Exercice mis à jour !' : 'Exercice ajouté !');
         }}
       />
+
+      {renderUnlockModal()}
     </CourseShell>
   );
 };

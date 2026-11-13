@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { AuthContext } from '../context/AuthContext';
 import { AlertCircle, Eye, EyeOff, Check, ArrowLeft } from 'lucide-react';
@@ -24,8 +24,14 @@ const Login = () => {
   const [submitting, setSubmitting] = useState(false);
   const { login, googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
 
   const redirectByRole = (role) => {
+    if (redirectUrl && role === 'student') {
+      navigate(redirectUrl);
+      return;
+    }
     if (role === 'admin') {
       navigate('/admin-dashboard');
     } else if (role === 'teacher') {
@@ -207,7 +213,7 @@ const Login = () => {
 
           <div className="text-center mt-3 text-xs sm:text-sm text-slate-500">
             <span>Vous n&apos;avez pas de compte ? </span>
-            <Link to="/register" className="font-bold text-[#009688] hover:underline">
+            <Link to={redirectUrl ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : "/register"} className="font-bold text-[#009688] hover:underline">
               S&apos;inscrire
             </Link>
           </div>

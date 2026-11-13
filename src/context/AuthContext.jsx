@@ -115,3 +115,12 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => {
+  const context = React.useContext(AuthContext);
+  if (!context) {
+    return { user: null, loading: false };
+  }
+  return context;
+};
+

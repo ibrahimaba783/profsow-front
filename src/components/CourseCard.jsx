@@ -1,6 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Clock, LayoutGrid, GraduationCap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Clock, LayoutGrid, GraduationCap, ChevronRight } from 'lucide-react';
 import { formatClassLabel, getSubjectMeta } from '../utils/education';
 
 export const formatLevel = (level) => formatClassLabel(level);
@@ -14,16 +14,24 @@ export const getInitials = (name) =>
     .join('');
 
 const CourseCard = ({ course, footerRight, topRightBadge, onClick }) => {
+  const navigate = useNavigate();
+
   const teacherName = course.teacher?.name || 'Aliou Sow';
   const chaptersCount = course.chaptersCount ?? course.chapters?.length ?? 0;
   const studentsCount = course.studentsCount ?? 0;
-  const courseIsFree = course.isFree || course.price === 0;
-  const displayPrice = courseIsFree
-    ? 'Gratuit'
-    : `${(course.price ?? 6000).toLocaleString('fr-FR')} FCFA`;
 
   const subjectMeta = getSubjectMeta(course.subject);
   const SubjectIcon = subjectMeta?.icon || GraduationCap;
+
+  const targetUrl = `/courses/${course._id}`;
+
+  const handleCardClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    } else {
+      navigate(targetUrl);
+    }
+  };
 
   const cardContent = (
     <>
@@ -39,7 +47,7 @@ const CourseCard = ({ course, footerRight, topRightBadge, onClick }) => {
 
       <div className="flex flex-col flex-1 p-4">
         {/* En-tête : Matière + Classe (clair, sans badges redondants) */}
-        <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-2 mb-2.5">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-100 rounded-full px-2.5 py-0.5 truncate">
             <SubjectIcon className="w-3 h-3 shrink-0 text-sky-600" />
             <span className="truncate">{course.subject || 'Matière'}</span>
@@ -54,14 +62,8 @@ const CourseCard = ({ course, footerRight, topRightBadge, onClick }) => {
           {course.title}
         </h3>
 
-        {/* Nombre d'élèves */}
-        <div className="text-right text-xs text-slate-500 mt-2.5">
-          <span className="font-semibold text-slate-700">{studentsCount}</span>{' '}
-          élève{studentsCount > 1 ? 's' : ''}
-        </div>
-
         {/* Durée & chapitres */}
-        <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+        <div className="flex items-center gap-4 mt-2.5 text-xs text-slate-500">
           <span className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
             <span>{course.duration || '3 mois'}</span>
@@ -74,57 +76,54 @@ const CourseCard = ({ course, footerRight, topRightBadge, onClick }) => {
           </span>
         </div>
 
-        {/* Pied de carte : enseignant à gauche, prix ou action à droite */}
-        <div className="mt-auto pt-3.5">
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+        {/* Pied de carte : enseignant + nombre d'élèves + CTA Commencer gratuitement */}
+        <div className="mt-auto pt-3">
+          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
             <span className="flex items-center gap-2 min-w-0">
-              <span className="w-7 h-7 rounded bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+              <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center shrink-0">
                 {getInitials(teacherName)}
               </span>
               <span className="text-xs font-medium text-slate-600 truncate">{teacherName}</span>
             </span>
 
-            {footerRight ? (
-              footerRight
-            ) : (
-              <div className="text-right shrink-0">
-                {courseIsFree && course.originalPrice > 0 && (
-                  <span className="text-[11px] text-slate-400 line-through mr-1.5">
-                    {course.originalPrice.toLocaleString('fr-FR')}
-                  </span>
-                )}
-                <span className="text-sm font-bold text-[#009688]">{displayPrice}</span>
-              </div>
-            )}
+            <span className="text-xs text-slate-500 shrink-0">
+              <strong className="text-slate-700">{studentsCount}</strong> élève{studentsCount > 1 ? 's' : ''}
+            </span>
           </div>
+
+          {footerRight ? (
+            <div className="mt-2.5">{footerRight}</div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleCardClick(e);
+              }}
+              className="w-full mt-3 py-2 px-3 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <span>Commencer gratuitement</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
     </>
   );
 
-  if (onClick) {
-    return (
-      <div
-        onClick={onClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') onClick();
-        }}
-        className="group h-full flex flex-col bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-slate-300 transition cursor-pointer"
-      >
-        {cardContent}
-      </div>
-    );
-  }
-
   return (
-    <Link
-      to={`/courses/${course._id}`}
-      className="group h-full flex flex-col bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-slate-300 transition"
+    <div
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') handleCardClick(e);
+      }}
+      className="group h-full flex flex-col bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-slate-300 transition cursor-pointer"
     >
       {cardContent}
-    </Link>
+    </div>
   );
 };
 

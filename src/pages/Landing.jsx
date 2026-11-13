@@ -106,12 +106,12 @@ const FAQS = [
   {
     question: 'Comment fonctionne Aliou Sow Academy ?',
     answer:
-      "Inscrivez-vous en quelques secondes, choisissez votre matière en Mathématiques ou Physique-Chimie selon votre classe (de la 6ème à la Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, résumés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
+      "Inscrivez-vous en quelques secondes, choisissez votre matière en Mathématiques ou Physique-Chimie selon votre classe (de la 4ème à la Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, résumés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
   },
   {
     question: 'Les cours suivent-ils le programme officiel sénégalais ?',
     answer:
-      "Oui, l'ensemble des matières est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (6ème, 5ème, 4ème, 3ème, Seconde, Première, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
+      "Oui, l'ensemble des matières est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (4ème, 3ème, 2nde S, 1ère S, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
   },
   {
     question: "Quel est le tarif et la durée d'accès à une matière ?",
@@ -167,7 +167,8 @@ const StatCard = ({ icon: Icon, target, label, suffix = '', start }) => {
 };
 
 const CourseSkeletonRow = () => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div className={`grid gap-6 ${cycle.classes.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+
     {[1, 2, 3, 4].map((i) => (
       <div key={i} className="rounded-xl border border-slate-200 overflow-hidden animate-pulse bg-white">
         <div className="aspect-[16/10] bg-slate-100"></div>
@@ -446,7 +447,7 @@ const Landing = () => {
                 <p className="text-slate-600 text-base leading-relaxed max-w-xl mb-8">
                   Avec la plateforme d&apos;apprentissage de M. Aliou Sow inspirée du modèle Sama School,
                   accédez à des matières structurées en chapitres (Mathématiques et Physique-Chimie),
-                  de la 6ème à la Terminale S. Progressez à votre rythme grâce aux leçons vidéos, résumés PDF,
+                  de la 4ème à la Terminale S (4ème, 3ème, 2nde S, 1ère S, Terminale S). Progressez à votre rythme grâce aux leçons vidéos, résumés PDF,
                   exercices corrigés et quiz pour réussir le BFEM et le Baccalauréat.
                 </p>
                 <div className="flex flex-wrap items-center gap-4">
@@ -526,7 +527,7 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* 2. SÉLECTION PAR CLASSE : COLLÈGE (6e à 3e) & LYCÉE (Seconde à Terminale) — MODÈLE SAMA SCHOOL */}
+      {/* 2. SÉLECTION PAR CLASSE : COLLÈGE (4e & 3e) & LYCÉE (2nde S à Terminale S) — MODÈLE SAMA SCHOOL */}
       <section id="classes" className="w-full bg-slate-50/70 py-16 scroll-mt-24 border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -566,7 +567,7 @@ const Landing = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Collège (6e à 3e)
+                Collège (4e & 3e)
               </button>
               <button
                 type="button"
@@ -577,7 +578,7 @@ const Landing = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Lycée (2nde à Tle)
+                Lycée (2nde S à TS)
               </button>
             </div>
           </div>
@@ -600,7 +601,7 @@ const Landing = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {cycle.classes.map((cls) => {
                     const stats = getClassStats(courses, cls);
-                    const isKeyExam = cls.name === '3ème' || cls.name === 'Terminale';
+                    const isKeyExam = cls.id === '3ème' || cls.name === '3ème' || cls.id === 'TS' || cls.name === 'Terminale S' || cls.name === 'Terminale';
                     return (
                       <Link
                         key={cls.id}
@@ -614,7 +615,7 @@ const Landing = () => {
                             </span>
                             {isKeyExam && (
                               <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                {cls.name === '3ème' ? 'Examen BFEM' : 'Examen Bac'}
+                                {(cls.id === '3ème' || cls.name === '3ème') ? 'Examen BFEM' : 'Examen Bac'}
                               </span>
                             )}
                           </div>

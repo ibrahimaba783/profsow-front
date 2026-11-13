@@ -55,12 +55,12 @@ export const DEFAULT_SETTINGS = {
     {
       question: 'Comment fonctionne Aliou Sow Academy ?',
       answer:
-        "Inscrivez-vous en quelques secondes, choisissez votre matière en Mathématiques ou Physique-Chimie selon votre classe (de la 6ème à la Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, résumés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
+        "Inscrivez-vous en quelques secondes, choisissez votre matière en Mathématiques ou Physique-Chimie selon votre classe (de la 4ème à la Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, résumés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
     },
     {
       question: 'Les cours suivent-ils le programme officiel ?',
       answer:
-        "Oui, l'ensemble des matières est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (6ème, 5ème, 4ème, 3ème, Seconde, Première, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
+        "Oui, l'ensemble des matières est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (4ème, 3ème, 2nde S, 1ère S, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
     },
     {
       question: "Quel est le tarif et la durée d'accès à une matière ?",

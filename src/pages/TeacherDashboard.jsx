@@ -369,6 +369,55 @@ const TeacherDashboard = () => {
     return items.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
   }, [discussions, reviews, quizResults]);
 
+  const pendingHomeworkCount = exerciseSubmissions.filter((s) => s.status === 'submitted').length;
+
+  const pendingTeacherAlerts = useMemo(() => {
+    const unanswered = metrics.unansweredQuestions?.length || 0;
+    const pendingHomework = pendingHomeworkCount || 0;
+    return unanswered + pendingHomework;
+  }, [metrics.unansweredQuestions, pendingHomeworkCount]);
+
+  const teacherActivities = useMemo(() => {
+    const acts = [];
+    students.forEach((s) => {
+      acts.push({
+        id: `sub-${s._id}`,
+        type: 'sub',
+        title: `Inscription : ${s.student?.name || 'Élève'}`,
+        subtitle: `Module : ${s.course?.title || 'Cours'} (${Number(s.amount || 0).toLocaleString('fr-FR')} FCFA via ${s.paymentMethod || 'Wave'})`,
+        date: s.createdAt,
+      });
+    });
+    exerciseSubmissions.forEach((sub) => {
+      acts.push({
+        id: `hw-${sub._id}`,
+        type: 'homework',
+        title: `Devoir soumis : ${sub.student?.name || 'Élève'}`,
+        subtitle: `Exercice : ${sub.exercise?.title || 'Devoir'} — ${sub.status === 'graded' ? `Noté ${sub.grade}/20` : 'En attente de correction'}`,
+        date: sub.submittedAt || sub.createdAt,
+      });
+    });
+    quizResults.forEach((q) => {
+      acts.push({
+        id: `qz-${q._id}`,
+        type: 'quiz',
+        title: `Quiz évalué : ${q.student?.name || 'Élève'}`,
+        subtitle: `Score : ${q.score}% (${q.isPassed ? 'Réussi' : 'Échoué'})`,
+        date: q.completedAt || q.createdAt,
+      });
+    });
+    discussions.forEach((d) => {
+      acts.push({
+        id: `qa-${d._id}`,
+        type: 'qa',
+        title: `Question de ${d.sender?.name || 'Élève'}`,
+        subtitle: `"${d.message?.slice(0, 60)}..."`,
+        date: d.createdAt,
+      });
+    });
+    return acts.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [students, exerciseSubmissions, quizResults, discussions]);
+
   // ================= GESTION DES COURS (CRUD + PUBLICATION) =================
   const resetCourseForm = () => {
     const defaultPrice = settings.siteInfo?.defaultPrice ?? 6000;
@@ -1028,54 +1077,6 @@ const TeacherDashboard = () => {
     );
   }
 
-  const pendingHomeworkCount = exerciseSubmissions.filter((s) => s.status === 'submitted').length;
-
-  const pendingTeacherAlerts = useMemo(() => {
-    const unanswered = metrics.unansweredQuestions?.length || 0;
-    const pendingHomework = pendingHomeworkCount || 0;
-    return unanswered + pendingHomework;
-  }, [metrics.unansweredQuestions, pendingHomeworkCount]);
-
-  const teacherActivities = useMemo(() => {
-    const acts = [];
-    students.forEach((s) => {
-      acts.push({
-        id: `sub-${s._id}`,
-        type: 'sub',
-        title: `Inscription : ${s.student?.name || 'Élève'}`,
-        subtitle: `Module : ${s.course?.title || 'Cours'} (${Number(s.amount || 0).toLocaleString('fr-FR')} FCFA via ${s.paymentMethod || 'Wave'})`,
-        date: s.createdAt,
-      });
-    });
-    exerciseSubmissions.forEach((sub) => {
-      acts.push({
-        id: `hw-${sub._id}`,
-        type: 'homework',
-        title: `Devoir soumis : ${sub.student?.name || 'Élève'}`,
-        subtitle: `Exercice : ${sub.exercise?.title || 'Devoir'} — ${sub.status === 'graded' ? `Noté ${sub.grade}/20` : 'En attente de correction'}`,
-        date: sub.submittedAt || sub.createdAt,
-      });
-    });
-    quizResults.forEach((q) => {
-      acts.push({
-        id: `qz-${q._id}`,
-        type: 'quiz',
-        title: `Quiz évalué : ${q.student?.name || 'Élève'}`,
-        subtitle: `Score : ${q.score}% (${q.isPassed ? 'Réussi' : 'Échoué'})`,
-        date: q.completedAt || q.createdAt,
-      });
-    });
-    discussions.forEach((d) => {
-      acts.push({
-        id: `qa-${d._id}`,
-        type: 'qa',
-        title: `Question de ${d.sender?.name || 'Élève'}`,
-        subtitle: `"${d.message?.slice(0, 60)}..."`,
-        date: d.createdAt,
-      });
-    });
-    return acts.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [students, exerciseSubmissions, quizResults, discussions]);
 
   const handleExerciseSaved = async (saved, isEdit) => {
     showToast('success', isEdit ? 'Exercice mis à jour.' : 'Exercice créé et ajouté au module.');

@@ -3354,7 +3354,7 @@ const TeacherDashboard = () => {
       <main className={`min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
           {/* Barre supérieure flottante blanche */}
-          <header className="bg-white/95 backdrop-blur rounded-2xl shadow-lg px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 border border-white/70">
+          <header className="bg-white rounded-2xl shadow-lg px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 border border-slate-100 relative z-30">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
@@ -3388,23 +3388,33 @@ const TeacherDashboard = () => {
                 Voir le site
               </Link>
 
+              {/* Bouton Nouveau Cours (placé exactement avant la cloche, comme sur l'Admin) */}
+              <button
+                onClick={openCreateModal}
+                className="h-9 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Nouveau Cours</span>
+              </button>
+
+              {/* Bouton Historique (format compact icône carré assorti à la cloche) */}
               <button
                 type="button"
                 onClick={() => setShowHistoryModal(true)}
-                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-slate-200 hover:border-[#4c3882] text-[13px] font-semibold text-slate-700 hover:text-[#4c3882] transition bg-white cursor-pointer"
+                className="w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center transition cursor-pointer shrink-0"
                 title="Consulter l'historique d'activité"
               >
-                <History className="w-3.5 h-3.5 text-[#4c3882]" />
-                <span className="hidden lg:inline">Historique</span>
+                <History className="w-4 h-4" />
               </button>
 
-              {/* Cloche de notifications enseignant */}
+              {/* Cloche de notifications enseignant (identique à Admin) */}
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setShowNotifMenu((v) => !v)}
                   aria-label="Notifications"
                   className="relative w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center cursor-pointer transition shrink-0"
+                  title="Notifications et alertes"
                 >
                   <Bell className="w-4 h-4" />
                   {pendingTeacherAlerts > 0 && (
@@ -3417,7 +3427,7 @@ const TeacherDashboard = () => {
                 {showNotifMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowNotifMenu(false)} />
-                    <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50">
+                    <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 isolate">
                       <div className="px-4 pb-2.5 border-b border-slate-100 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Bell className="w-4 h-4 text-[#4c3882]" />
@@ -3493,14 +3503,7 @@ const TeacherDashboard = () => {
                 )}
               </div>
 
-              <button
-                onClick={openCreateModal}
-                className="h-9 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Nouveau Cours</span>
-              </button>
-
+              {/* Profil enseignant avec dropdown haute netteté */}
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen((v) => !v)}
@@ -3530,37 +3533,52 @@ const TeacherDashboard = () => {
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
-                    <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50">
+                    <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 isolate">
                       <div className="px-4 pb-3 border-b border-slate-100">
-                        <p className="text-[11px] font-bold text-[#ef4444] uppercase">Professeur</p>
-                        <p className="text-sm font-bold text-slate-900 truncate">{user?.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                        <p className="text-[11px] font-extrabold text-[#ef4444] uppercase tracking-wider">Professeur</p>
+                        <p className="text-sm font-bold text-slate-900 truncate mt-0.5">{user?.name}</p>
+                        <p className="text-xs font-medium text-slate-500 truncate">{user?.email}</p>
                       </div>
-                      {user?.role === 'admin' && (
-                        <Link
-                          to="/admin-dashboard"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[#5c6be0] hover:bg-[#eef2fb]/60"
+                      <div className="py-1">
+                        {user?.role === 'admin' && (
+                          <Link
+                            to="/admin-dashboard"
+                            onClick={() => setMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition"
+                          >
+                            <Shield className="w-4 h-4 text-[#5c6be0]" />
+                            Back-Office Admin
+                          </Link>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            setShowHistoryModal(true);
+                          }}
+                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition cursor-pointer"
                         >
-                          <Shield className="w-4 h-4" />
-                          Back-Office Admin
+                          <History className="w-4 h-4 text-[#5c6be0]" />
+                          Historique d'activité
+                        </button>
+                        <Link
+                          to="/profile"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition"
+                        >
+                          <Settings className="w-4 h-4 text-[#5c6be0]" />
+                          Paramètres du profil
                         </Link>
-                      )}
-                      <Link
-                        to="/profile"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-[#eef2fb]/60"
-                      >
-                        <Settings className="w-4 h-4 text-[#5c6be0]" />
-                        Paramètres du profil
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 cursor-pointer"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Se déconnecter
-                      </button>
+                      </div>
+                      <div className="pt-1 border-t border-slate-100">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Se déconnecter
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
@@ -3568,29 +3586,24 @@ const TeacherDashboard = () => {
             </div>
           </header>
 
-          {/* Bannière titre de section */}
-          <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white flex items-center justify-center shadow-sm shrink-0">
-                <ActiveBannerIcon className="w-5 h-5" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">
-                  {activeSidebarItem?.label || 'Espace Enseignant'}
-                </h1>
-                <p className="text-[13px] text-slate-500 mt-0.5">
-                  Aliou Sow Academy — Gérez vos cours, exercices, quiz, élèves, Q&amp;R et communication.
-                </p>
+          {/* Bannière titre de section (uniquement pour les sous-vues, pour éviter les doublons sur l'overview) */}
+          {view !== 'overview' && (
+            <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-100">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white flex items-center justify-center shadow-sm shrink-0">
+                  <ActiveBannerIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">
+                    {activeSidebarItem?.label || 'Espace Enseignant'}
+                  </h1>
+                  <p className="text-[13px] text-slate-500 mt-0.5">
+                    Aliou Sow Academy — Gérez vos cours, exercices, quiz, élèves, Q&amp;R et communication.
+                  </p>
+                </div>
               </div>
             </div>
-            <button
-              onClick={openCreateModal}
-              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition text-[13px] shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Nouveau Cours</span>
-            </button>
-          </div>
+          )}
 
           {view === 'overview' && renderOverview()}
           {view === 'courses' && renderCoursesSection()}

@@ -987,7 +987,7 @@ const AdminDashboard = () => {
       <main className={`min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
           {/* Barre supérieure flottante blanche */}
-          <header className="bg-white/95 backdrop-blur rounded-2xl shadow-lg px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 border border-white/70">
+          <header className="bg-white rounded-2xl shadow-lg px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 border border-slate-100 relative z-30">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
@@ -1071,38 +1071,42 @@ const AdminDashboard = () => {
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
-                    <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50">
+                    <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 isolate">
                       <div className="px-4 pb-3 border-b border-slate-100">
-                        <p className="text-[11px] font-bold text-[#ef4444] uppercase">Administrateur</p>
-                        <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                        <p className="text-[11px] font-extrabold text-[#ef4444] uppercase tracking-wider">Administrateur</p>
+                        <p className="text-sm font-bold text-slate-900 truncate mt-0.5">{user.name}</p>
+                        <p className="text-xs font-medium text-slate-500 truncate">{user.email}</p>
                       </div>
-                      <Link
-                        to="/profile"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-[#eef2fb]/60"
-                      >
-                        <User className="w-4 h-4 text-[#5c6be0]" />
-                        Mon profil &amp; paramètres
-                      </Link>
-                      <Link
-                        to="/teacher-dashboard"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-[#eef2fb]/60"
-                      >
-                        <GraduationCap className="w-4 h-4 text-[#5c6be0]" />
-                        Vue Enseignant
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          navigate('/');
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 cursor-pointer"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Se déconnecter
-                      </button>
+                      <div className="py-1">
+                        <Link
+                          to="/profile"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition"
+                        >
+                          <User className="w-4 h-4 text-[#5c6be0]" />
+                          Mon profil &amp; paramètres
+                        </Link>
+                        <Link
+                          to="/teacher-dashboard"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition"
+                        >
+                          <GraduationCap className="w-4 h-4 text-[#5c6be0]" />
+                          Vue Enseignant
+                        </Link>
+                      </div>
+                      <div className="pt-1 border-t border-slate-100">
+                        <button
+                          onClick={() => {
+                            logout();
+                            navigate('/');
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Se déconnecter
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}

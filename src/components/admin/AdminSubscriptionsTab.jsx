@@ -20,6 +20,7 @@ import {
 
 const AdminSubscriptionsTab = ({
   subscriptions = [],
+  usersList = [],
   onUpdateSub,
   onDeleteSub,
   onOpenGrantModal,
@@ -32,6 +33,13 @@ const AdminSubscriptionsTab = ({
   const [historyModalSub, setHistoryModalSub] = useState(null);
   const [extendModalSub, setExtendModalSub] = useState(null);
   const [extendMonths, setExtendMonths] = useState(1);
+
+  const getStudentAvatar = (sub) => {
+    if (sub?.student?.avatar) return sub.student.avatar;
+    const studentId = sub?.student?._id || sub?.student;
+    const found = usersList?.find((u) => u._id === studentId || u.email === sub?.student?.email);
+    return found?.avatar || null;
+  };
 
   const now = useMemo(() => new Date(), []);
 
@@ -348,12 +356,24 @@ const AdminSubscriptionsTab = ({
                   const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
                   const isExpiringSoon = isActive && diffDays <= 7 && diffDays >= 0;
 
+                  const studentAvatar = getStudentAvatar(s);
+
                   return (
                     <tr key={s._id} className="hover:bg-slate-50/80 transition">
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 border border-slate-200">
-                            {s.student?.name?.[0]?.toUpperCase() || 'E'}
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                            {studentAvatar ? (
+                              <img
+                                src={studentAvatar}
+                                alt={s.student?.name || 'Élève'}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">
+                                {s.student?.name?.[0]?.toUpperCase() || 'E'}
+                              </div>
+                            )}
                           </div>
                           <div>
                             <p className="font-bold text-slate-900">{s.student?.name || 'Élève supprimé'}</p>
@@ -502,10 +522,25 @@ const AdminSubscriptionsTab = ({
             </div>
 
             <div className="p-6 space-y-4">
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase">Élève</p>
-                <p className="font-bold text-slate-800 text-base">{extendModalSub.student?.name}</p>
-                <p className="text-xs text-slate-500">{extendModalSub.student?.email}</p>
+              <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl">
+                <div className="w-11 h-11 rounded-full overflow-hidden bg-white border border-slate-200 shrink-0">
+                  {getStudentAvatar(extendModalSub) ? (
+                    <img
+                      src={getStudentAvatar(extendModalSub)}
+                      alt={extendModalSub.student?.name || 'Élève'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-sm">
+                      {extendModalSub.student?.name?.charAt(0)?.toUpperCase() || 'E'}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-400 uppercase">Élève</p>
+                  <p className="font-bold text-slate-800 text-sm truncate">{extendModalSub.student?.name}</p>
+                  <p className="text-xs text-slate-500 truncate">{extendModalSub.student?.email}</p>
+                </div>
               </div>
 
               <div>
@@ -590,10 +625,25 @@ const AdminSubscriptionsTab = ({
             </div>
 
             <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-              <div className="bg-slate-50 p-3 rounded-xl">
-                <p className="text-xs text-slate-400 font-bold uppercase">Élève & Module</p>
-                <p className="text-sm font-bold text-slate-800">{historyModalSub.student?.name}</p>
-                <p className="text-xs text-slate-500">{historyModalSub.course?.title}</p>
+              <div className="bg-slate-50 p-3.5 rounded-xl flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-slate-200 shrink-0">
+                  {getStudentAvatar(historyModalSub) ? (
+                    <img
+                      src={getStudentAvatar(historyModalSub)}
+                      alt={historyModalSub.student?.name || 'Élève'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">
+                      {historyModalSub.student?.name?.charAt(0)?.toUpperCase() || 'E'}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-400 font-bold uppercase">Élève &amp; Module</p>
+                  <p className="text-sm font-bold text-slate-800 truncate">{historyModalSub.student?.name}</p>
+                  <p className="text-xs text-slate-500 truncate">{historyModalSub.course?.title}</p>
+                </div>
               </div>
 
               <div>

@@ -269,18 +269,34 @@ const AdminOverviewTab = ({
             </button>
           </div>
           <div className="space-y-3">
-            {subscriptions.slice(0, 5).map((sub) => (
-              <div key={sub._id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                <div className="min-w-0 pr-2">
-                  <p className="font-bold text-slate-900 truncate">{sub.student?.name || 'Élève'}</p>
-                  <p className="text-[11px] text-slate-500 truncate">{sub.course?.title || 'Module'}</p>
+            {subscriptions.slice(0, 5).map((sub) => {
+              const avatar =
+                sub.student?.avatar ||
+                usersList?.find((u) => u._id === sub.student?._id || u._id === sub.student || u.email === sub.student?.email)?.avatar;
+              return (
+                <div key={sub._id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-white border border-slate-200 shrink-0">
+                      {avatar ? (
+                        <img src={avatar} alt={sub.student?.name || 'Élève'} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-[10px]">
+                          {sub.student?.name?.charAt(0)?.toUpperCase() || 'E'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-900 truncate">{sub.student?.name || 'Élève'}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{sub.course?.title || 'Module'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="font-bold text-slate-900">{(sub.amount || 0).toLocaleString('fr-FR')} F</span>
+                    <span className="block text-[10px] text-slate-400 capitalize">{sub.paymentMethod || 'Wave'}</span>
+                  </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="font-bold text-slate-900">{(sub.amount || 0).toLocaleString('fr-FR')} F</span>
-                  <span className="block text-[10px] text-slate-400 capitalize">{sub.paymentMethod || 'Wave'}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {subscriptions.length === 0 && (
               <p className="text-xs text-slate-400 py-4 text-center">Aucun abonnement récent.</p>
             )}

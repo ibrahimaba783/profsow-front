@@ -1246,6 +1246,7 @@ const AdminDashboard = () => {
           {view === 'subscriptions' && (
             <AdminSubscriptionsTab
               subscriptions={subscriptions}
+              usersList={usersList}
               onUpdateSub={async (id, payload, successMsg) => {
                 await api(`/admin/subscriptions/${id}`, {
                   method: 'PUT',

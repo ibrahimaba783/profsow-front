@@ -3397,16 +3397,6 @@ const TeacherDashboard = () => {
                 <span className="hidden sm:inline">Nouveau Cours</span>
               </button>
 
-              {/* Bouton Historique (format compact icône carré assorti à la cloche) */}
-              <button
-                type="button"
-                onClick={() => setShowHistoryModal(true)}
-                className="w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center transition cursor-pointer shrink-0"
-                title="Consulter l'historique d'activité"
-              >
-                <History className="w-4 h-4" />
-              </button>
-
               {/* Cloche de notifications enseignant (identique à Admin) */}
               <div className="relative">
                 <button

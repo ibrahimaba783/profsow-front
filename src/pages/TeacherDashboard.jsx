@@ -54,8 +54,15 @@ import {
   Globe,
   Menu,
   Zap,
+  History,
+  Smartphone,
+  DollarSign,
+  Trophy,
 } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
+import TeacherOverviewTab from '../components/teacher/TeacherOverviewTab';
+import TeacherStudentsTab from '../components/teacher/TeacherStudentsTab';
+import TeacherHistoryModal from '../components/teacher/TeacherHistoryModal';
 
 const getSubscriptionState = (sub) => {
   if (!sub) return 'expired';
@@ -106,6 +113,8 @@ const TeacherDashboard = () => {
     () => typeof window !== 'undefined' && window.innerWidth >= 768
   );
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   // Toast & confirmation modal
   const [toast, setToast] = useState({ type: '', text: '' });
@@ -769,6 +778,19 @@ const TeacherDashboard = () => {
     });
   };
 
+  const handleExtendStudentSubscription = async (sub, months = 1) => {
+    try {
+      const updated = await api(`/subscriptions/${sub._id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ extendMonths: months }),
+      });
+      setStudents((prev) => prev.map((s) => (s._id === sub._id ? updated : s)));
+      showToast('success', `Abonnement de ${sub.student?.name || "l'élève"} prolongé de ${months} mois.`);
+    } catch (err) {
+      showToast('error', err.message || "Erreur lors de la prolongation de l'abonnement");
+    }
+  };
+
   const handleSendRemind = async (e) => {
     e.preventDefault();
     if (!remindModalSub) return;
@@ -1008,6 +1030,53 @@ const TeacherDashboard = () => {
 
   const pendingHomeworkCount = exerciseSubmissions.filter((s) => s.status === 'submitted').length;
 
+  const pendingTeacherAlerts = useMemo(() => {
+    const unanswered = metrics.unansweredQuestions?.length || 0;
+    const pendingHomework = pendingHomeworkCount || 0;
+    return unanswered + pendingHomework;
+  }, [metrics.unansweredQuestions, pendingHomeworkCount]);
+
+  const teacherActivities = useMemo(() => {
+    const acts = [];
+    students.forEach((s) => {
+      acts.push({
+        id: `sub-${s._id}`,
+        type: 'sub',
+        title: `Inscription : ${s.student?.name || 'Élève'}`,
+        subtitle: `Module : ${s.course?.title || 'Cours'} (${Number(s.amount || 0).toLocaleString('fr-FR')} FCFA via ${s.paymentMethod || 'Wave'})`,
+        date: s.createdAt,
+      });
+    });
+    exerciseSubmissions.forEach((sub) => {
+      acts.push({
+        id: `hw-${sub._id}`,
+        type: 'homework',
+        title: `Devoir soumis : ${sub.student?.name || 'Élève'}`,
+        subtitle: `Exercice : ${sub.exercise?.title || 'Devoir'} — ${sub.status === 'graded' ? `Noté ${sub.grade}/20` : 'En attente de correction'}`,
+        date: sub.submittedAt || sub.createdAt,
+      });
+    });
+    quizResults.forEach((q) => {
+      acts.push({
+        id: `qz-${q._id}`,
+        type: 'quiz',
+        title: `Quiz évalué : ${q.student?.name || 'Élève'}`,
+        subtitle: `Score : ${q.score}% (${q.isPassed ? 'Réussi' : 'Échoué'})`,
+        date: q.completedAt || q.createdAt,
+      });
+    });
+    discussions.forEach((d) => {
+      acts.push({
+        id: `qa-${d._id}`,
+        type: 'qa',
+        title: `Question de ${d.sender?.name || 'Élève'}`,
+        subtitle: `"${d.message?.slice(0, 60)}..."`,
+        date: d.createdAt,
+      });
+    });
+    return acts.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [students, exerciseSubmissions, quizResults, discussions]);
+
   const handleExerciseSaved = async (saved, isEdit) => {
     showToast('success', isEdit ? 'Exercice mis à jour.' : 'Exercice créé et ajouté au module.');
     try {
@@ -1099,241 +1168,46 @@ const TeacherDashboard = () => {
 
   // ================= RENDU : 1. TABLEAU DE BORD =================
   const renderOverview = () => (
-    <div className="space-y-5">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        <div className="bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white p-6 rounded-2xl shadow-lg text-center">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-3">
-            <Users className="w-6 h-6" />
-          </div>
-          <div className="text-[26px] sm:text-[28px] font-bold tracking-tight tabular-nums leading-tight">{metrics.activeSubs.length}</div>
-          <div className="text-[13px] font-semibold text-white/95 mt-1">Élèves actifs</div>
-          <div className="text-xs font-medium text-white/80 mt-1">
-            {metrics.expiredSubs.length} expiré(s) • {metrics.suspendedSubs.length} bloqué(s)
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-[#06b6d4] to-[#0ea5e9] text-white p-6 rounded-2xl shadow-lg text-center">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-3">
-            <BookOpen className="w-6 h-6" />
-          </div>
-          <div className="text-[26px] sm:text-[28px] font-bold tracking-tight tabular-nums leading-tight">
-            {metrics.publishedCourses}
-            <span className="text-base font-semibold text-white/75">/{courses.length}</span>
-          </div>
-          <div className="text-[13px] font-semibold text-white/95 mt-1">Cours publiés</div>
-          <div className="text-xs font-medium text-white/80 mt-1">
-            {metrics.totalChapters} chapitres • {metrics.totalLessons} leçons
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-[#10b981] to-[#2dd4bf] text-white p-6 rounded-2xl shadow-lg text-center">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-3">
-            <BarChart3 className="w-6 h-6" />
-          </div>
-          <div className="text-[26px] sm:text-[28px] font-bold tracking-tight tabular-nums leading-tight">
-            {metrics.totalRevenue.toLocaleString('fr-FR')} <span className="text-sm font-semibold">F</span>
-          </div>
-          <div className="text-[13px] font-semibold text-white/95 mt-1">Revenus générés</div>
-          <div className="text-xs font-medium text-white/80 mt-1">Note moyenne : {metrics.avgRating} ★</div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setView('qa')}
-          className="bg-gradient-to-br from-[#ec4899] to-[#f43f5e] text-white p-6 rounded-2xl shadow-lg text-center transition hover:brightness-105 cursor-pointer"
-        >
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-3">
-            <Bell className="w-6 h-6" />
-          </div>
-          <div className="text-[26px] sm:text-[28px] font-bold tracking-tight tabular-nums leading-tight">
-            {metrics.unansweredQuestions.length}
-          </div>
-          <div className="text-[13px] font-semibold text-white/95 mt-1">À traiter (Q&amp;R)</div>
-          <div className="text-xs text-white/90 font-semibold mt-1">
-            {metrics.unansweredQuestions.length > 0 ? 'Répondre aux élèves →' : 'Tout est à jour'}
-          </div>
-        </button>
-      </div>
-
-      {/* Actions rapides */}
-      <div className="bg-white rounded-2xl p-5 shadow-md space-y-3">
-        <div className="flex items-center gap-2 text-[15px] font-bold text-slate-800">
-          <Zap className="w-4 h-4 text-[#f59d0e]" />
-          <span>Actions rapides</span>
-        </div>
-        <div className="flex flex-wrap gap-2.5">
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="px-4 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Nouveau cours
-          </button>
-          <button
-            type="button"
-            disabled={courses.length === 0}
-            onClick={() =>
-              setExerciseModalState({
-                open: true,
-                courseId: courses[0]?._id || '',
-                chapterId: '',
-                editing: null,
-              })
-            }
-            className="px-4 py-2.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-sm disabled:opacity-50"
-          >
-            <Calculator className="w-4 h-4" />
-            Nouvel exercice
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              resetQuizForm();
-              setQuizTab('builder');
-              setView('quizzes');
-            }}
-            className="px-4 py-2.5 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-sm"
-          >
-            <Award className="w-4 h-4" />
-            Créer un quiz
-          </button>
-          <button
-            type="button"
-            onClick={() => setView('communication')}
-            className="px-4 py-2.5 rounded-xl bg-[#f59d0e] hover:bg-[#d97706] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-sm"
-          >
-            <Megaphone className="w-4 h-4" />
-            Publier une annonce
-          </button>
-        </div>
-      </div>
-
-      {/* Notifications prioritaires */}
-      {metrics.unansweredQuestions.length > 0 && (
-        <div className="bg-amber-50/95 border border-amber-200 rounded-2xl p-5 shadow-md">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-[#f59d0e]" />
-              <h3 className="font-bold text-slate-800 text-sm">
-                Questions en attente de réponse ({metrics.unansweredQuestions.length})
-              </h3>
-            </div>
-            <button
-              type="button"
-              onClick={() => setView('qa')}
-              className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
-            >
-              Ouvrir l&apos;espace Q&amp;R →
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {metrics.unansweredQuestions.slice(0, 4).map((q) => (
-              <div key={q._id} className="bg-white border border-amber-100 rounded-xl p-3 flex items-center justify-between gap-3 shadow-sm">
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">
-                    {q.sender?.name || 'Élève'} • <span className="text-[#2563eb]">{q.course?.title}</span>
-                  </p>
-                  <p className="text-xs text-slate-600 truncate mt-0.5">{q.message}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQaFilter('unanswered');
-                    setView('qa');
-                  }}
-                  className="px-3 py-1.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg text-xs font-bold shrink-0 cursor-pointer"
-                >
-                  Répondre
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Abonnements récents & Activité récente */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white p-6 rounded-2xl shadow-md">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#2563eb]" />
-              <span>Abonnements récents</span>
-            </h3>
-            <button
-              type="button"
-              onClick={() => setView('students')}
-              className="text-xs font-bold text-[#2563eb] hover:underline cursor-pointer"
-            >
-              Tout voir
-            </button>
-          </div>
-          {students.length === 0 ? (
-            <p className="text-sm text-slate-400 py-6 text-center">Aucun abonnement enregistré.</p>
-          ) : (
-            <div className="space-y-2.5">
-              {students.slice(0, 6).map((sub) => {
-                const st = getSubscriptionState(sub);
-                return (
-                  <div
-                    key={sub._id}
-                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[#eef2fb]/50 hover:bg-[#eef2fb] border border-indigo-100/70 text-xs transition"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-900 truncate">{sub.student?.name || 'Élève'}</p>
-                      <p className="text-slate-500 truncate">{sub.course?.title}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          st === 'active'
-                            ? 'bg-emerald-500 text-white'
-                            : st === 'suspended'
-                            ? 'bg-rose-500 text-white'
-                            : 'bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {st === 'active' ? 'Actif' : st === 'suspended' ? 'Bloqué' : 'Expiré'}
-                      </span>
-                      <p className="text-[11px] text-slate-400 mt-1">
-                        {Number(sub.amount || 0).toLocaleString('fr-FR')} FCFA • {formatDateShort(sub.expiresAt)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-md">
-          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
-            <Clock className="w-5 h-5 text-[#f59d0e]" />
-            <span>Activité récente</span>
-          </h3>
-          {recentActivity.length === 0 ? (
-            <p className="text-sm text-slate-400 py-6 text-center">Aucune activité récente.</p>
-          ) : (
-            <div className="space-y-2.5">
-              {recentActivity.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setView(item.actionView)}
-                  className="w-full text-left flex items-start justify-between gap-3 p-3 rounded-xl bg-[#eef2fb]/50 hover:bg-[#eef2fb] border border-indigo-100/70 transition cursor-pointer text-xs"
-                >
-                  <div className="min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{item.title}</p>
-                    <p className="text-slate-500 truncate mt-0.5">{item.subtitle}</p>
-                  </div>
-                  <span className="text-[11px] text-slate-400 shrink-0">{formatDateShort(item.date)}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <TeacherOverviewTab
+      user={user}
+      courses={courses}
+      students={students}
+      exercises={exercises}
+      exerciseSubmissions={exerciseSubmissions}
+      quizzes={quizzes}
+      quizResults={quizResults}
+      discussions={discussions}
+      reviews={reviews}
+      metrics={metrics}
+      onNavigateTab={(tab) => {
+        setView(tab);
+        if (window.innerWidth < 768) setSidebarOpen(false);
+      }}
+      onOpenCreateCourse={openCreateModal}
+      onOpenNewExercise={() => {
+        setView('exercises');
+        setExerciseTab('catalog');
+        setExerciseModalState({
+          open: true,
+          courseId: courses[0]?._id || '',
+          chapterId: courses[0]?.chapters?.[0]?._id || '',
+          editing: null,
+        });
+      }}
+      onOpenNewQuiz={() => {
+        setView('quizzes');
+        setQuizTab('builder');
+        setEditingQuizId(null);
+      }}
+      onOpenLiveMeet={() => {
+        setView('courses');
+        showToast('info', 'Sélectionnez une leçon pour configurer un lien Google Meet / Jitsi.');
+      }}
+      onOpenBroadcast={() => {
+        setView('communication');
+      }}
+      formatDateShort={formatDateShort}
+    />
   );
 
   // ================= RENDU : 2 & 3. COURS + CHAPITRES & LEÇONS =================
@@ -2697,156 +2571,15 @@ const TeacherDashboard = () => {
 
   // ================= RENDU : 5. SUIVI DES ÉLÈVES =================
   const renderStudentsSection = () => (
-    <div className="space-y-5">
-      <div className="bg-white p-4 rounded-2xl shadow-md flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={studentSearch}
-            onChange={(e) => setStudentSearch(e.target.value)}
-            placeholder="Rechercher un élève par nom, email..."
-            className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 bg-[#eef2fb]/50 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
-          />
-        </div>
-        <select
-          value={studentCourseFilter}
-          onChange={(e) => setStudentCourseFilter(e.target.value)}
-          className="h-10 px-3 rounded-xl border border-slate-200 text-sm bg-[#eef2fb]/50 font-semibold"
-        >
-          <option value="all">Tous les cours</option>
-          {courses.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.title}
-            </option>
-          ))}
-        </select>
-        <select
-          value={studentStatusFilter}
-          onChange={(e) => setStudentStatusFilter(e.target.value)}
-          className="h-10 px-3 rounded-xl border border-slate-200 text-sm bg-[#eef2fb]/50 font-semibold"
-        >
-          <option value="all">Tous les statuts</option>
-          <option value="active">Actifs</option>
-          <option value="expired">Expirés</option>
-          <option value="suspended">Bloqués</option>
-        </select>
-      </div>
-
-      <div className="bg-white rounded-2xl p-6 shadow-md">
-        {filteredStudents.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">Aucun élève ne correspond aux critères.</p>
-        ) : (
-          <div className="space-y-3">
-            {filteredStudents.map((sub) => {
-              const st = getSubscriptionState(sub);
-              const courseObj = courses.find((c) => c._id === (sub.course?._id || sub.course)) || sub.course;
-              const totalLessons =
-                (courseObj?.chapters || []).reduce((sum, ch) => sum + (ch.lessons?.length || 0), 0) || 0;
-              const doneCount = Array.isArray(sub.completedLessons) ? sub.completedLessons.length : 0;
-              const progressPct = totalLessons > 0 ? Math.min(100, Math.round((doneCount / totalLessons) * 100)) : 0;
-
-              const studentResults = quizResults.filter(
-                (qr) =>
-                  String(qr.student?._id || qr.student) === String(sub.student?._id || sub.student) &&
-                  String(qr.quiz?.course?._id || qr.quiz?.course) === String(sub.course?._id || sub.course)
-              );
-              const avgScore =
-                studentResults.length > 0
-                  ? Math.round(
-                      studentResults.reduce(
-                        (sum, r) => sum + (r.score / Math.max(1, r.totalQuestions)) * 100,
-                        0
-                      ) / studentResults.length
-                    )
-                  : null;
-
-              return (
-                <div
-                  key={sub._id}
-                  className="p-4 rounded-xl bg-[#eef2fb]/50 hover:bg-[#eef2fb] border border-indigo-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-xs transition"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={sub.student?.avatar}
-                      alt={sub.student?.name}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-indigo-100 shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-slate-900 text-sm">{sub.student?.name || 'Élève'}</span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            st === 'active'
-                              ? 'bg-emerald-500 text-white'
-                              : st === 'suspended'
-                              ? 'bg-rose-500 text-white'
-                              : 'bg-slate-200 text-slate-700'
-                          }`}
-                        >
-                          {st === 'active' ? 'Actif' : st === 'suspended' ? 'Bloqué' : 'Expiré'}
-                        </span>
-                      </div>
-                      <p className="text-slate-500 truncate">{sub.student?.email}</p>
-                      <p className="text-[#2563eb] font-semibold mt-0.5">
-                        {sub.course?.title} • Expire le {formatDateShort(sub.expiresAt)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-5">
-                    <div className="w-40">
-                      <div className="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
-                        <span>Progression</span>
-                        <span>{progressPct}% ({doneCount}/{totalLessons})</span>
-                      </div>
-                      <div className="w-full h-2.5 rounded-full bg-indigo-100 overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-[#5c6be0] to-[#2563eb] rounded-full" style={{ width: `${progressPct}%` }}></div>
-                      </div>
-                    </div>
-
-                    <div className="text-center min-w-[75px]">
-                      <div className="text-[11px] text-slate-400 font-semibold">Moy. Quiz</div>
-                      <div className="font-bold text-slate-800 text-sm">
-                        {avgScore !== null ? `${avgScore}%` : '—'}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRemindModalSub(sub);
-                          setRemindMessage(
-                            `Bonjour ${sub.student?.name || ''}, n'oubliez pas de poursuivre vos chapitres et quiz sur "${sub.course?.title}".`
-                          );
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold inline-flex items-center gap-1 cursor-pointer shadow-sm"
-                      >
-                        <Mail className="w-3.5 h-3.5" />
-                        Relancer
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStudentStatus(sub)}
-                        className={`px-3 py-1.5 rounded-lg font-bold inline-flex items-center gap-1 cursor-pointer transition shadow-sm ${
-                          sub.status === 'suspended'
-                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                            : 'bg-rose-500 hover:bg-rose-600 text-white'
-                        }`}
-                      >
-                        {sub.status === 'suspended' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
-                        {sub.status === 'suspended' ? 'Débloquer' : 'Bloquer'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+    <TeacherStudentsTab
+      students={students}
+      courses={courses}
+      quizResults={quizResults}
+      onToggleStudentStatus={handleToggleStudentStatus}
+      onOpenRemindModal={(sub) => setRemindModalSub(sub)}
+      onExtendStudentSubscription={handleExtendStudentSubscription}
+      formatDateShort={formatDateShort}
+    />
   );
 
   // ================= RENDU : 6. QUESTIONS & RÉPONSES =================
@@ -3544,19 +3277,19 @@ const TeacherDashboard = () => {
                       }}
                       className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition cursor-pointer ${
                         active
-                          ? 'bg-white/20 text-white font-semibold shadow-sm border-l-4 border-white'
+                          ? 'bg-white text-[#4c3882] font-bold shadow-md shadow-black/10'
                           : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      <Icon className="w-4 h-4 shrink-0" />
+                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#4c3882]' : 'text-white/80'}`} />
                       <span className="flex-1 text-left truncate">{item.label}</span>
                       {typeof item.count === 'number' && (
                         <span
-                          className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full ${
+                          className={`text-[11px] font-bold tabular-nums px-2 py-0.5 rounded-full ${
                             item.alert
                               ? 'bg-[#ef4444] text-white shadow-sm'
                               : active
-                              ? 'bg-white text-[#4c3882]'
+                              ? 'bg-[#4c3882] text-white'
                               : 'bg-white/15 text-white'
                           }`}
                         >
@@ -3653,6 +3386,111 @@ const TeacherDashboard = () => {
                 <Globe className="w-3.5 h-3.5" />
                 Voir le site
               </Link>
+
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(true)}
+                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-slate-200 hover:border-[#4c3882] text-[13px] font-semibold text-slate-700 hover:text-[#4c3882] transition bg-white cursor-pointer"
+                title="Consulter l'historique d'activité"
+              >
+                <History className="w-3.5 h-3.5 text-[#4c3882]" />
+                <span className="hidden lg:inline">Historique</span>
+              </button>
+
+              {/* Cloche de notifications enseignant */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowNotifMenu((v) => !v)}
+                  aria-label="Notifications"
+                  className="relative w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center cursor-pointer transition shrink-0"
+                >
+                  <Bell className="w-4 h-4" />
+                  {pendingTeacherAlerts > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ef4444] text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm animate-pulse">
+                      {pendingTeacherAlerts > 99 ? '99+' : pendingTeacherAlerts}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowNotifMenu(false)} />
+                    <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50">
+                      <div className="px-4 pb-2.5 border-b border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Bell className="w-4 h-4 text-[#4c3882]" />
+                          <span className="text-sm font-bold text-slate-900">Notifications Pédagogiques</span>
+                        </div>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-[#4c3882]">
+                          {pendingTeacherAlerts} active(s)
+                        </span>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                        {metrics.unansweredQuestions?.slice(0, 4).map((q) => (
+                          <button
+                            key={q._id}
+                            onClick={() => {
+                              setView('qa');
+                              setQaFilter('unanswered');
+                              setShowNotifMenu(false);
+                            }}
+                            className="w-full text-left p-3.5 hover:bg-slate-50 flex items-start gap-3 transition cursor-pointer"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                              <MessageSquare className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-slate-800 truncate">
+                                Question de {q.sender?.name || 'Élève'}
+                              </p>
+                              <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">"{q.message}"</p>
+                              <span className="text-[10px] text-blue-600 font-semibold mt-1 inline-block">
+                                Cliquer pour répondre →
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                        {exerciseSubmissions
+                          ?.filter((s) => s.status === 'submitted')
+                          .slice(0, 4)
+                          .map((sub) => (
+                            <button
+                              key={sub._id}
+                              onClick={() => {
+                                setView('exercises');
+                                setExerciseTab('submissions');
+                                setShowNotifMenu(false);
+                              }}
+                              className="w-full text-left p-3.5 hover:bg-slate-50 flex items-start gap-3 transition cursor-pointer"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <Calculator className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-slate-800 truncate">
+                                  Devoir soumis : {sub.student?.name || 'Élève'}
+                                </p>
+                                <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                                  {sub.exercise?.title || 'Exercice'}
+                                </p>
+                                <span className="text-[10px] text-amber-600 font-semibold mt-1 inline-block">
+                                  Cliquer pour corriger →
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        {pendingTeacherAlerts === 0 && (
+                          <div className="p-6 text-center text-xs text-slate-400">
+                            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                            Toutes les questions sont répondues et tous les devoirs sont corrigés !
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
 
               <button
                 onClick={openCreateModal}
@@ -4237,6 +4075,13 @@ const TeacherDashboard = () => {
           </button>
         </div>
       )}
+
+      <TeacherHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        activities={teacherActivities}
+        formatDateShort={formatDateShort}
+      />
 
       <ConfirmModal
         open={Boolean(confirmState)}

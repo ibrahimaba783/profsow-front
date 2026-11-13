@@ -204,17 +204,34 @@ const Landing = () => {
   const dynamicTestimonials = settings.testimonials?.length > 0 ? settings.testimonials : TESTIMONIALS;
   const dynamicFaqs = settings.faqs?.length > 0 ? settings.faqs : FAQS;
   const activeExtraLinks = (settings.extraLinks || []).filter((item) => item && item.active !== false && item.title && item.url);
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState(() => {
+    try {
+      const cached = localStorage.getItem('profsow_cached_courses');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('profsow_cached_courses');
+      return !cached || JSON.parse(cached).length === 0;
+    } catch {
+      return true;
+    }
+  });
   const [activeSubject, setActiveSubject] = useState('Tous');
   const [activeLevel, setActiveLevel] = useState('Tous');
   const [onlyFree, setOnlyFree] = useState(false);
   const [showAllCourses, setShowAllCourses] = useState(false);
   const [statsVisible, setStatsVisible] = useState(false);
-  const [platformStats, setPlatformStats] = useState({
-    studentsCount: 0,
-    coursesCount: 0,
-    modulesCount: 0,
+  const [platformStats, setPlatformStats] = useState(() => {
+    try {
+      const cached = localStorage.getItem('profsow_cached_stats');
+      return cached ? JSON.parse(cached) : { studentsCount: 0, coursesCount: 0, modulesCount: 0 };
+    } catch {
+      return { studentsCount: 0, coursesCount: 0, modulesCount: 0 };
+    }
   });
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [openFaq, setOpenFaq] = useState(-1);
@@ -243,7 +260,12 @@ const Landing = () => {
     const fetchCourses = async () => {
       try {
         const data = await api('/courses');
-        setCourses(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length > 0) {
+          setCourses(data);
+          try {
+            localStorage.setItem('profsow_cached_courses', JSON.stringify(data));
+          } catch {}
+        }
       } catch (err) {
         console.error('Erreur de chargement des cours :', err);
       } finally {
@@ -257,7 +279,12 @@ const Landing = () => {
     const fetchStats = async () => {
       try {
         const data = await api('/stats');
-        setPlatformStats(data);
+        if (data && typeof data === 'object') {
+          setPlatformStats(data);
+          try {
+            localStorage.setItem('profsow_cached_stats', JSON.stringify(data));
+          } catch {}
+        }
       } catch (err) {
         console.error('Erreur de chargement des statistiques :', err);
       }

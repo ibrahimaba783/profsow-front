@@ -9,8 +9,22 @@ import LevelSelect from '../components/LevelSelect';
 const Courses = () => {
   const { settings } = useContext(SettingsContext);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState(() => {
+    try {
+      const cached = localStorage.getItem('profsow_cached_courses');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('profsow_cached_courses');
+      return !cached || JSON.parse(cached).length === 0;
+    } catch {
+      return true;
+    }
+  });
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [activeSubject, setActiveSubject] = useState('Tous');
   const [activeLevel, setActiveLevel] = useState('Tous');
@@ -37,7 +51,12 @@ const Courses = () => {
     const fetchCourses = async () => {
       try {
         const data = await api('/courses');
-        setCourses(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length > 0) {
+          setCourses(data);
+          try {
+            localStorage.setItem('profsow_cached_courses', JSON.stringify(data));
+          } catch {}
+        }
       } catch (err) {
         console.error('Erreur de chargement des cours :', err);
       } finally {

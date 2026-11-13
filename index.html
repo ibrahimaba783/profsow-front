@@ -13,6 +13,20 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Aliou Sow Academy" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <!-- Préchauffage et réveil anticipé du backend Render dès l'ouverture -->
+    <link rel="preconnect" href="https://profsow-back.onrender.com" crossorigin />
+    <link rel="dns-prefetch" href="https://profsow-back.onrender.com" />
+    <script>
+      (function() {
+        try {
+          fetch('https://profsow-back.onrender.com/api/health', {
+            mode: 'no-cors',
+            cache: 'no-store'
+          }).catch(function() {});
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body class="bg-white text-slate-900 antialiased">
     <div id="root"></div>

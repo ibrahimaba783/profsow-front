@@ -1,6 +1,15 @@
 const BASE_URL = (import.meta.env.VITE_API_URL || 'https://profsow-back.onrender.com/api').replace(/\/+$/, '');
 
-const REQUEST_TIMEOUT_MS = 45000;
+const REQUEST_TIMEOUT_MS = 60000;
+const MAX_GATEWAY_RETRIES = 4;
+const MAX_NETWORK_RETRIES = 3;
+
+// Déclenchement anticipé du réveil dès que le module API est chargé
+try {
+  fetch(`${BASE_URL}/health`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+} catch {
+  // Ignorer
+}
 
 const parseBodySafely = async (response) => {
   const raw = await response.text();
@@ -43,9 +52,14 @@ const api = async (endpoint, options = {}, retryCount = 0) => {
       signal: options.signal || controller.signal,
     });
 
-    // Réessayer 1 fois sur erreur de passerelle (démarrage à froid Render)
-    if ((response.status === 502 || response.status === 503 || response.status === 504) && retryCount < 1 && method === 'GET') {
-      await wait(1500);
+    // Réessayer sur erreur de passerelle (démarrage à froid Render 502/503/504)
+    if (
+      (response.status === 502 || response.status === 503 || response.status === 504) &&
+      retryCount < MAX_GATEWAY_RETRIES &&
+      method === 'GET'
+    ) {
+      const delay = 2000 + retryCount * 1000;
+      await wait(delay);
       return api(endpoint, options, retryCount + 1);
     }
 
@@ -56,7 +70,7 @@ const api = async (endpoint, options = {}, retryCount = 0) => {
         if (response.status === 404) {
           throw new Error('Service temporairement indisponible sur le serveur distant.');
         }
-        throw new Error('Le serveur est en cours de démarrage. Veuillez réessayer dans quelques secondes.');
+        throw new Error('Le serveur est en cours de démarrage. Veuillez patienter quelques instants.');
       }
       throw new Error(data.message || 'Une erreur est survenue');
     }
@@ -71,8 +85,9 @@ const api = async (endpoint, options = {}, retryCount = 0) => {
       throw new Error('Le serveur met trop de temps à répondre. Veuillez réessayer.');
     }
     if (err instanceof TypeError) {
-      if (retryCount < 1 && method === 'GET') {
-        await wait(1500);
+      if (retryCount < MAX_NETWORK_RETRIES && method === 'GET') {
+        const delay = 2000 + retryCount * 1000;
+        await wait(delay);
         return api(endpoint, options, retryCount + 1);
       }
       throw new Error('Impossible de joindre le serveur. Vérifiez votre connexion internet et réessayez.');

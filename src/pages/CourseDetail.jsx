@@ -540,6 +540,7 @@ const CourseDetail = () => {
   };
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     fetchCourseDetails();
     fetchExercises();
   }, [id, user?._id]);
@@ -1273,7 +1274,7 @@ const CourseDetail = () => {
                   </span>
                   <span className="inline-flex items-center gap-2">
                     <Users className="w-4 h-4 text-white/85" />
-                    {studentsCount > 0 ? studentsCount : '--'} apprenant{studentsCount > 1 ? 's' : ''}
+                    {studentsCount > 0 ? studentsCount : '--'} élève{studentsCount > 1 ? 's' : ''}
                   </span>
                   <span className="inline-flex items-center gap-2">
                     <BarChart2 className="w-4 h-4 text-white/85" />
@@ -1663,7 +1664,7 @@ const CourseDetail = () => {
                 </ul>
               </div>
 
-              {/* 4. Carte Formateur (Format exact Bakeli : Avatar + Nom + Stats Apprenants / Cours + Bio) */}
+              {/* 4. Carte Formateur (Format exact Bakeli : Avatar + Nom + Stats Élèves / Cours + Bio) */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                 <div className="flex items-center gap-3.5 mb-4">
                   {course.teacher?.avatar ? (
@@ -1686,7 +1687,7 @@ const CourseDetail = () => {
                 <div className="grid grid-cols-2 divide-x divide-slate-100 border-y border-slate-100 py-3 mb-3 text-center">
                   <div className="px-2">
                     <div className="text-base font-extrabold text-slate-900">{studentsCount}</div>
-                    <div className="text-xs text-slate-400">Apprenant{studentsCount > 1 ? 's' : ''}</div>
+                    <div className="text-xs text-slate-400">Élève{studentsCount > 1 ? 's' : ''}</div>
                   </div>
                   <div className="px-2">
                     <div className="text-base font-extrabold text-slate-900">{totalCoursesCount}</div>
@@ -2823,7 +2824,7 @@ const CourseDetail = () => {
                                   {exerciseQuestions.slice().reverse().map((q) => (
                                     <div key={q._id} className="bg-slate-50 border border-slate-100 rounded-lg p-3 text-xs space-y-1.5">
                                       <div className="flex items-center justify-between gap-2">
-                                        <span className="font-bold text-slate-900">{q.sender?.name || 'Apprenant'}</span>
+                                        <span className="font-bold text-slate-900">{q.sender?.name || 'Élève'}</span>
                                         <span className="text-[10px] text-slate-400">{formatRelativeTime(q.createdAt)}</span>
                                       </div>
                                       <p className="text-slate-700">{q.message}</p>
@@ -3098,7 +3099,7 @@ const CourseDetail = () => {
                               .slice()
                               .reverse()
                               .map((msg) => {
-                                const senderName = msg.sender?.name || 'Apprenant';
+                                const senderName = msg.sender?.name || 'Élève';
                                 const senderIsStaff =
                                   msg.sender?.role === 'teacher' || msg.sender?.role === 'admin';
                                 const initials = senderName

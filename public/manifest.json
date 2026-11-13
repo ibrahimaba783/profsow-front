@@ -1,0 +1,25 @@
+{
+  "name": "Aliou Sow Academy",
+  "short_name": "Aliou Sow",
+  "description": "Plateforme e-learning de Mathématiques et Physique-Chimie animée par M. Aliou Sow.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

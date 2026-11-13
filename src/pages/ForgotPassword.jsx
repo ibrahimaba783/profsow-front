@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
-import { Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 const ForgotPassword = () => {
@@ -29,7 +29,14 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4 pt-[72px]">
+    <div className="min-h-screen w-full bg-[#f8fafc] flex items-center justify-center p-4 lg:h-screen lg:overflow-hidden relative">
+      <Link
+        to="/login"
+        className="absolute top-4 left-4 sm:top-6 sm:left-8 inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Retour à la connexion</span>
+      </Link>
       <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200 shadow-sm slide-in">
         {success ? (
           <div className="text-center py-4 space-y-5">
@@ -52,7 +59,9 @@ const ForgotPassword = () => {
         ) : (
           <>
             <div className="text-center mb-7">
-              <img src={logo} alt="Aliou Sow Academy" className="h-12 w-auto mx-auto mb-3" />
+              <Link to="/" title="Retour à l'accueil" className="inline-block transition-transform hover:scale-105 cursor-pointer">
+                <img src={logo} alt="Aliou Sow Academy" className="h-12 w-auto mx-auto mb-3" />
+              </Link>
               <h2 className="text-2xl font-extrabold text-slate-900">Mot de passe oublié ?</h2>
               <p className="text-slate-500 text-sm mt-1">
                 Entrez votre email pour recevoir un lien de réinitialisation.

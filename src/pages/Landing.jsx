@@ -23,6 +23,7 @@ import {
   Megaphone,
   Wrench,
   ExternalLink,
+  Download,
 } from 'lucide-react';
 import profPhoto from '../assets/prof-aliou-sow-cutout.png';
 
@@ -122,7 +123,7 @@ const FAQS = [
   {
     question: "Y a-t-il un support disponible si j'ai des questions ?",
     answer:
-      "Oui ! Chaque module intègre un salon de discussion et de soutien pédagogique permettant d'échanger directement avec M. Aliou Sow et les autres apprenants, en plus des séances en direct.",
+      "Oui ! Chaque module intègre un salon de discussion et de soutien pédagogique permettant d'échanger directement avec M. Aliou Sow et les autres élèves, en plus des séances en direct.",
   },
 ];
 
@@ -297,7 +298,7 @@ const Landing = () => {
     setOnlyFree(false);
   };
 
-  // Cours tendance : triés par nombre d'apprenants puis récence
+  // Cours tendance : triés par nombre d'élèves puis récence
   const trendingCourses = [...courses]
     .sort((a, b) => (b.studentsCount || 0) - (a.studentsCount || 0))
     .slice(0, TRENDING_PREVIEW_COUNT);
@@ -545,7 +546,7 @@ const Landing = () => {
               icon={Users}
               target={platformStats.studentsCount}
               suffix="+"
-              label="Apprenants inscrits"
+              label="Élèves inscrits"
               start={statsVisible}
             />
             <StatCard
@@ -566,63 +567,66 @@ const Landing = () => {
       </section>
 
       {/* 4. APPRENEZ PARTOUT, MÊME HORS LIGNE + COMMENT INSTALLER ? (Captures 4 & 5 Bakeli) */}
-      <section id="install" className="w-full bg-white py-16 scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="max-w-2xl">
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-              Apprenez partout, même hors ligne
-            </h2>
-            <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed">
-              Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez
-              à vos cours rapidement, même sans connexion internet.
-            </p>
+      {settings.features?.enableAppInstall !== false && (
+        <section id="install" className="w-full bg-white py-16 scroll-mt-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="max-w-2xl">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
+                Apprenez partout, même hors ligne
+              </h2>
+              <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed">
+                Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez
+                à vos cours rapidement, même sans connexion internet.
+              </p>
 
-            <div className="mt-8 space-y-5">
-              {INSTALL_FEATURES.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.title} className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#f59d0e] flex items-center justify-center shrink-0">
-                      <Icon className="w-5 h-5" />
+              <div className="mt-8 space-y-5">
+                {INSTALL_FEATURES.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.title} className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#f59d0e] flex items-center justify-center shrink-0">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-[15px]">{item.title}</h3>
+                        <p className="text-sm text-slate-500 mt-0.5">{item.text}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-[15px]">{item.title}</h3>
-                      <p className="text-sm text-slate-500 mt-0.5">{item.text}</p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+
+              {installPrompt && (
+                <button
+                  onClick={handleInstall}
+                  className="mt-8 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold px-6 py-3.5 rounded-xl transition cursor-pointer shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                >
+                  <Download className="w-5 h-5" />
+                  Installer l&apos;application
+                </button>
+              )}
             </div>
 
-            {installPrompt && (
-              <button
-                onClick={handleInstall}
-                className="mt-8 bg-[#009688] hover:bg-[#00796b] text-white font-semibold px-6 py-3 rounded-lg transition cursor-pointer"
-              >
-                Installer l&apos;application
-              </button>
-            )}
-          </div>
+            <hr className="border-slate-100 my-14" />
 
-          <hr className="border-slate-100 my-14" />
-
-          <h3 className="text-xl font-bold text-slate-900 text-center mb-8">
-            Comment installer ?
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {INSTALL_STEPS.map((step) => (
-              <div
-                key={step.title}
-                className="bg-slate-50/70 border border-slate-100 rounded-xl p-6 text-center shadow-[0_1px_6px_rgba(15,23,42,0.03)]"
-              >
-                <div className="text-3xl mb-3">{step.emoji}</div>
-                <h4 className="font-bold text-slate-900 mb-2">{step.title}</h4>
-                <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
-              </div>
-            ))}
+            <h3 className="text-xl font-bold text-slate-900 text-center mb-8">
+              Comment installer ?
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {INSTALL_STEPS.map((step) => (
+                <div
+                  key={step.title}
+                  className="bg-slate-50/70 border border-slate-100 rounded-xl p-6 text-center shadow-[0_1px_6px_rgba(15,23,42,0.03)]"
+                >
+                  <div className="text-3xl mb-3">{step.emoji}</div>
+                  <h4 className="font-bold text-slate-900 mb-2">{step.title}</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 5. TROUVER LE MODULE QUI VOUS CORRESPOND (Captures 5 & 6 Bakeli) */}
       <section id="catalogue" className="w-full bg-white pb-16 pt-4 scroll-mt-24">
@@ -719,11 +723,11 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* 6. CE QUE DISENT NOS APPRENANTS (Captures 7 & 8 Bakeli) */}
+      {/* 6. CE QUE DISENT NOS ÉLÈVES (Captures 7 & 8 Bakeli) */}
       <section id="testimonials" className="w-full bg-[#f8fafc] py-16 scroll-mt-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-8">
-            Ce que disent nos apprenants
+            Ce que disent nos élèves
           </h2>
 
           <div className="space-y-4">

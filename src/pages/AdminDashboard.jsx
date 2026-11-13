@@ -86,7 +86,7 @@ const FEATURE_LIST = [
   },
   {
     key: 'enableReviews',
-    title: 'Avis & notes des apprenants',
+    title: 'Avis & notes des élèves',
     desc: 'Permet aux élèves abonnés de laisser une note et un commentaire sur les modules.',
   },
   {
@@ -103,6 +103,11 @@ const FEATURE_LIST = [
     key: 'enableSequentialUnlock',
     title: 'Déblocage progressif des sections',
     desc: "Déverrouille les chapitres et le quiz final au fur et à mesure que l'élève termine chaque section (style Bakeli).",
+  },
+  {
+    key: 'enableAppInstall',
+    title: "Guide & Bannière d'installation de l'application (PWA)",
+    desc: "Affiche ou masque la section « Apprenez partout, même hors ligne » et le guide « Comment installer ? » sur la page d'accueil.",
   },
 ];
 

@@ -49,10 +49,10 @@ const CourseCard = ({ course, footerRight, topRightBadge, onClick }) => {
           {course.title}
         </h3>
 
-        {/* Nombre d'apprenants aligné à droite comme sur Bakeli */}
+        {/* Nombre d'élèves aligné à droite comme sur Bakeli */}
         <div className="text-right text-xs text-slate-500 mt-2.5">
           <span className="font-semibold text-slate-700">{studentsCount}</span>{' '}
-          apprenant{studentsCount > 1 ? 's' : ''}
+          élève{studentsCount > 1 ? 's' : ''}
         </div>
 
         {/* Durée & sections */}

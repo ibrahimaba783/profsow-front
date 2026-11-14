@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 import { AuthContext } from '../context/AuthContext';
 import { AlertCircle, Eye, EyeOff, Check, ArrowLeft } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
@@ -22,7 +22,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const { login, googleLogin } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect');
@@ -56,19 +56,7 @@ const Login = () => {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setError('');
-    setSubmitting(true);
 
-    try {
-      const data = await googleLogin(credentialResponse.credential);
-      redirectByRole(data.role);
-    } catch (err) {
-      setError(err.message || 'Connexion Google impossible');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] flex items-center justify-center p-4 sm:p-6 lg:p-8 lg:h-screen lg:overflow-hidden relative">
@@ -132,17 +120,7 @@ const Login = () => {
             </div>
           )}
 
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setError('La connexion avec Google a échoué. Veuillez réessayer.')}
-              text="signin_with"
-              shape="rectangular"
-              theme="outline"
-              size="large"
-              locale="fr"
-            />
-          </div>
+          <GoogleLoginButton onError={setError} text="signin_with" />
 
           <div className="flex items-center gap-3 my-2.5 sm:my-3">
             <div className="flex-1 border-t border-slate-200"></div>

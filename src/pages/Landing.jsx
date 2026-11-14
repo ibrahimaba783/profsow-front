@@ -277,7 +277,7 @@ const Landing = () => {
     const fetchCourses = async () => {
       try {
         const data = await api('/courses');
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setCourses(data);
           try {
             localStorage.setItem('profsow_cached_courses', JSON.stringify(data));
@@ -290,6 +290,19 @@ const Landing = () => {
       }
     };
     fetchCourses();
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'profsow_cached_courses') {
+        try {
+          const parsed = e.newValue ? JSON.parse(e.newValue) : [];
+          setCourses(Array.isArray(parsed) ? parsed : []);
+        } catch {
+          setCourses([]);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   useEffect(() => {
@@ -900,37 +913,39 @@ const Landing = () => {
       {/* ========================================================================= */}
       {/* 3. NOS MATIÈRES TENDANCES (Vidéo 00:05 - 00:07) */}
       {/* ========================================================================= */}
-      <section id="trending" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 scroll-mt-24">
-        <Reveal className="flex items-center justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Nos matières tendances
-            </h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-1">
-              Les matières les plus suivies par les élèves de l'académie cette année.
-            </p>
-          </div>
-          <Link
-            to="/courses"
-            className="text-xs sm:text-sm font-bold text-[#009688] hover:underline flex items-center gap-1 shrink-0"
-          >
-            <span>Tout afficher</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </Reveal>
+      {(loading || courses.length > 0) && (
+        <section id="trending" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 scroll-mt-24">
+          <Reveal className="flex items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Nos matières tendances
+              </h2>
+              <p className="text-slate-500 text-xs sm:text-sm mt-1">
+                Les matières les plus suivies par les élèves de l'académie cette année.
+              </p>
+            </div>
+            <Link
+              to="/courses"
+              className="text-xs sm:text-sm font-bold text-[#009688] hover:underline flex items-center gap-1 shrink-0"
+            >
+              <span>Tout afficher</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </Reveal>
 
-        {loading ? (
-          <CourseSkeletonRow />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {(trendingCourses.length > 0 ? trendingCourses : courses.slice(0, 4)).map((course, idx) => (
-              <Reveal key={`trending-${course._id}`} delay={idx * 0.08}>
-                <CourseCard course={course} />
-              </Reveal>
-            ))}
-          </div>
-        )}
-      </section>
+          {loading ? (
+            <CourseSkeletonRow />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {(trendingCourses.length > 0 ? trendingCourses : courses.slice(0, 4)).map((course, idx) => (
+                <Reveal key={`trending-${course._id}`} delay={idx * 0.08}>
+                  <CourseCard course={course} />
+                </Reveal>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ========================================================================= */}
       {/* 4. DÉCOUVREZ LES CHIFFRES DES ÉLÈVES (Vidéo 00:08) */}

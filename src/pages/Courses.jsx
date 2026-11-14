@@ -71,7 +71,7 @@ const Courses = () => {
     const fetchCourses = async () => {
       try {
         const data = await api('/courses');
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setCourses(data);
           try {
             localStorage.setItem('profsow_cached_courses', JSON.stringify(data));
@@ -84,6 +84,19 @@ const Courses = () => {
       }
     };
     fetchCourses();
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'profsow_cached_courses') {
+        try {
+          const parsed = e.newValue ? JSON.parse(e.newValue) : [];
+          setCourses(Array.isArray(parsed) ? parsed : []);
+        } catch {
+          setCourses([]);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const handleSearchChange = (value) => {

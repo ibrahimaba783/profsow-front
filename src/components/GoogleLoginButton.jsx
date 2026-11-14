@@ -3,7 +3,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
-const GoogleLoginButton = ({ onError, onSuccessRedirect }) => {
+const GoogleLoginButton = ({ onError, onSuccessRedirect, text = 'signup_with' }) => {
   const { googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -40,8 +40,11 @@ const GoogleLoginButton = ({ onError, onSuccessRedirect }) => {
         <GoogleLogin
           onSuccess={handleSuccess}
           onError={() => onError?.('Connexion Google échouée')}
-          text="signup_with"
+          text={text}
           locale="fr"
+          shape="rectangular"
+          theme="outline"
+          size="large"
         />
       )}
     </div>

@@ -87,9 +87,9 @@ export const ALL_CLASSES = CYCLES.flatMap((cycle) => cycle.classes);
 export const matchesClassLevel = (courseLevel, classTarget) => {
   if (!courseLevel || !classTarget) return false;
   const raw = String(courseLevel).trim().toLowerCase();
-  const targetId = typeof classTarget === 'string' ? classTarget : classTarget.id;
+  const targetId = typeof classTarget === 'string' ? classTarget : classTarget?.id || '';
   const targetValues =
-    typeof classTarget === 'object' && Array.isArray(classTarget.levelValues)
+    typeof classTarget === 'object' && Array.isArray(classTarget?.levelValues)
       ? classTarget.levelValues.map((v) => v.toLowerCase())
       : [targetId.toLowerCase()];
 
@@ -106,9 +106,27 @@ export const matchesClassLevel = (courseLevel, classTarget) => {
 
 /**
  * Calcule dynamiquement le nombre de matières et de chapitres pour une classe donnée.
+ * Accepte les arguments dans n'importe quel ordre: (courses, classItem) ou (classItem, courses).
  */
-export const getClassStats = (courses = [], classItem) => {
-  const classCourses = courses.filter((c) => matchesClassLevel(c.level, classItem));
+export const getClassStats = (arg1 = [], arg2) => {
+  let coursesList = [];
+  let classTarget = null;
+
+  if (Array.isArray(arg1)) {
+    coursesList = arg1;
+    classTarget = arg2;
+  } else if (Array.isArray(arg2)) {
+    coursesList = arg2;
+    classTarget = arg1;
+  } else {
+    coursesList = [];
+    classTarget = arg1 || arg2;
+  }
+
+  const classCourses = Array.isArray(coursesList)
+    ? coursesList.filter((c) => c && matchesClassLevel(c.level, classTarget))
+    : [];
+
   const distinctSubjects = Array.from(
     new Set(classCourses.map((c) => c.subject || c.title || 'Matière'))
   );
@@ -116,11 +134,25 @@ export const getClassStats = (courses = [], classItem) => {
     (sum, c) => sum + (c.chaptersCount ?? c.chapters?.length ?? 0),
     0
   );
+  const totalLessons = classCourses.reduce((sum, c) => {
+    if (typeof c.lessonsCount === 'number') return sum + c.lessonsCount;
+    if (Array.isArray(c.chapters)) {
+      return (
+        sum +
+        c.chapters.reduce(
+          (cSum, ch) => cSum + (ch.lessonsCount ?? ch.lessons?.length ?? 0),
+          0
+        )
+      );
+    }
+    return sum;
+  }, 0);
 
   return {
     coursesCount: classCourses.length,
     subjectsCount: distinctSubjects.length,
     totalChapters,
+    totalLessons,
     subjectsList: distinctSubjects,
     courses: classCourses,
   };

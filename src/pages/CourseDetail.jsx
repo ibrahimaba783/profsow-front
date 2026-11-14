@@ -1422,15 +1422,39 @@ const CourseDetail = () => {
                   ) : user.role === 'student' ? (
                     <button
                       type="button"
-                      onClick={handleDirectEnroll}
-                      disabled={enrollingDirect}
-                      className="inline-flex items-center gap-2 bg-[#f59d0e] hover:bg-[#e08b00] text-white font-bold px-6 py-3 rounded-xl text-sm transition shadow-md cursor-pointer disabled:opacity-60"
+                      onClick={() => {
+                        if (courseIsFree) {
+                          if (features.enableFreeEnrollment === false) {
+                            alert("Les inscriptions gratuites sont momentanément suspendues par l'administration.");
+                            return;
+                          }
+                          handleDirectEnroll();
+                        } else {
+                          if (features.enablePayments === false) {
+                            alert("Les paiements Wave & Orange Money sont temporairement désactivés par l'administration.");
+                            return;
+                          }
+                          setPhoneNumber('');
+                          setPayError('');
+                          setShowPayModal(true);
+                        }
+                      }}
+                      disabled={enrollingDirect || (courseIsFree && features.enableFreeEnrollment === false) || (!courseIsFree && features.enablePayments === false)}
+                      className="inline-flex items-center gap-2 bg-[#f59d0e] hover:bg-[#e08b00] disabled:opacity-60 text-white font-bold px-6 py-3 rounded-xl text-sm transition shadow-md cursor-pointer"
                     >
                       {enrollingDirect ? (
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         <>
-                          <span>{courseIsFree ? 'Commencer gratuitement' : "S'inscrire à ce cours"}</span>
+                          <span>
+                            {courseIsFree
+                              ? features.enableFreeEnrollment === false
+                                ? 'Inscriptions gratuites suspendues'
+                                : 'Commencer gratuitement'
+                              : features.enablePayments === false
+                              ? 'Paiements suspendus'
+                              : "S'inscrire avec Wave / OM"}
+                          </span>
                           <ChevronRight className="w-4 h-4" />
                         </>
                       )}
@@ -1713,23 +1737,52 @@ const CourseDetail = () => {
                   ) : user.role === 'student' ? (
                     // 2. Élève connecté mais pas inscrit au cours
                     <div className="space-y-3 pt-2">
-                      <button
-                        type="button"
-                        onClick={handleDirectEnroll}
-                        disabled={enrollingDirect}
-                        className={orangeBtn}
-                      >
-                        {enrollingDirect ? (
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      {courseIsFree ? (
+                        features.enableFreeEnrollment === false ? (
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center text-xs text-amber-800">
+                            Les inscriptions gratuites sont actuellement suspendues par l&apos;administration.
+                          </div>
                         ) : (
-                          <>
-                            <span>{courseIsFree || course.price === 0 ? 'Commencer gratuitement' : "S'inscrire au cours"}</span>
+                          <button
+                            type="button"
+                            onClick={handleDirectEnroll}
+                            disabled={enrollingDirect}
+                            className={orangeBtn}
+                          >
+                            {enrollingDirect ? (
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <>
+                                <span>Commencer gratuitement</span>
+                                <ChevronRight className="w-4 h-4" />
+                              </>
+                            )}
+                          </button>
+                        )
+                      ) : (
+                        features.enablePayments === false ? (
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center text-xs text-amber-800">
+                            Les paiements Wave &amp; Orange Money sont actuellement suspendus par l&apos;administration.
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPhoneNumber('');
+                              setPayError('');
+                              setShowPayModal(true);
+                            }}
+                            className={orangeBtn}
+                          >
+                            <span>Débloquer avec Wave / Orange Money</span>
                             <ChevronRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
+                          </button>
+                        )
+                      )}
                       <p className="text-[11px] text-slate-500 text-center">
-                        Accès immédiat en 1 clic à l&apos;ensemble des leçons, vidéos et exercices.
+                        {courseIsFree
+                          ? "Accès immédiat en 1 clic à l'ensemble des leçons, vidéos et exercices."
+                          : "Paiement sécurisé avec activation immédiate de vos accès."}
                       </p>
                     </div>
                   ) : (
@@ -2025,7 +2078,14 @@ const CourseDetail = () => {
     const chDone = ls.length === 0 ? true : chCompletedCount === ls.length;
     const manuallyLocked = Boolean(ch.isLocked);
     const isChapterFree = cIdx === 0 || Boolean(ch.isFree) || course.isFree || course.price === 0;
-    const unlocked = isStaff || isSubscribed || isChapterFree;
+    let unlocked = isStaff;
+    if (!unlocked) {
+      if (isSubscribed) {
+        unlocked = !sequentialUnlock || cIdx === 0 || prevChaptersDone;
+      } else {
+        unlocked = isChapterFree;
+      }
+    }
     chapterStatusList.push({
       unlocked,
       isFree: isChapterFree,
@@ -3114,21 +3174,29 @@ const CourseDetail = () => {
                                   </p>
                                 </div>
                               </div>
-                              {(features.enablePdfDownload !== false || isStaff) && (
+                              {(features.enablePdfDownload !== false || isStaff) ? (
                                 <a
                                   href={getInlinePdfUrl(activeLesson.pdfPath)}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-5 py-2.5 bg-[#009688] hover:bg-[#00796b] text-white rounded-xl text-xs font-bold shrink-0 cursor-pointer transition"
+                                  className="px-5 py-2.5 bg-[#009688] hover:bg-[#00796b] text-white rounded-xl text-xs font-bold shrink-0 cursor-pointer transition inline-flex items-center gap-1.5"
                                 >
-                                  Ouvrir le PDF
+                                  <FileText className="w-3.5 h-3.5" />
+                                  <span>Ouvrir le PDF</span>
                                 </a>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200/80 text-slate-600 text-xs font-medium">
+                                  <Lock className="w-3.5 h-3.5" />
+                                  Consultation PDF suspendue
+                                </span>
                               )}
                             </div>
 
-                            <div className="hidden md:block w-full h-[520px] rounded-xl overflow-hidden border border-slate-200">
-                              <embed src={getInlinePdfUrl(activeLesson.pdfPath)} type="application/pdf" width="100%" height="100%" />
-                            </div>
+                            {(features.enablePdfDownload !== false || isStaff) && (
+                              <div className="hidden md:block w-full h-[520px] rounded-xl overflow-hidden border border-slate-200">
+                                <embed src={getInlinePdfUrl(activeLesson.pdfPath)} type="application/pdf" width="100%" height="100%" />
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -3150,23 +3218,35 @@ const CourseDetail = () => {
                         )}
 
                         {activeLesson.contentType === 'meet' && activeLesson.meetLink && (
-                          <div className="p-8 bg-slate-50 border border-slate-200 rounded-xl text-center flex flex-col items-center">
-                            <div className="w-14 h-14 bg-teal-50 border border-teal-100 text-[#009688] rounded-full flex items-center justify-center mb-4">
-                              <Video className="w-7 h-7" />
+                          features.enableLiveMeet === false && !isStaff ? (
+                            <div className="p-8 bg-slate-50 border border-slate-200 rounded-xl text-center flex flex-col items-center">
+                              <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-3">
+                                <Video className="w-6 h-6" />
+                              </div>
+                              <h4 className="text-sm font-bold text-slate-800">Séances en direct suspendues</h4>
+                              <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                                Les visioconférences et directs sont momentanément suspendus par l'administration.
+                              </p>
                             </div>
-                            <h4 className="text-base font-bold text-slate-900 mb-1.5">Cours en direct avec {settings.siteInfo?.teacherDisplayName || 'M. Aliou Sow'}</h4>
-                            <p className="text-slate-500 text-xs mb-5 max-w-sm">
-                              Rejoignez la réunion virtuelle en cours pour assister au live ou poser vos questions.
-                            </p>
-                            <a
-                              href={activeLesson.meetLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="bg-[#009688] hover:bg-[#00796b] text-white px-7 py-3 rounded-xl font-bold text-xs transition"
-                            >
-                              Rejoindre le Direct Google Meet
-                            </a>
-                          </div>
+                          ) : (
+                            <div className="p-8 bg-slate-50 border border-slate-200 rounded-xl text-center flex flex-col items-center">
+                              <div className="w-14 h-14 bg-teal-50 border border-teal-100 text-[#009688] rounded-full flex items-center justify-center mb-4">
+                                <Video className="w-7 h-7" />
+                              </div>
+                              <h4 className="text-base font-bold text-slate-900 mb-1.5">Cours en direct avec {settings.siteInfo?.teacherDisplayName || 'M. Aliou Sow'}</h4>
+                              <p className="text-slate-500 text-xs mb-5 max-w-sm">
+                                Rejoignez la réunion virtuelle en cours pour assister au live ou poser vos questions.
+                              </p>
+                              <a
+                                href={activeLesson.meetLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-[#009688] hover:bg-[#00796b] text-white px-7 py-3 rounded-xl font-bold text-xs transition"
+                              >
+                                Rejoindre le Direct Google Meet
+                              </a>
+                            </div>
+                          )
                         )}
 
                         {activeLesson.contentType === 'text' && (

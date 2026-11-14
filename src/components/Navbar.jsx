@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Menu, X, ChevronDown, LayoutDashboard, User, LogOut } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, LayoutDashboard, User, LogOut, GraduationCap } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
@@ -78,12 +78,12 @@ const Navbar = () => {
     navigate('/');
   };
 
-  // Barre de recherche exacte Bakeli : pilule blanche + bouton rond orange à droite
+  // Barre de recherche Figma : pilule blanche + bouton rond orange à droite
   const renderSearch = () => (
     <form
       onSubmit={handleSearch}
       role="search"
-      className="flex items-center w-full h-11 rounded-full border border-slate-200 bg-white pl-4 pr-1.5 shadow-[0_1px_4px_rgba(15,23,42,0.03)] focus-within:border-[#f59d0e] focus-within:ring-2 focus-within:ring-[#f59d0e]/15 transition"
+      className="flex items-center w-full h-11 rounded-full border border-slate-200 bg-white pl-4 pr-1.5 shadow-[0_1px_4px_rgba(15,23,42,0.03)] focus-within:border-[#009688] focus-within:ring-2 focus-within:ring-[#009688]/15 transition"
     >
       <input
         type="search"
@@ -96,7 +96,7 @@ const Navbar = () => {
       <button
         type="submit"
         aria-label="Rechercher"
-        className="w-8 h-8 rounded-full bg-[#f59d0e] hover:bg-[#e08b00] text-white flex items-center justify-center shrink-0 cursor-pointer transition"
+        className="w-8 h-8 rounded-full bg-[#f59e0b] hover:bg-[#d97706] text-white flex items-center justify-center shrink-0 cursor-pointer transition shadow-xs"
       >
         <Search className="w-4 h-4" />
       </button>
@@ -120,26 +120,26 @@ const Navbar = () => {
   const isHome = location.pathname === '/';
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-white border-b border-slate-100 shadow-[0_1px_10px_rgba(15,23,42,0.05)]">
+    <header className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-[0_2px_12px_rgba(15,23,42,0.04)]">
       <div className="max-w-7xl mx-auto h-[72px] px-4 sm:px-6 flex items-center gap-4 lg:gap-6">
         {/* Logo */}
-        <Link to="/" onClick={handleHomeClick} className="flex items-center gap-2 shrink-0">
-          <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto" />
+        <Link to="/" onClick={handleHomeClick} className="flex items-center gap-2.5 shrink-0">
+          <img src={logo} alt="Aliou Sow Academy" className="h-10 w-auto object-contain" />
           <span className="hidden sm:block leading-tight">
             <span className="block text-[15px] font-extrabold text-slate-900 tracking-wide">ALIOU SOW</span>
             <span className="block text-[9px] font-bold tracking-[0.24em] text-[#009688]">ACADEMY</span>
           </span>
         </Link>
 
-        {/* Liens de navigation (format Bakeli) */}
+        {/* Liens de navigation */}
         <nav className="hidden lg:flex items-center gap-6 shrink-0" aria-label="Navigation principale">
           <Link
             to="/"
             onClick={handleHomeClick}
-            className={`text-sm font-medium py-1 transition-colors ${
+            className={`text-sm font-semibold py-1 transition-colors ${
               isHome
-                ? 'text-slate-900 border-b-2 border-[#f59d0e]'
-                : 'text-slate-700 hover:text-[#009688]'
+                ? 'text-[#0f172a] border-b-2 border-[#f59e0b]'
+                : 'text-slate-600 hover:text-[#009688]'
             }`}
           >
             Accueil
@@ -149,7 +149,7 @@ const Navbar = () => {
               key={item.id}
               to={`/#${item.id}`}
               onClick={handleAnchorClick(item.id)}
-              className="text-sm font-medium text-slate-700 hover:text-[#009688] py-1 transition-colors whitespace-nowrap"
+              className="text-sm font-semibold text-slate-600 hover:text-[#009688] py-1 transition-colors whitespace-nowrap"
             >
               {item.label}
             </Link>
@@ -159,19 +159,19 @@ const Navbar = () => {
         {/* Barre de recherche centrale */}
         <div className="hidden md:block flex-1 max-w-md lg:max-w-lg mx-auto">{renderSearch()}</div>
 
-        {/* Boutons Connexion / Inscription (format Bakeli : pilules orange et vert sarcelle) */}
+        {/* Boutons Connexion / Inscription Figma Make */}
         <div className="hidden lg:flex items-center gap-3 ml-auto shrink-0">
           {!loading && !user && (
             <>
               <Link
                 to="/login"
-                className="h-10 px-5 inline-flex items-center justify-center rounded-full bg-[#f59d0e] hover:bg-[#e08b00] text-white text-sm font-semibold shadow-sm transition whitespace-nowrap"
+                className="h-10 px-5 inline-flex items-center justify-center rounded-full bg-[#fff8e9] hover:bg-[#fef3c7] text-[#d97706] text-xs font-bold transition whitespace-nowrap"
               >
                 Se connecter
               </Link>
               <Link
                 to="/register"
-                className="h-10 px-5 inline-flex items-center justify-center rounded-full bg-[#009688] hover:bg-[#00796b] text-white text-sm font-semibold shadow-sm transition whitespace-nowrap"
+                className="h-10 px-5 inline-flex items-center justify-center rounded-full border border-[#009688] bg-white text-[#009688] hover:bg-[#009688] hover:text-white text-xs font-bold transition whitespace-nowrap shadow-xs"
               >
                 S'inscrire
               </Link>
@@ -182,7 +182,7 @@ const Navbar = () => {
             <>
               <Link
                 to={dashboardPath}
-                className="h-10 px-4 inline-flex items-center rounded-full bg-[#009688]/10 text-[#009688] text-sm font-semibold hover:bg-[#009688]/15 transition whitespace-nowrap"
+                className="h-10 px-4 inline-flex items-center rounded-full bg-[#009688]/10 text-[#009688] text-xs font-bold hover:bg-[#009688]/15 transition whitespace-nowrap"
               >
                 Mon espace
               </Link>
@@ -204,7 +204,7 @@ const Navbar = () => {
                 {menuOpen && (
                   <div
                     role="menu"
-                    className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden"
+                    className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50"
                   >
                     <div className="px-4 py-3 border-b border-slate-100">
                       <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
@@ -248,7 +248,7 @@ const Navbar = () => {
           onClick={() => setMobileOpen((o) => !o)}
           aria-label={mobileOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
           aria-expanded={mobileOpen}
-          className="lg:hidden ml-auto w-10 h-10 inline-flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
+          className="lg:hidden ml-auto w-10 h-10 inline-flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -256,14 +256,14 @@ const Navbar = () => {
 
       {/* Panneau mobile */}
       {mobileOpen && (
-        <div className="lg:hidden border-t border-slate-100 bg-white px-4 pb-5 pt-4 space-y-4 max-h-[calc(100vh-4.5rem)] overflow-y-auto shadow-lg">
+        <div className="lg:hidden border-t border-slate-100 bg-white px-4 pb-6 pt-4 space-y-4 max-h-[calc(100vh-4.5rem)] overflow-y-auto shadow-xl">
           <div className="md:hidden">{renderSearch()}</div>
 
           <nav className="flex flex-col" aria-label="Navigation mobile">
             <Link
               to="/"
               onClick={handleHomeClick}
-              className="py-3 text-sm font-medium text-slate-800 border-b border-slate-100 hover:text-[#009688]"
+              className="py-3 text-sm font-semibold text-slate-800 border-b border-slate-100 hover:text-[#009688]"
             >
               Accueil
             </Link>
@@ -272,30 +272,30 @@ const Navbar = () => {
                 key={item.id}
                 to={`/#${item.id}`}
                 onClick={handleAnchorClick(item.id)}
-                className="py-3 text-sm font-medium text-slate-800 border-b border-slate-100 hover:text-[#009688]"
+                className="py-3 text-sm font-semibold text-slate-800 border-b border-slate-100 hover:text-[#009688]"
               >
                 {item.label}
               </Link>
             ))}
             <Link
               to={COURSES_PATH}
-              className="py-3 text-sm font-medium text-slate-800 border-b border-slate-100 hover:text-[#009688]"
+              className="py-3 text-sm font-semibold text-slate-800 border-b border-slate-100 hover:text-[#009688]"
             >
               Catalogue des matières
             </Link>
           </nav>
 
           {!loading && !user && (
-            <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-2 gap-3 pt-2">
               <Link
                 to="/login"
-                className="h-11 inline-flex items-center justify-center rounded-full bg-[#f59d0e] text-white text-sm font-semibold hover:bg-[#e08b00]"
+                className="h-11 inline-flex items-center justify-center rounded-full bg-[#fff8e9] text-[#d97706] text-xs font-bold"
               >
                 Se connecter
               </Link>
               <Link
                 to="/register"
-                className="h-11 inline-flex items-center justify-center rounded-full bg-[#009688] text-white text-sm font-semibold hover:bg-[#00796b]"
+                className="h-11 inline-flex items-center justify-center rounded-full border border-[#009688] bg-white text-[#009688] text-xs font-bold"
               >
                 S'inscrire
               </Link>

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   Users,
   Search,
@@ -95,96 +96,121 @@ const TeacherStudentsTab = ({
   return (
     <div className="space-y-6">
       {/* 1. Header Banner */}
-      <div className="bg-white rounded-2xl shadow-md p-6 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4c3882] to-[#6b5cc4] text-white flex items-center justify-center shadow-sm shrink-0">
-            <Users className="w-6 h-6" />
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white rounded-3xl shadow-2xs p-6 sm:p-7 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white flex items-center justify-center shadow-md shadow-indigo-600/20 shrink-0">
+            <Users className="w-7 h-7" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
                 Suivi des Élèves &amp; Abonnements
               </h1>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#4c3882] font-bold border border-indigo-200">
+              <span className="text-xs px-3 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-extrabold border border-indigo-200/70 shadow-2xs">
                 {summary.total} élève{summary.total > 1 ? 's' : ''}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
               Consultez la progression, les scores aux quiz, relancez ou gérez les abonnements de vos élèves.
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* 2. KPI Cards Statut */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.05 }}
           onClick={() => setStatusFilter('active')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-5 rounded-3xl border transition-all cursor-pointer ${
             statusFilter === 'active'
-              ? 'bg-emerald-50 border-emerald-300 shadow-sm'
-              : 'bg-white border-slate-100 hover:border-slate-200'
+              ? 'bg-emerald-50/70 border-emerald-300 shadow-xs ring-2 ring-emerald-500/20'
+              : 'bg-white border-slate-200/80 hover:border-emerald-200 shadow-2xs hover:shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Actifs</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">Actifs</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
           </div>
-          <p className="text-2xl font-black text-slate-900 mt-1">{summary.active}</p>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Accès autorisés</p>
-        </div>
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-2 tracking-tight">{summary.active}</p>
+          <p className="text-[11px] text-emerald-600 font-bold mt-1">Accès autorisés</p>
+        </motion.div>
 
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.1 }}
           onClick={() => setStatusFilter('expiring_soon')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-5 rounded-3xl border transition-all cursor-pointer ${
             statusFilter === 'expiring_soon'
-              ? 'bg-amber-50 border-amber-300 shadow-sm'
-              : 'bg-white border-slate-100 hover:border-slate-200'
+              ? 'bg-amber-50/70 border-amber-300 shadow-xs ring-2 ring-amber-500/20'
+              : 'bg-white border-slate-200/80 hover:border-amber-200 shadow-2xs hover:shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Expirent sous 7j</span>
-            <Clock className="w-4 h-4 text-amber-500" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">Expirent sous 7j</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
-          <p className="text-2xl font-black text-amber-600 mt-1">{summary.expiringSoon}</p>
-          <p className="text-[11px] text-amber-600 font-semibold mt-0.5">À relancer</p>
-        </div>
+          <p className="text-2xl sm:text-3xl font-black text-amber-600 mt-2 tracking-tight">{summary.expiringSoon}</p>
+          <p className="text-[11px] text-amber-600 font-bold mt-1">À relancer</p>
+        </motion.div>
 
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.15 }}
           onClick={() => setStatusFilter('expired')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-5 rounded-3xl border transition-all cursor-pointer ${
             statusFilter === 'expired'
-              ? 'bg-slate-100 border-slate-300 shadow-sm'
-              : 'bg-white border-slate-100 hover:border-slate-200'
+              ? 'bg-slate-100 border-slate-300 shadow-xs ring-2 ring-slate-400/20'
+              : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-2xs hover:shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Expirés</span>
-            <Clock className="w-4 h-4 text-slate-400" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">Expirés</span>
+            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center border border-slate-200">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
-          <p className="text-2xl font-black text-slate-700 mt-1">{summary.expired}</p>
-          <p className="text-[11px] text-slate-400 font-semibold mt-0.5">Accès clos</p>
-        </div>
+          <p className="text-2xl sm:text-3xl font-black text-slate-700 mt-2 tracking-tight">{summary.expired}</p>
+          <p className="text-[11px] text-slate-400 font-bold mt-1">Accès clos</p>
+        </motion.div>
 
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.2 }}
           onClick={() => setStatusFilter('suspended')}
-          className={`p-4 rounded-2xl border transition cursor-pointer ${
+          className={`p-5 rounded-3xl border transition-all cursor-pointer ${
             statusFilter === 'suspended'
-              ? 'bg-rose-50 border-rose-300 shadow-sm'
-              : 'bg-white border-slate-100 hover:border-slate-200'
+              ? 'bg-rose-50/70 border-rose-300 shadow-xs ring-2 ring-rose-500/20'
+              : 'bg-white border-slate-200/80 hover:border-rose-200 shadow-2xs hover:shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Bloqués</span>
-            <Ban className="w-4 h-4 text-rose-500" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">Bloqués</span>
+            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
+              <Ban className="w-4 h-4" />
+            </div>
           </div>
-          <p className="text-2xl font-black text-rose-600 mt-1">{summary.suspended}</p>
-          <p className="text-[11px] text-rose-600 font-semibold mt-0.5">Suspendus</p>
-        </div>
+          <p className="text-2xl sm:text-3xl font-black text-rose-600 mt-2 tracking-tight">{summary.suspended}</p>
+          <p className="text-[11px] text-rose-600 font-bold mt-1">Suspendus</p>
+        </motion.div>
       </div>
 
       {/* 3. Barre de recherche & Filtres */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+      <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-2xs border border-slate-200/80 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -192,21 +218,21 @@ const TeacherStudentsTab = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher par nom, email, téléphone..."
-            className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:bg-white focus:border-[#4c3882] transition"
+            className="w-full h-11 pl-10 pr-9 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition shadow-2xs"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Filtres de statut */}
-          <div className="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs">
+          <div className="flex bg-slate-100/80 p-1 rounded-2xl gap-1 text-xs">
             {[
               { id: 'all', label: 'Tous' },
               { id: 'active', label: 'Actifs' },
@@ -218,9 +244,9 @@ const TeacherStudentsTab = ({
                 key={t.id}
                 type="button"
                 onClick={() => setStatusFilter(t.id)}
-                className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
                   statusFilter === t.id
-                    ? 'bg-white text-slate-900 shadow-sm'
+                    ? 'bg-white text-slate-900 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -233,7 +259,7 @@ const TeacherStudentsTab = ({
           <select
             value={courseFilter}
             onChange={(e) => setCourseFilter(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#4c3882]"
+            className="h-11 px-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 text-xs font-bold text-slate-700 focus:outline-none focus:bg-white focus:border-indigo-500 shadow-2xs cursor-pointer"
           >
             <option value="all">Toutes les matières</option>
             {courses.map((c) => (
@@ -246,16 +272,20 @@ const TeacherStudentsTab = ({
       </div>
 
       {/* 4. Liste des élèves */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-2xs border border-slate-200/80 overflow-hidden">
         {filteredStudents.length === 0 ? (
-          <div className="py-12 text-center text-slate-400">
-            <Users className="w-10 h-10 mx-auto text-slate-300 mb-2" />
-            <p className="text-sm font-semibold">Aucun élève trouvé</p>
-            <p className="text-xs text-slate-400 mt-1">Essayez d'ajuster vos filtres ou termes de recherche.</p>
+          <div className="py-14 text-center text-slate-400">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-400 flex items-center justify-center mx-auto mb-3">
+              <Users className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-slate-800">Aucun élève trouvé</p>
+            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+              Essayez d'ajuster vos filtres ou termes de recherche pour afficher les inscriptions.
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {filteredStudents.map((sub) => {
+            {filteredStudents.map((sub, sIdx) => {
               const exp = new Date(sub.expiresAt);
               const isExp = exp <= now;
               const isSuspended = sub.status === 'suspended';
@@ -282,13 +312,16 @@ const TeacherStudentsTab = ({
                   : null;
 
               return (
-                <div
+                <motion.div
                   key={sub._id}
-                  className="p-4 hover:bg-slate-50/80 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-xs"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: sIdx * 0.03 }}
+                  className="p-5 hover:bg-slate-50/70 transition flex flex-col lg:flex-row lg:items-center justify-between gap-5 text-xs"
                 >
                   {/* Élève info avec photo */}
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-11 h-11 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="relative w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 shadow-2xs">
                       {sub.student?.avatar ? (
                         <img src={sub.student.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -296,61 +329,66 @@ const TeacherStudentsTab = ({
                           {sub.student?.name?.charAt(0) || 'E'}
                         </div>
                       )}
+                      <span
+                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                          isActive ? 'bg-emerald-500' : isSuspended ? 'bg-rose-500' : 'bg-slate-400'
+                        }`}
+                      />
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-slate-900 text-sm">{sub.student?.name || 'Élève'}</span>
+                        <span className="font-extrabold text-slate-900 text-sm">{sub.student?.name || 'Élève'}</span>
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                             isActive
-                              ? 'bg-emerald-500 text-white'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : isSuspended
-                              ? 'bg-rose-500 text-white'
-                              : 'bg-slate-200 text-slate-700'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
                           }`}
                         >
                           {isActive ? 'Actif' : isSuspended ? 'Bloqué' : 'Expiré'}
                         </span>
                       </div>
-                      <p className="text-slate-500 truncate">{sub.student?.email}</p>
-                      <p className="text-[#4c3882] font-semibold mt-0.5 flex items-center gap-1.5 flex-wrap">
-                        <span>{sub.course?.title}</span>
+                      <p className="text-slate-500 truncate mt-0.5">{sub.student?.email}</p>
+                      <p className="text-indigo-600 font-semibold mt-1 flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-slate-800">{sub.course?.title}</span>
                         <span>•</span>
                         {isActive ? (
                           <span className={diffDays <= 7 ? 'text-amber-600 font-bold' : 'text-slate-500'}>
                             Reste {diffDays} jour{diffDays > 1 ? 's' : ''} (jusqu'au {formatDateShort(sub.expiresAt)})
                           </span>
                         ) : (
-                          <span className="text-rose-500">Expiré le {formatDateShort(sub.expiresAt)}</span>
+                          <span className="text-rose-500 font-medium">Expiré le {formatDateShort(sub.expiresAt)}</span>
                         )}
                       </p>
                     </div>
                   </div>
 
                   {/* Progression & Quiz & Actions */}
-                  <div className="flex flex-wrap items-center gap-5 justify-between lg:justify-end">
+                  <div className="flex flex-wrap items-center gap-6 justify-between lg:justify-end">
                     {/* Progression bar */}
                     <div className="w-36">
                       <div className="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
                         <span>Progression</span>
-                        <span className="font-bold">{progressPct}%</span>
+                        <span className="font-bold text-indigo-700">{progressPct}%</span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-[#4c3882] to-[#2563eb] rounded-full transition-all duration-300"
+                          className="h-full bg-gradient-to-r from-indigo-600 to-blue-500 rounded-full transition-all duration-300"
                           style={{ width: `${progressPct}%` }}
                         />
                       </div>
-                      <span className="text-[10px] text-slate-400 mt-0.5 block">
-                        {doneCount}/{totalLessons} leçons
+                      <span className="text-[10px] text-slate-400 mt-1 block font-medium">
+                        {doneCount}/{totalLessons} leçons validées
                       </span>
                     </div>
 
                     {/* Quiz average */}
-                    <div className="text-center min-w-[70px]">
-                      <span className="text-[11px] text-slate-400 block font-semibold">Moy. Quiz</span>
-                      <span className="font-bold text-slate-900 text-sm">
+                    <div className="text-center min-w-[70px] bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Moy. Quiz</span>
+                      <span className="font-black text-slate-900 text-sm">
                         {avgScore !== null ? `${avgScore}%` : '—'}
                       </span>
                     </div>
@@ -360,7 +398,7 @@ const TeacherStudentsTab = ({
                       <button
                         type="button"
                         onClick={() => onOpenRemindModal(sub)}
-                        className="px-3 py-1.5 rounded-lg bg-[#4c3882] hover:bg-[#3a2966] text-white font-bold inline-flex items-center gap-1 cursor-pointer transition shadow-sm"
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold inline-flex items-center gap-1.5 cursor-pointer transition shadow-2xs hover:shadow-xs hover:scale-[1.02] active:scale-[0.98]"
                         title="Envoyer un message de rappel"
                       >
                         <Mail className="w-3.5 h-3.5" />
@@ -371,8 +409,8 @@ const TeacherStudentsTab = ({
                         <button
                           type="button"
                           onClick={() => onExtendStudentSubscription(sub)}
-                          className="px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold border border-teal-200 cursor-pointer transition inline-flex items-center gap-1"
-                          title="Prolonger l'accès"
+                          className="px-3 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold border border-teal-200 cursor-pointer transition inline-flex items-center gap-1 shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+                          title="Prolonger l'accès d'un mois"
                         >
                           <CalendarPlus className="w-3.5 h-3.5" />
                           <span>+1m</span>
@@ -382,17 +420,17 @@ const TeacherStudentsTab = ({
                       <button
                         type="button"
                         onClick={() => onToggleStudentStatus(sub)}
-                        className={`px-3 py-1.5 rounded-lg font-bold inline-flex items-center gap-1 cursor-pointer transition shadow-sm ${
+                        className={`px-3 py-2 rounded-xl font-bold inline-flex items-center gap-1.5 cursor-pointer transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] ${
                           sub.status === 'suspended'
-                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                            : 'bg-rose-500 hover:bg-rose-600 text-white'
+                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                            : 'bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200'
                         }`}
                         title={sub.status === 'suspended' ? 'Débloquer' : 'Suspendre'}
                       >
                         {sub.status === 'suspended' ? (
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                         ) : (
-                          <Ban className="w-3.5 h-3.5" />
+                          <Ban className="w-3.5 h-3.5 text-slate-400" />
                         )}
                         <span className="hidden sm:inline">
                           {sub.status === 'suspended' ? 'Débloquer' : 'Bloquer'}
@@ -400,7 +438,7 @@ const TeacherStudentsTab = ({
                       </button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>

@@ -5,8 +5,11 @@ import { SettingsContext } from '../context/SettingsContext';
 import api from '../utils/api';
 import CourseCard, { formatLevel } from '../components/CourseCard';
 import LevelSelect from '../components/LevelSelect';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen,
+  Play,
+  RotateCcw,
   CreditCard,
   ChevronRight,
   ChevronLeft,
@@ -27,7 +30,7 @@ import {
   Award,
   Calendar,
   SlidersHorizontal,
-  Flame,
+  X,
 } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
@@ -260,8 +263,29 @@ const StudentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="loader-spinner"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl border border-slate-200/80 flex flex-col items-center text-center">
+          <div className="relative mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-[#009688] shadow-sm">
+              <BookOpen className="w-8 h-8 text-[#009688]" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
+              <div className="w-3.5 h-3.5 border-2 border-teal-200 border-t-[#009688] rounded-full animate-spin" />
+            </div>
+          </div>
+          <h2 className="text-base font-black text-slate-900 tracking-tight">
+            Aliou Sow Academy
+          </h2>
+          <p className="text-[11px] font-bold text-[#009688] uppercase tracking-wider mt-0.5 mb-2">
+            Espace Élève
+          </p>
+          <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
+            Chargement de votre programme, de vos cours et de vos devoirs...
+          </p>
+          <div className="w-40 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-4">
+            <div className="h-full bg-gradient-to-r from-[#009688] to-teal-400 rounded-full animate-pulse w-full"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -447,23 +471,79 @@ const StudentDashboard = () => {
 
           {view === 'all' ? (
             <>
-              {/* 1. COURS RECOMMANDÉS / SÉLECTION DU PROGRAMME (FORMAT BAKELI) */}
+              {/* BANNIÈRE DE BIENVENUE & STATS ÉLÈVE */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-[#0a3138] to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800/80"
+              >
+                {/* Glow decoratif */}
+                <div className="absolute top-0 right-0 -mr-16 -mt-16 w-72 h-72 rounded-full bg-[#009688]/20 blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-1/4 -mb-12 w-48 h-48 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                  <div className="max-w-xl">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-500/30 text-teal-300 text-xs font-bold mb-3 shadow-2xs">
+                      <Sparkles className="w-3.5 h-3.5 text-teal-300" />
+                      <span>Espace d'apprentissage Aliou Sow Academy</span>
+                    </div>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
+                      Bonjour, {user?.name || 'Élève'}
+                    </h1>
+                    <p className="text-slate-300 text-sm sm:text-base mt-2 leading-relaxed">
+                      Continuez votre progression en sciences, accédez aux cours vidéo, révisez vos chapitres et réussissez vos examens.
+                    </p>
+                  </div>
+
+                  {/* 3 Widgets métriques de l'élève */}
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4 shrink-0">
+                    <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-3 sm:p-4 text-center">
+                      <div className="text-xl sm:text-2xl font-black text-white">{myCourses.length}</div>
+                      <div className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wider">
+                        Matières
+                      </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-3 sm:p-4 text-center">
+                      <div className="text-xl sm:text-2xl font-black text-teal-300">{allCoursesList.length}</div>
+                      <div className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wider">
+                        Catalogue
+                      </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-3 sm:p-4 text-center">
+                      <div className="text-xl sm:text-2xl font-black text-amber-300">
+                        {quizResults.length > 0 ? `${avgQuizScore}%` : '—'}
+                      </div>
+                      <div className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wider">
+                        Quiz
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* 1. COURS RECOMMANDÉS / SÉLECTION DU PROGRAMME */}
               {recommendedCourses.length > 0 && (
-                <section className="space-y-4">
+                <section className="space-y-4 pt-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                      {myCourses.length > 0 ? 'Reprendre & découvrir' : 'Matières recommandées'}
-                    </h2>
-                    <span className="text-xs font-medium text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#009688]"></span>
+                      <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+                        {myCourses.length > 0 ? 'Reprendre & découvrir' : 'Matières recommandées'}
+                      </h2>
+                    </div>
+                    <span className="text-xs font-semibold text-slate-400 bg-white border border-slate-200 px-3 py-1 rounded-full">
                       Mathématiques &amp; Physique-Chimie • 4ème à Terminale S
                     </span>
                   </div>
 
-                  <div className="grid grid-flow-col auto-cols-[245px] sm:auto-cols-[260px] gap-4 overflow-x-auto pb-2 snap-x">
+                  <div className="grid grid-flow-col auto-cols-[260px] sm:auto-cols-[280px] gap-4 overflow-x-auto pb-4 pt-1 snap-x">
                     {recommendedCourses.map((course) => {
                       const isEnrolled = activeSubMap.has(String(course._id));
                       return (
-                        <div
+                        <motion.div
+                          whileHover={{ y: -4 }}
+                          transition={{ duration: 0.2 }}
                           key={course._id}
                           onClick={() => navigate(`/courses/${course._id}`)}
                           role="button"
@@ -471,168 +551,231 @@ const StudentDashboard = () => {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') navigate(`/courses/${course._id}`);
                           }}
-                          className="snap-start group bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-slate-300 transition flex flex-col cursor-pointer"
+                          className="snap-start group bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-lg hover:border-[#009688]/40 transition-all flex flex-col cursor-pointer"
                         >
                           <div className="aspect-[16/10] bg-slate-100 relative overflow-hidden">
                             <img
                               src={course.image}
                               alt={course.title}
                               loading="lazy"
-                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
                             {isEnrolled ? (
-                              <span className="absolute top-2.5 left-2.5 text-[10px] font-extrabold uppercase tracking-wider bg-[#009688] text-white px-2 py-0.5 rounded-md shadow-xs">
+                              <span className="absolute top-2.5 left-2.5 text-[10px] font-black uppercase tracking-wider bg-[#009688] text-white px-2.5 py-1 rounded-lg shadow-sm">
                                 DÉJÀ DÉBLOQUÉ
                               </span>
-                            ) : (course.isFree || course.price === 0) ? (
-                              <span className="absolute top-2.5 left-2.5 text-[10px] font-extrabold uppercase tracking-wider bg-rose-600 text-white px-2 py-0.5 rounded-md shadow-xs">
+                            ) : course.isFree || course.price === 0 ? (
+                              <span className="absolute top-2.5 left-2.5 text-[10px] font-black uppercase tracking-wider bg-rose-600 text-white px-2.5 py-1 rounded-lg shadow-sm">
                                 MATIÈRE GRATUITE
                               </span>
                             ) : null}
+
+                            <div className="absolute bottom-2.5 right-2.5 w-7 h-7 rounded-full bg-white/95 text-[#009688] flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-[#009688] group-hover:text-white transition-all">
+                              <Play className="w-3 h-3 fill-current translate-x-0.5" />
+                            </div>
                           </div>
 
-                          <div className="p-3.5 flex flex-col flex-1">
+                          <div className="p-4 flex flex-col flex-1">
                             <div className="flex items-center justify-between gap-2 mb-2.5">
-                              <span className="text-[11px] font-semibold bg-sky-50 text-sky-600 rounded-md px-2 py-0.5 truncate">
+                              <span className="text-[11px] font-bold bg-sky-50 text-sky-700 rounded-md px-2.5 py-0.5 truncate border border-sky-100">
                                 {course.subject}
                               </span>
-                              <span className="text-[11px] font-semibold bg-amber-50 text-[#f59d0e] rounded-md px-2 py-0.5 shrink-0">
+                              <span className="text-[11px] font-bold bg-amber-50 text-amber-800 rounded-md px-2.5 py-0.5 shrink-0 border border-amber-200/60">
                                 {formatLevel(course.level)}
                               </span>
                             </div>
 
-                            <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-[#009688] transition-colors">
+                            <h3 className="text-sm font-extrabold text-slate-900 leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-[#009688] transition-colors">
                               {course.title}
                             </h3>
 
-                            <div className="mt-auto pt-3 flex items-center justify-between text-xs text-slate-500">
-                              <span className="inline-flex items-center gap-1 text-slate-400 font-medium">
-                                <Users className="w-3.5 h-3.5" />
+                            <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                              <span className="inline-flex items-center gap-1 text-slate-400 font-semibold">
+                                <Users className="w-3.5 h-3.5 text-slate-400" />
                                 <span>{course.studentsCount || 0}</span>
                               </span>
-                              <span className="text-[#009688] font-bold inline-flex items-center gap-0.5">
+                              <span className="text-[#009688] font-bold inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                                 Voir <ChevronRight className="w-3.5 h-3.5" />
                               </span>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
                 </section>
               )}
 
-              {/* 2. CATALOGUE DES COURS (FORMAT BAKELI) */}
-              <section className="space-y-5">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                  Catalogue des matières
-                </h2>
-
-                {/* Barre de recherche + bouton Filtres */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="flex-1 flex items-center bg-white border border-slate-200 rounded-full px-4 h-11 focus-within:border-[#009688] shadow-2xs">
-                    <Search className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
-                    <input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Rechercher une matière..."
-                      className="flex-1 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
-                    />
+              {/* 2. CATALOGUE DES COURS */}
+              <section className="space-y-6 pt-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                      Catalogue des matières
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                      Filtrez et explorez l'intégralité du programme officiel de Mathématiques et Physique-Chimie.
+                    </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowFilters((v) => !v)}
-                    className={`h-11 px-5 rounded-2xl border text-sm font-semibold flex items-center justify-center gap-2 shrink-0 cursor-pointer transition ${
-                      showFilters || activeFiltersCount > 0
-                        ? 'bg-teal-50 border-[#009688]/40 text-[#009688]'
-                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
-                    }`}
-                  >
-                    <span>Filtres</span>
-                    <SlidersHorizontal className="w-4 h-4" />
-                    {activeFiltersCount > 0 && (
-                      <span className="w-5 h-5 rounded-full bg-[#009688] text-white text-[10px] font-bold flex items-center justify-center">
-                        {activeFiltersCount}
-                      </span>
-                    )}
-                  </button>
-                </div>
-
-                {/* Panneau Filtres dépliable */}
-                {showFilters && (
-                  <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center gap-3 shadow-xs">
-                    <LevelSelect
-                      value={levelFilter}
-                      onChange={setLevelFilter}
-                      options={LEVEL_FILTERS}
-                      size="sm"
-                    />
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      {SUBJECT_FILTERS.map((subject) => (
+                  {/* Barre de recherche + bouton Filtres */}
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1 sm:w-80 flex items-center bg-white border border-slate-200/90 rounded-2xl px-4 h-11 focus-within:border-[#009688] focus-within:ring-2 focus-within:ring-[#009688]/15 shadow-2xs transition">
+                      <Search className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
+                      <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Rechercher une matière..."
+                        className="w-full bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                      />
+                      {query && (
                         <button
-                          key={subject}
                           type="button"
-                          onClick={() => setSubjectFilter(subject)}
-                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                            subjectFilter === subject
-                              ? 'bg-[#009688] border-[#009688] text-white'
-                              : 'bg-white border-slate-200 text-slate-600 hover:border-[#009688]'
-                          }`}
+                          onClick={() => setQuery('')}
+                          className="text-slate-400 hover:text-slate-600 p-1"
                         >
-                          {subject === 'Tous' ? 'Toutes les matières' : subject}
+                          <X className="w-3.5 h-3.5" />
                         </button>
-                      ))}
+                      )}
                     </div>
 
                     <button
                       type="button"
-                      onClick={() => setFreeOnly((v) => !v)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                        freeOnly
-                          ? 'bg-[#f59d0e] border-[#f59d0e] text-white'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-[#f59d0e]'
+                      onClick={() => setShowFilters((v) => !v)}
+                      className={`h-11 px-4 rounded-2xl border text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shrink-0 cursor-pointer transition ${
+                        showFilters || activeFiltersCount > 0
+                          ? 'bg-teal-50 border-[#009688]/40 text-[#009688] shadow-xs'
+                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
                       }`}
                     >
-                      Matières gratuites uniquement
+                      <SlidersHorizontal className="w-4 h-4" />
+                      <span>Filtres</span>
+                      {activeFiltersCount > 0 && (
+                        <span className="w-5 h-5 rounded-full bg-[#009688] text-white text-[10px] font-bold flex items-center justify-center">
+                          {activeFiltersCount}
+                        </span>
+                      )}
                     </button>
-
-                    {activeFiltersCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSubjectFilter('Tous');
-                          setLevelFilter('Tous');
-                          setFreeOnly(false);
-                        }}
-                        className="ml-auto text-xs font-bold text-slate-500 hover:text-red-500 cursor-pointer"
-                      >
-                        Réinitialiser
-                      </button>
-                    )}
                   </div>
+                </div>
+
+                {/* Filtres rapides par discipline */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {SUBJECT_FILTERS.map((subject) => {
+                    const isSelected = subjectFilter === subject;
+                    return (
+                      <motion.button
+                        whileHover={{ y: -1 }}
+                        whileTap={{ scale: 0.97 }}
+                        key={subject}
+                        type="button"
+                        onClick={() => setSubjectFilter(subject)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#009688] border-[#009688] text-white shadow-sm shadow-teal-700/20'
+                            : 'bg-white border-slate-200 text-slate-700 hover:border-[#009688] hover:text-[#009688]'
+                        }`}
+                      >
+                        {subject === 'Tous' ? 'Toutes les matières' : subject}
+                      </motion.button>
+                    );
+                  })}
+
+                  <motion.button
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.97 }}
+                    type="button"
+                    onClick={() => setFreeOnly((v) => !v)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                      freeOnly
+                        ? 'bg-amber-500 border-amber-500 text-white shadow-sm shadow-amber-600/20'
+                        : 'bg-white border-slate-200 text-slate-700 hover:border-amber-400 hover:text-amber-600'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Matières gratuites</span>
+                  </motion.button>
+
+                  {activeFiltersCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubjectFilter('Tous');
+                        setLevelFilter('Tous');
+                        setFreeOnly(false);
+                        setQuery('');
+                      }}
+                      className="ml-auto text-xs font-bold text-slate-500 hover:text-red-500 cursor-pointer flex items-center gap-1"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Réinitialiser</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Panneau Filtres de classe dépliable */}
+                {showFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-wrap items-center gap-4 shadow-xs"
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                        Classe de l'élève :
+                      </span>
+                      <LevelSelect
+                        value={levelFilter}
+                        onChange={setLevelFilter}
+                        options={LEVEL_FILTERS}
+                        size="sm"
+                      />
+                    </div>
+                  </motion.div>
                 )}
 
-                <p className="text-sm text-slate-500 flex items-center gap-1.5">
-                  <span>Retrouvez les leçons vidéo, fiches PDF, directs et quiz</span>
-                  <Flame className="w-4 h-4 text-[#f59d0e] fill-[#f59d0e]" />
-                  <span>du programme ({filteredTrending.length})</span>
-                </p>
+                <div className="flex items-center gap-2 text-sm text-slate-500 font-medium pt-1">
+                  <span className="w-2 h-2 rounded-full bg-[#009688]"></span>
+                  <span>Retrouvez les leçons vidéo, fiches PDF, directs et quiz du programme ({filteredTrending.length})</span>
+                </div>
 
                 {filteredTrending.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center text-slate-500">
-                    Aucune matière ne correspond à votre recherche.
+                  <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 max-w-md mx-auto">
+                    <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <h4 className="text-slate-800 font-bold mb-1">Aucune matière trouvée</h4>
+                    <p className="text-xs text-slate-400">Essayez un autre mot-clé ou réinitialisez les filtres.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: { staggerChildren: 0.08 },
+                      },
+                    }}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                  >
                     {filteredTrending.map((course) => (
-                      <div key={course._id}>
+                      <motion.div
+                        key={course._id}
+                        variants={{
+                          hidden: { opacity: 0, y: 16 },
+                          visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+                        }}
+                        whileHover={{ y: -6 }}
+                        transition={{ duration: 0.2 }}
+                      >
                         {renderCard(course, activeSubMap.has(String(course._id)))}
-                      </div>
+                      </motion.div>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
               </section>
             </>
@@ -849,7 +992,7 @@ const StudentDashboard = () => {
               onClick={() => setSelectedCourse(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold cursor-pointer"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
 
             {paymentSuccess ? (

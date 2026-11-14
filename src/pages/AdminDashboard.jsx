@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { SettingsContext } from '../context/SettingsContext';
@@ -11,14 +12,17 @@ import AdminUsersTab from '../components/admin/AdminUsersTab';
 import AdminSubscriptionsTab from '../components/admin/AdminSubscriptionsTab';
 import AdminContentTab from '../components/admin/AdminContentTab';
 import AdminNotificationsTab from '../components/admin/AdminNotificationsTab';
+import AdminTroubleshootingTab from '../components/admin/AdminTroubleshootingTab';
 import {
   ShieldCheck,
   ShieldAlert,
+  Wrench,
   Bell,
   Database,
   Download,
   LayoutDashboard,
   BookOpen,
+  ImagePlus,
   CreditCard,
   Users,
   Sliders,
@@ -48,6 +52,17 @@ import {
   GraduationCap,
   Menu,
   Zap,
+  UserPlus,
+  Gift,
+  Video,
+  HelpCircle,
+  FileText,
+  Share2,
+  Smartphone,
+  Lock,
+  Unlock,
+  ArrowRight,
+  RefreshCw,
 } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
@@ -68,56 +83,78 @@ const FEATURE_LIST = [
     key: 'enableOpenRegistration',
     title: 'Inscriptions publiques ouvertes',
     desc: "Permet aux nouveaux élèves de créer un compte librement depuis la page d'inscription.",
+    icon: UserPlus,
+    category: 'Accès & Comptes',
   },
   {
     key: 'enableFreeEnrollment',
     title: 'Inscription gratuite en 1 clic',
     desc: 'Autorise les élèves à débloquer les modules à 0 FCFA sans passer par le paiement.',
+    icon: Gift,
+    category: 'Accès & Tarifs',
   },
   {
     key: 'enablePayments',
     title: 'Paiements Wave & Orange Money',
     desc: 'Active les boutons et formulaires d’abonnement payant sur les fiches de modules.',
+    icon: CreditCard,
+    category: 'Monétisation',
   },
   {
     key: 'enableLiveMeet',
     title: 'Séances en direct (Google Meet / Jitsi)',
     desc: 'Active les leçons vidéo en direct et l’accès à la salle interactive.',
+    icon: Video,
+    category: 'Pédagogie & Échanges',
   },
   {
     key: 'enableQuiz',
     title: 'Quiz interactifs & évaluations',
     desc: 'Affiche l’onglet Quiz dans les cours et enregistre les notes des élèves.',
+    icon: HelpCircle,
+    category: 'Évaluations',
   },
   {
     key: 'enableForum',
     title: 'Salon de discussion & Q/R',
     desc: 'Active l’espace d’échange entre les élèves et le professeur dans chaque module.',
+    icon: MessageSquare,
+    category: 'Pédagogie & Échanges',
   },
   {
     key: 'enableReviews',
     title: 'Avis & notes des élèves',
     desc: 'Permet aux élèves abonnés de laisser une note et un commentaire sur les modules.',
+    icon: Star,
+    category: 'Communauté',
   },
   {
     key: 'enablePdfDownload',
     title: 'Supports & fiches PDF',
     desc: 'Autorise la consultation et le téléchargement des supports PDF dans les leçons.',
+    icon: FileText,
+    category: 'Ressources',
   },
   {
     key: 'enableShareButtons',
     title: 'Boutons de partage social',
     desc: 'Affiche Facebook, WhatsApp, TikTok et YouTube sur les pages publiques de modules.',
+    icon: Share2,
+    category: 'Réseaux & Partage',
   },
   {
     key: 'enableSequentialUnlock',
     title: 'Déblocage progressif des sections',
     desc: "Déverrouille les chapitres et le quiz final au fur et à mesure que l'élève termine chaque section (style Bakeli).",
+    icon: Lock,
+    category: 'Pédagogie & Progression',
   },
   {
     key: 'enableAppInstall',
     title: "Guide & Bannière d'installation de l'application (PWA)",
     desc: "Affiche ou masque la section « Apprenez partout, même hors ligne » et le guide « Comment installer ? » sur la page d'accueil.",
+    icon: Smartphone,
+    category: 'Application Mobile',
   },
 ];
 
@@ -334,9 +371,28 @@ const AdminDashboard = () => {
 
   if (authLoading || loading || !user || user.role !== 'admin') {
     return (
-      <div className="theme-myschools min-h-screen flex items-center justify-center bg-gradient-to-br from-[#6372e8] via-[#6b5cc4] to-[#7c52a5]">
-        <div className="bg-white/95 rounded-2xl p-6 shadow-xl">
-          <div className="loader-spinner"></div>
+      <div className="theme-myschools min-h-screen flex items-center justify-center bg-gradient-to-br from-[#6372e8] via-[#6b5cc4] to-[#7c52a5] px-4">
+        <div className="w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 flex flex-col items-center text-center">
+          <div className="relative mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#6372e8] shadow-sm">
+              <ShieldCheck className="w-8 h-8 text-[#6372e8]" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
+              <div className="w-3.5 h-3.5 border-2 border-indigo-200 border-t-[#6372e8] rounded-full animate-spin" />
+            </div>
+          </div>
+          <h2 className="text-base font-black text-slate-900 tracking-tight">
+            Aliou Sow Academy
+          </h2>
+          <p className="text-[11px] font-bold text-[#6372e8] uppercase tracking-wider mt-0.5 mb-2">
+            Espace Administrateur
+          </p>
+          <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
+            Synchronisation des données et préparation de votre tableau de bord...
+          </p>
+          <div className="w-40 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-4">
+            <div className="h-full bg-gradient-to-r from-[#6372e8] to-[#7c52a5] rounded-full animate-pulse w-full"></div>
+          </div>
         </div>
       </div>
     );
@@ -650,13 +706,14 @@ const AdminDashboard = () => {
   };
 
   const handleToggleFeature = async (featureKey) => {
+    const currentEnabled = draftSettings.features?.[featureKey] !== false;
     const nextFeatures = {
       ...draftSettings.features,
-      [featureKey]: !draftSettings.features?.[featureKey],
+      [featureKey]: !currentEnabled,
     };
     const next = { ...draftSettings, features: nextFeatures };
     setDraftSettings(next);
-    await persistSettings({ features: nextFeatures }, 'Fonctionnalité mise à jour immédiatement.');
+    await persistSettings({ features: nextFeatures }, 'Fonctionnalité mise à jour avec succès.');
   };
 
   const handleAddSubject = async (e) => {
@@ -806,6 +863,13 @@ const AdminDashboard = () => {
     { key: 'courses', label: 'Matières & Cours', icon: BookOpen, count: courses.length, group: 'GESTION' },
     { key: 'subscriptions', label: 'Abonnements', icon: CreditCard, count: subscriptions.length, group: 'GESTION' },
     { key: 'users', label: 'Utilisateurs', icon: Users, count: usersList.length, group: 'GESTION' },
+    {
+      key: 'troubleshooting',
+      label: 'Résolution des Problèmes',
+      icon: Wrench,
+      group: 'GESTION',
+      priority: true,
+    },
     {
       key: 'security',
       label: 'Sécurité & Signalements',
@@ -1295,6 +1359,20 @@ const AdminDashboard = () => {
                 }
               }}
               onOpenCreateUser={openCreateUser}
+              onOpenEditUser={openEditUser}
+              onRefresh={fetchAllData}
+              showToast={showToast}
+              setConfirmState={setConfirmState}
+            />
+          )}
+
+          {/* ===================== RÉSOLUTION DES PROBLÈMES & SUPPORT ===================== */}
+          {view === 'troubleshooting' && (
+            <AdminTroubleshootingTab
+              courses={courses}
+              usersList={usersList}
+              subscriptions={subscriptions}
+              reports={reports}
               onRefresh={fetchAllData}
               showToast={showToast}
               setConfirmState={setConfirmState}
@@ -1344,242 +1422,428 @@ const AdminDashboard = () => {
 
           {/* ===================== 5. FONCTIONNALITÉS NO-CODE ===================== */}
           {view === 'features' && (
-            <div className="space-y-5">
-              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#10b981] to-[#2dd4bf] text-white flex items-center justify-center shadow-sm shrink-0">
-                  <Sliders className="w-5 h-5" />
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: 'easeOut' }}
+              className="space-y-6"
+            >
+              {/* En-tête de section moderne */}
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+                    <Sliders className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
+                        Fonctionnalités &amp; Extensions (Sans Code)
+                      </h1>
+                      <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200">
+                        No-Code Config
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                      Activez des fonctionnalités, ajoutez de nouvelles matières, niveaux ou ressources à la demande du professeur sans modifier le code.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">
-                    Fonctionnalités &amp; Extensions (Sans Code)
-                  </h1>
-                  <p className="text-xs sm:text-sm text-slate-500">
-                    Activez des fonctionnalités, ajoutez de nouvelles matières, niveaux ou ressources à la demande du professeur sans modifier le code.
-                  </p>
+
+                <div className="shrink-0 flex items-center gap-2 self-start sm:self-auto">
+                  {savingSettings ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold animate-pulse">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Synchronisation...
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      Paramètres synchronisés
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Interrupteurs de fonctionnalités */}
-              <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <Sparkles className="w-5 h-5 text-[#2563eb]" />
-                  <h2 className="text-base font-bold text-slate-800">Modules fonctionnels de la plateforme</h2>
+              {/* Interrupteurs de fonctionnalités de la plateforme */}
+              <section className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200/80 space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                        Modules fonctionnels de la plateforme
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Basculez instantanément les fonctionnalités clés en un clic.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 self-start sm:self-auto">
+                    {FEATURE_LIST.length} modules disponibles
+                  </span>
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {FEATURE_LIST.map((f) => {
                     const enabled = draftSettings.features?.[f.key] !== false;
+                    const IconComponent = f.icon || Sparkles;
                     return (
-                      <div
+                      <motion.div
                         key={f.key}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.99 }}
                         onClick={() => handleToggleFeature(f.key)}
-                        className={`flex items-center justify-between gap-4 p-4 rounded-xl border cursor-pointer transition ${
-                          enabled ? 'bg-[#eef2fb]/70 border-indigo-200' : 'bg-slate-50 border-slate-200'
+                        className={`group flex items-center justify-between gap-4 p-4 sm:p-4.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none ${
+                          enabled
+                            ? 'bg-gradient-to-r from-blue-50/60 to-indigo-50/40 border-blue-200 shadow-xs'
+                            : 'bg-slate-50/70 border-slate-200/90 hover:border-slate-300'
                         }`}
                       >
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">{f.title}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{f.desc}</p>
-                        </div>
-                        <div
-                          className={`w-11 h-6 rounded-full relative transition-colors duration-300 shrink-0 ${
-                            enabled ? 'bg-[#2563eb]' : 'bg-slate-300'
-                          }`}
-                        >
+                        <div className="flex items-start gap-3.5 min-w-0">
                           <div
-                            className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
-                              enabled ? 'translate-x-5' : 'translate-x-0.5'
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                              enabled
+                                ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25'
+                                : 'bg-slate-200 text-slate-500'
                             }`}
-                          />
+                          >
+                            <IconComponent className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-bold text-slate-900 truncate">
+                                {f.title}
+                              </p>
+                              {f.category && (
+                                <span className="hidden sm:inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/80 border border-slate-200 text-slate-500">
+                                  {f.category}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed line-clamp-2">
+                              {f.desc}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+
+                        {/* Switch animé */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span
+                            className={`text-[11px] font-bold hidden sm:inline ${
+                              enabled ? 'text-blue-700' : 'text-slate-400'
+                            }`}
+                          >
+                            {enabled ? 'Actif' : 'Inactif'}
+                          </span>
+                          <div
+                            className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-250 flex items-center cursor-pointer ${
+                              enabled ? 'bg-blue-600' : 'bg-slate-300'
+                            }`}
+                          >
+                            <motion.div
+                              layout
+                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                              className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform ${
+                                enabled ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
                     );
                   })}
                 </div>
               </section>
 
               {/* Matières & Niveaux dynamiques */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
-                  <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <Layers className="w-5 h-5 text-[#2563eb]" />
-                    <h2 className="text-base font-bold text-slate-800">Matières proposées</h2>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {availableSubjects.map((sub) => (
-                      <span
-                        key={sub}
-                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#eef2fb] text-[#4c3882] border border-indigo-200 text-xs font-bold"
-                      >
-                        {sub}
-                        <button
-                          onClick={() => handleRemoveSubject(sub)}
-                          className="hover:text-rose-600 cursor-pointer"
-                          title="Retirer cette matière"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 1. Matières proposées */}
+                <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                          <Layers className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-bold text-slate-900">Matières proposées</h2>
+                          <p className="text-xs text-slate-500">Disciplines scientifiques et modules actifs.</p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        {availableSubjects.length} active{availableSubjects.length > 1 ? 's' : ''}
                       </span>
-                    ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 min-h-[44px]">
+                      {availableSubjects.map((sub) => (
+                        <span
+                          key={sub}
+                          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-indigo-50/80 text-indigo-900 border border-indigo-200 text-xs font-bold shadow-2xs hover:bg-indigo-100/70 transition"
+                        >
+                          <span>{sub}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSubject(sub)}
+                            className="w-4 h-4 rounded-full flex items-center justify-center text-indigo-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                            title="Retirer cette matière"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <form onSubmit={handleAddSubject} className="flex gap-2 pt-2">
+
+                  <form onSubmit={handleAddSubject} className="flex gap-2 pt-3 border-t border-slate-100">
                     <input
                       type="text"
                       value={newSubject}
                       onChange={(e) => setNewSubject(e.target.value)}
-                      placeholder="Nouvelle matière (ex: SVT, Anglais...)"
+                      placeholder="Nouvelle matière (ex: SVT, Informatique...)"
                       className={inputClass}
                     />
                     <button
                       type="submit"
-                      disabled={savingSettings}
-                      className="px-4 h-10 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold shrink-0 cursor-pointer shadow-sm"
+                      disabled={savingSettings || !newSubject.trim()}
+                      className="px-5 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold shrink-0 inline-flex items-center gap-1.5 cursor-pointer shadow-sm transition"
                     >
-                      Ajouter
+                      <Plus className="w-4 h-4" />
+                      <span>Ajouter</span>
                     </button>
                   </form>
                 </section>
 
-                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
-                  <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <GraduationCap className="w-5 h-5 text-[#f59d0e]" />
-                    <h2 className="text-base font-bold text-slate-800">Niveaux &amp; Classes</h2>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {availableLevels.map((lvl) => (
-                      <span
-                        key={lvl.value}
-                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/20 text-amber-900 border border-amber-300 text-xs font-bold"
-                      >
-                        {lvl.label || lvl.value}
-                        <button
-                          onClick={() => handleRemoveLevel(lvl.value)}
-                          className="hover:text-rose-600 cursor-pointer"
-                          title="Retirer ce niveau"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                {/* 2. Niveaux & Classes */}
+                <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                          <GraduationCap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h2 className="text-base font-bold text-slate-900">Niveaux &amp; Classes</h2>
+                          <p className="text-xs text-slate-500">Classes sénégalaises du collège au lycée.</p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                        {availableLevels.length} classe{availableLevels.length > 1 ? 's' : ''}
                       </span>
-                    ))}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 min-h-[44px]">
+                      {availableLevels.map((lvl) => (
+                        <span
+                          key={lvl.value}
+                          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-50 text-amber-950 border border-amber-200/90 text-xs font-bold shadow-2xs hover:bg-amber-100/70 transition"
+                        >
+                          <span>{lvl.label || lvl.value}</span>
+                          <span className="text-[10px] text-amber-600 font-semibold px-1 rounded bg-amber-100/70">
+                            {lvl.value}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveLevel(lvl.value)}
+                            className="w-4 h-4 rounded-full flex items-center justify-center text-amber-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                            title="Retirer ce niveau"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <form onSubmit={handleAddLevel} className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+
+                  <form onSubmit={handleAddLevel} className="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-3 border-t border-slate-100">
                     <input
                       type="text"
                       value={newLevelValue}
                       onChange={(e) => setNewLevelValue(e.target.value)}
                       placeholder="Code (ex: 4ème)"
-                      className={inputClass}
+                      className={`sm:col-span-2 ${inputClass}`}
                     />
                     <input
                       type="text"
                       value={newLevelLabel}
                       onChange={(e) => setNewLevelLabel(e.target.value)}
-                      placeholder="Nom affiché (ex: 4ème)"
-                      className={inputClass}
+                      placeholder="Nom affiché (ex: Classe de 4ème)"
+                      className={`sm:col-span-2 ${inputClass}`}
                     />
                     <button
                       type="submit"
-                      disabled={savingSettings}
-                      className="h-10 rounded-xl bg-[#f59d0e] hover:bg-[#d97706] text-white text-xs font-bold cursor-pointer shadow-sm"
+                      disabled={savingSettings || !newLevelValue.trim()}
+                      className="sm:col-span-1 h-10 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold inline-flex items-center justify-center gap-1 cursor-pointer shadow-sm transition"
                     >
-                      Ajouter niveau
+                      <Plus className="w-4 h-4" />
+                      <span>Ajouter</span>
                     </button>
                   </form>
                 </section>
               </div>
 
-              {/* Extensions / Ressources personnalisées */}
-              <section className="bg-white rounded-2xl p-6 shadow-md space-y-5">
-                <div className="border-b border-slate-100 pb-3">
-                  <h2 className="text-base font-bold text-slate-800">
-                    Nouveaux services &amp; ressources personnalisées (Affichés sur l&apos;accueil)
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Ajoutez un bouton ou service demandé par le professeur (ex : Annales BFEM/BAC, Groupe WhatsApp, Stage de révision...).
-                  </p>
+              {/* Extensions / Ressources personnalisées affichées sur l'accueil */}
+              <section className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200/80 space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-teal-50 text-[#009688] flex items-center justify-center">
+                      <Zap className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                        Nouveaux services &amp; ressources personnalisées (Affichés sur l'accueil)
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Ajoutez un bouton ou service demandé par le professeur (ex : Annales BFEM/BAC, Groupe WhatsApp, Stage de révision...). Ces cartes s'affichent automatiquement sur la page d'accueil.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200 self-start sm:self-auto">
+                    {(draftSettings.extraLinks || []).length} ressource{(draftSettings.extraLinks || []).length > 1 ? 's' : ''}
+                  </span>
                 </div>
 
-                {(draftSettings.extraLinks || []).length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {(draftSettings.extraLinks || []).length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {draftSettings.extraLinks.map((item, idx) => (
                       <div
                         key={idx}
-                        className="flex items-start justify-between gap-3 p-4 rounded-xl border border-indigo-100 bg-[#eef2fb]/50"
+                        className="flex flex-col justify-between p-4.5 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-blue-200 transition-all shadow-2xs"
                       >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold bg-[#2563eb] text-white px-2.5 py-0.5 rounded-full">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider bg-blue-600 text-white px-2.5 py-0.5 rounded-full">
                               {item.badge || 'Nouveau'}
                             </span>
-                            <p className="text-sm font-bold text-slate-900 truncate">{item.title}</p>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                item.active !== false
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-slate-200 text-slate-600'
+                              }`}
+                            >
+                              {item.active !== false ? 'Actif sur l\'accueil' : 'Masqué'}
+                            </span>
                           </div>
+
+                          <h3 className="text-sm font-bold text-slate-900 truncate">
+                            {item.title}
+                          </h3>
+
                           {item.description && (
-                            <p className="text-xs text-slate-500 mt-1">{item.description}</p>
+                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                              {item.description}
+                            </p>
                           )}
-                          <p className="text-[11px] text-[#2563eb] truncate mt-1">{item.url}</p>
+
+                          <p className="text-[11px] text-blue-600 font-mono truncate bg-white px-2.5 py-1 rounded-lg border border-slate-200/80">
+                            {item.url}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
+
+                        <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-slate-200/70">
                           <button
+                            type="button"
                             onClick={() => handleToggleExtraLink(idx)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer ${
-                              item.active ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-700'
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                              item.active !== false
+                                ? 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                                : 'bg-emerald-600 text-white hover:bg-emerald-700'
                             }`}
                           >
-                            {item.active ? 'Actif' : 'Masqué'}
+                            {item.active !== false ? 'Masquer' : 'Activer'}
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleRemoveExtraLink(idx)}
-                            className="p-1.5 rounded-lg bg-rose-500 hover:bg-rose-600 text-white cursor-pointer"
+                            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                            title="Supprimer cette ressource"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <div className="text-center py-8 px-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
+                    <p className="text-xs text-slate-500">
+                      Aucune ressource personnalisée active. Remplissez le formulaire ci-dessous pour en créer une.
+                    </p>
+                  </div>
                 )}
 
-                <form onSubmit={handleAddExtraLink} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
-                  <input
-                    type="text"
-                    required
-                    value={newExtraLink.title}
-                    onChange={(e) => setNewExtraLink({ ...newExtraLink, title: e.target.value })}
-                    placeholder="Titre (ex: Annales Bac)"
-                    className={inputClass}
-                  />
-                  <input
-                    type="text"
-                    value={newExtraLink.description}
-                    onChange={(e) => setNewExtraLink({ ...newExtraLink, description: e.target.value })}
-                    placeholder="Courte description"
-                    className={inputClass}
-                  />
-                  <input
-                    type="text"
-                    required
-                    value={newExtraLink.url}
-                    onChange={(e) => setNewExtraLink({ ...newExtraLink, url: e.target.value })}
-                    placeholder="Lien URL ou /courses"
-                    className={inputClass}
-                  />
-                  <div className="flex gap-2">
+                {/* Formulaire d'ajout de ressource */}
+                <form onSubmit={handleAddExtraLink} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 pt-2">
+                  <div className="lg:col-span-3">
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Titre de la ressource
+                    </label>
                     <input
                       type="text"
-                      value={newExtraLink.badge}
-                      onChange={(e) => setNewExtraLink({ ...newExtraLink, badge: e.target.value })}
-                      placeholder="Badge"
+                      required
+                      value={newExtraLink.title}
+                      onChange={(e) => setNewExtraLink({ ...newExtraLink, title: e.target.value })}
+                      placeholder="ex: Annales BFEM & BAC"
                       className={inputClass}
                     />
-                    <button
-                      type="submit"
-                      className="px-4 h-10 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold shrink-0 cursor-pointer shadow-sm"
-                    >
-                      Ajouter
-                    </button>
+                  </div>
+
+                  <div className="lg:col-span-4">
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Courte description
+                    </label>
+                    <input
+                      type="text"
+                      value={newExtraLink.description}
+                      onChange={(e) => setNewExtraLink({ ...newExtraLink, description: e.target.value })}
+                      placeholder="ex: Sujets d'examen officiels avec corrigés types"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div className="lg:col-span-3">
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Lien URL ou page locale
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newExtraLink.url}
+                      onChange={(e) => setNewExtraLink({ ...newExtraLink, url: e.target.value })}
+                      placeholder="ex: /courses ou https://..."
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div className="lg:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Badge
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newExtraLink.badge}
+                        onChange={(e) => setNewExtraLink({ ...newExtraLink, badge: e.target.value })}
+                        placeholder="Nouveau"
+                        className={inputClass}
+                      />
+                      <button
+                        type="submit"
+                        disabled={savingSettings || !newExtraLink.title.trim() || !newExtraLink.url.trim()}
+                        className="px-4 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold shrink-0 inline-flex items-center gap-1 cursor-pointer shadow-sm transition"
+                        title="Ajouter la ressource"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span className="hidden sm:inline">Ajouter</span>
+                      </button>
+                    </div>
                   </div>
                 </form>
               </section>
-            </div>
+            </motion.div>
           )}
 
           {/* ===================== 6. CONTENU & AVIS ===================== */}
@@ -1879,40 +2143,69 @@ const AdminDashboard = () => {
 
       {/* ===================== MODAL COURS ===================== */}
       {showCourseModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-[0_25px_70px_rgba(15,23,42,0.25)] relative max-h-[92vh] overflow-y-auto"
+          >
             <button
               onClick={() => setShowCourseModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer"
+              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <h3 className="text-lg font-bold text-slate-800 mb-4">
-              {editingCourse ? 'Modifier la matière' : 'Créer une nouvelle matière'}
-            </h3>
-            <form onSubmit={handleSaveCourse} className="space-y-3.5">
+
+            {/* En-tête */}
+            <div className="flex items-center gap-3.5 mb-6 pr-8">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-[#5c6be0] flex items-center justify-center shrink-0 shadow-xs">
+                <BookOpen className="w-6 h-6" />
+              </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600">Titre de la matière</label>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  {editingCourse ? 'Modifier la matière' : 'Créer une nouvelle matière'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Renseignez les paramètres académiques, le niveau et le tarif du module.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveCourse} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Titre de la matière
+                </label>
                 <input
                   type="text"
                   required
+                  placeholder="ex: Mécanique de Newton et Lois du mouvement"
                   value={courseForm.title}
                   onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
                   className={inputClass}
                 />
               </div>
+
               <div>
-                <label className="text-xs font-semibold text-slate-600">Description</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Description
+                </label>
                 <textarea
                   required
+                  placeholder="Décrivez les objectifs et chapitres de cette matière..."
                   value={courseForm.description}
                   onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
-                  className="w-full h-20 p-3 rounded-xl border border-slate-200 bg-slate-50/60 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
+                  className="w-full h-24 p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white focus:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10 transition shadow-2xs resize-none"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">Matière</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Matière
+                  </label>
                   <select
                     value={courseForm.subject}
                     onChange={(e) => setCourseForm({ ...courseForm, subject: e.target.value })}
@@ -1926,7 +2219,9 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">Niveau</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Niveau
+                  </label>
                   <select
                     value={courseForm.level}
                     onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })}
@@ -1940,9 +2235,12 @@ const AdminDashboard = () => {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">Professeur assigné</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Professeur assigné
+                  </label>
                   <select
                     value={courseForm.teacherId}
                     onChange={(e) => setCourseForm({ ...courseForm, teacherId: e.target.value })}
@@ -1956,28 +2254,36 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">Durée</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Durée
+                  </label>
                   <input
                     type="text"
+                    placeholder="ex: 3 mois"
                     value={courseForm.duration}
                     onChange={(e) => setCourseForm({ ...courseForm, duration: e.target.value })}
                     className={inputClass}
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[#eef2fb]/60 border border-indigo-100">
-                <span className="text-sm font-semibold text-slate-700">Module gratuit</span>
+
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                <div>
+                  <span className="text-sm font-bold text-slate-800 block">Module gratuit</span>
+                  <span className="text-xs text-slate-500">Accessible sans abonnement par tous les élèves</span>
+                </div>
                 <input
                   type="checkbox"
                   checked={courseForm.isFree}
                   onChange={(e) => setCourseForm({ ...courseForm, isFree: e.target.checked })}
-                  className="w-4 h-4 accent-[#2563eb]"
+                  className="w-5 h-5 rounded text-[#2563eb] accent-[#2563eb] cursor-pointer"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">
-                    {courseForm.isFree ? 'Valeur normale barrée (FCFA)' : 'Tarif (FCFA)'}
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    {courseForm.isFree ? 'Valeur barrée (FCFA)' : 'Tarif (FCFA)'}
                   </label>
                   <input
                     type="number"
@@ -1993,69 +2299,118 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">Image de couverture</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setCourseImage(e.target.files[0])}
-                    className="block w-full text-xs text-slate-500 mt-2"
-                  />
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Image de couverture
+                  </label>
+                  <label className="flex items-center gap-2 px-3 h-11 bg-slate-50/70 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 rounded-xl cursor-pointer transition shadow-2xs">
+                    <ImagePlus className="w-4 h-4 text-indigo-500 shrink-0" />
+                    <span className="truncate text-xs font-semibold text-slate-600">
+                      {courseImage ? courseImage.name : 'Choisir une image...'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setCourseImage(e.target.files[0])}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
               </div>
-              <button
-                type="submit"
-                disabled={savingCourse}
-                className="w-full h-11 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold cursor-pointer mt-2 shadow-sm"
-              >
-                {savingCourse ? 'Enregistrement...' : editingCourse ? 'Mettre à jour' : 'Créer la matière'}
-              </button>
+
+              <div className="flex justify-end items-center gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCourseModal(false)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingCourse}
+                  className="px-6 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold transition shadow-md shadow-blue-600/25 hover:shadow-lg disabled:opacity-60 cursor-pointer"
+                >
+                  {savingCourse ? 'Enregistrement...' : editingCourse ? 'Mettre à jour' : 'Créer la matière'}
+                </button>
+              </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* ===================== MODAL UTILISATEUR ===================== */}
       {showUserModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl relative">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-[0_25px_70px_rgba(15,23,42,0.25)] relative max-h-[92vh] overflow-y-auto"
+          >
             <button
               onClick={() => setShowUserModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer"
+              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <h3 className="text-lg font-bold text-slate-800 mb-4">
-              {editingUser ? `Modifier : ${editingUser.name}` : 'Créer un compte utilisateur'}
-            </h3>
+
+            {/* En-tête */}
+            <div className="flex items-center gap-3.5 mb-6 pr-8">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-xs">
+                <User className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  {editingUser ? `Modifier : ${editingUser.name}` : 'Créer un compte utilisateur'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Gérez les coordonnées, le rôle et les accès de l'utilisateur.
+                </p>
+              </div>
+            </div>
+
             {userModalError && (
-              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
-                {userModalError}
+              <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-semibold text-rose-700 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{userModalError}</span>
               </div>
             )}
-            <form onSubmit={handleSaveUser} className="space-y-3.5">
+
+            <form onSubmit={handleSaveUser} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600">Nom complet</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Nom complet
+                </label>
                 <input
                   type="text"
                   required
+                  placeholder="ex: Mamadou Diallo"
                   value={userForm.name}
                   onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
                   className={inputClass}
                 />
               </div>
+
               <div>
-                <label className="text-xs font-semibold text-slate-600">Email</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Adresse email
+                </label>
                 <input
                   type="email"
                   required
+                  placeholder="ex: mamadou.diallo@gmail.com"
                   value={userForm.email}
                   onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                   className={inputClass}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">Rôle</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Rôle
+                  </label>
                   <select
                     value={userForm.role}
                     onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
@@ -2067,48 +2422,72 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">Téléphone</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Téléphone
+                  </label>
                   <input
                     type="text"
+                    placeholder="+221 ..."
                     value={userForm.phone}
                     onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
                     className={inputClass}
                   />
                 </div>
               </div>
+
               <div>
-                <label className="text-xs font-semibold text-slate-600">
-                  {editingUser ? 'Nouveau mot de passe (laisser vide si inchangé)' : 'Mot de passe *'}
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  {editingUser ? 'Nouveau mot de passe (laisser vide si inchangé)' : 'Mot de passe (requis)'}
                 </label>
                 <input
                   type="password"
                   required={!editingUser}
                   minLength={6}
+                  placeholder={editingUser ? '••••••••' : 'Minimum 6 caractères'}
                   value={userForm.password}
                   onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                   className={inputClass}
                 />
               </div>
+
               {editingUser && (
                 <div>
-                  <label className="text-xs font-semibold text-slate-600">Photo de profil (optionnel)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setUserAvatarFile(e.target.files?.[0] || null)}
-                    className="block w-full text-xs text-slate-500 mt-1"
-                  />
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Photo de profil (optionnel)
+                  </label>
+                  <label className="flex items-center gap-2 px-3 h-11 bg-slate-50/70 border border-slate-200 hover:border-blue-300 hover:bg-blue-50/30 rounded-xl cursor-pointer transition shadow-2xs">
+                    <ImagePlus className="w-4 h-4 text-blue-500 shrink-0" />
+                    <span className="truncate text-xs font-semibold text-slate-600">
+                      {userAvatarFile ? userAvatarFile.name : 'Choisir une photo de profil...'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setUserAvatarFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
               )}
-              <button
-                type="submit"
-                disabled={savingUser}
-                className="w-full h-11 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold cursor-pointer mt-2 shadow-sm"
-              >
-                {savingUser ? 'Enregistrement...' : 'Sauvegarder'}
-              </button>
+
+              <div className="flex justify-end items-center gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowUserModal(false)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingUser}
+                  className="px-6 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold transition shadow-md shadow-blue-600/25 hover:shadow-lg disabled:opacity-60 cursor-pointer"
+                >
+                  {savingUser ? 'Enregistrement...' : 'Sauvegarder'}
+                </button>
+              </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
 

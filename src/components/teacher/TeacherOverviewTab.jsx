@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   Users,
   BookOpen,
@@ -278,7 +279,7 @@ const TeacherOverviewTab = ({
         id: `rev-${r._id}`,
         type: 'review',
         title: `Avis de ${r.student?.name || 'Élève'}`,
-        subtitle: `⭐ ${r.rating || 5}/5 - "${r.comment?.slice(0, 50)}..."`,
+        subtitle: `${r.rating || 5}/5 - "${r.comment?.slice(0, 50)}..."`,
         date: new Date(r.createdAt || now),
         avatar: r.student?.avatar,
         studentName: r.student?.name,
@@ -297,28 +298,33 @@ const TeacherOverviewTab = ({
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* 1. HERO BANNER & SHORTCUTS */}
-      <div className="bg-white rounded-2xl shadow-md p-6 border border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white rounded-3xl shadow-2xs p-6 sm:p-7 border border-slate-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+      >
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4c3882] to-[#6b5cc4] text-white flex items-center justify-center shadow-lg shadow-indigo-900/20 shrink-0">
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 text-white flex items-center justify-center shadow-md shadow-indigo-600/20 shrink-0 overflow-hidden ring-4 ring-indigo-50">
             {user?.avatar ? (
-              <img src={user.avatar} alt="" className="w-full h-full rounded-2xl object-cover" />
+              <img src={user.avatar} alt="" className="w-full h-full object-cover" />
             ) : (
-              <Users className="w-7 h-7" />
+              <Users className="w-8 h-8 text-white/90" />
             )}
           </div>
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Bonjour, M. {user?.name || 'Aliou Sow'} 👋
+                Bonjour, M. {user?.name || 'Aliou Sow'}
               </h1>
-              <span className="px-3 py-0.5 rounded-full text-xs font-extrabold bg-[#eef2fb] text-[#4c3882] border border-indigo-200">
+              <span className="px-3 py-0.5 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/70 shadow-2xs">
                 Espace Pédagogique
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Pilotez l'avancement de vos élèves, corrigez les devoirs, suivez vos encaissements et animez vos classes.
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
+              Pilotez l'avancement de vos élèves, corrigez les devoirs, suivez vos encaissements et animez vos classes en direct.
             </p>
           </div>
         </div>
@@ -328,211 +334,233 @@ const TeacherOverviewTab = ({
           <button
             type="button"
             onClick={onOpenCreateCourse}
-            className="px-3.5 py-2 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-bold inline-flex items-center gap-2 transition shadow-sm shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Nouvelle matière
+            <Plus className="w-4 h-4" />
+            <span>Nouvelle matière</span>
           </button>
           <button
             type="button"
             onClick={onOpenNewExercise}
-            className="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold inline-flex items-center gap-2 transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            <Calculator className="w-3.5 h-3.5" />
-            Nouvel exercice
+            <Calculator className="w-4 h-4 text-teal-600" />
+            <span>Nouvel exercice</span>
           </button>
           <button
             type="button"
             onClick={onOpenNewQuiz}
-            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold inline-flex items-center gap-2 transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            <Award className="w-3.5 h-3.5" />
-            Créer un quiz
+            <Award className="w-4 h-4 text-amber-500" />
+            <span>Créer un quiz</span>
           </button>
           <button
             type="button"
             onClick={onOpenLiveMeet}
-            className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold inline-flex items-center gap-2 transition shadow-2xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
-            <Video className="w-3.5 h-3.5" />
-            Séance direct
+            <Video className="w-4 h-4 text-purple-600" />
+            <span>Séance direct</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* 2. 4 CARTES STATISTIQUES INTERACTIVES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Carte 1: Élèves Actifs */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
           onClick={() => onNavigateTab('students')}
-          className="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+          className="group bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Élèves Actifs</span>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-[#4c3882] flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Users className="w-5 h-5" />
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-400">Élèves Actifs</span>
+              <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-transform">
+                <Users className="w-5 h-5" />
+              </div>
             </div>
+            <div className="mt-4 flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.activeSubs.length}</span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" /> En cours
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-2 font-medium">
+              {metrics.expiredSubs.length} expiré(s) • {metrics.suspendedSubs.length} bloqué(s)
+            </p>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-slate-900">{metrics.activeSubs.length}</span>
-            <span className="text-xs font-bold text-emerald-600 flex items-center">
-              <TrendingUp className="w-3 h-3 mr-0.5" /> En cours
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            {metrics.expiredSubs.length} expiré(s) • {metrics.suspendedSubs.length} bloqué(s)
-          </p>
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-[#4c3882]">
+          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-600 group-hover:text-indigo-800">
             <span>Gérer les accès</span>
-            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Carte 2: Cours & Modules */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
           onClick={() => onNavigateTab('courses')}
-          className="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+          className="group bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Matières &amp; Chapitres</span>
-            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <BookOpen className="w-5 h-5" />
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-400">Matières &amp; Chapitres</span>
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 group-hover:scale-110 transition-transform">
+                <BookOpen className="w-5 h-5" />
+              </div>
             </div>
+            <div className="mt-4 flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.publishedCourses}</span>
+              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">/{courses.length} publiés</span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-2 font-medium">
+              {metrics.totalChapters} chapitres • {metrics.totalLessons} leçons
+            </p>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-slate-900">{metrics.publishedCourses}</span>
-            <span className="text-xs font-semibold text-slate-400">/{courses.length} publiés</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            {metrics.totalChapters} chapitres • {metrics.totalLessons} leçons
-          </p>
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-cyan-600">
+          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600 group-hover:text-blue-800">
             <span>Organiser le programme</span>
-            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Carte 3: Revenus Encaissés */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
           onClick={() => {
             const el = document.getElementById('finance-section');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+          className="group bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Encaissé</span>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-[#f59d0e] flex items-center justify-center group-hover:scale-110 transition-transform">
-              <CreditCard className="w-5 h-5" />
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-400">Total Encaissé</span>
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100 group-hover:scale-110 transition-transform">
+                <CreditCard className="w-5 h-5" />
+              </div>
             </div>
+            <div className="mt-4 flex items-baseline gap-1.5">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tight">
+                {financialStats.total.toLocaleString('fr-FR')}
+              </span>
+              <span className="text-xs font-bold text-slate-500">FCFA</span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-2 font-medium">
+              Ce mois : <strong className="text-slate-800 font-bold">{financialStats.thisMonth.toLocaleString('fr-FR')} FCFA</strong>
+            </p>
           </div>
-          <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">
-              {financialStats.total.toLocaleString('fr-FR')}
-            </span>
-            <span className="text-xs font-bold text-slate-500">FCFA</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Ce mois : <strong>{financialStats.thisMonth.toLocaleString('fr-FR')} FCFA</strong>
-          </p>
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-[#f59d0e]">
+          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-amber-600 group-hover:text-amber-800">
             <span>Voir détail financier</span>
-            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Carte 4: Quiz & Évaluations */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
           onClick={() => onNavigateTab('quizzes')}
-          className="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+          className="group bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Évaluations &amp; Quiz</span>
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Award className="w-5 h-5" />
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-400">Évaluations &amp; Quiz</span>
+              <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100 group-hover:scale-110 transition-transform">
+                <Award className="w-5 h-5" />
+              </div>
             </div>
+            <div className="mt-4 flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{quizzes.length}</span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                {performanceStats.passRate}% réussite
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-2 font-medium">
+              {performanceStats.totalQuizAttempts} participations • Moy: {performanceStats.avgQuizScore}%
+            </p>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-slate-900">{quizzes.length}</span>
-            <span className="text-xs font-bold text-emerald-600">{performanceStats.passRate}% réussite</span>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            {performanceStats.totalQuizAttempts} participations • Moy: {performanceStats.avgQuizScore}%
-          </p>
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-purple-600">
+          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-purple-600 group-hover:text-purple-800">
             <span>Consulter les résultats</span>
-            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* 3. SECTION GESTION FINANCIÈRE (Journalier, Hebdo, Mensuel, Total, Wave & OM) */}
-      <section id="finance-section" className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+      <section id="finance-section" className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xs border border-slate-200/80 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
               <DollarSign className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-extrabold text-slate-900">Gestion Financière &amp; Encaissements</h2>
-              <p className="text-xs text-slate-400">Suivi des abonnements payés par les élèves</p>
+              <p className="text-xs text-slate-500">Suivi des abonnements payés par les élèves</p>
             </div>
           </div>
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
             Comptabilité en temps réel
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-xs font-semibold text-slate-500 uppercase">Aujourd'hui</p>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1 tabular-nums">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aujourd'hui</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1.5 tabular-nums">
               {financialStats.today.toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500">FCFA</span>
             </p>
-            <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Encaissé ce jour</p>
+            <p className="text-[11px] text-emerald-600 font-semibold mt-1">Encaissé ce jour</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-xs font-semibold text-slate-500 uppercase">Cette semaine (7j)</p>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1 tabular-nums">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cette semaine (7j)</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1.5 tabular-nums">
               {financialStats.thisWeek.toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500">FCFA</span>
             </p>
-            <p className="text-[11px] text-slate-500 mt-0.5">7 derniers jours</p>
+            <p className="text-[11px] text-slate-500 font-medium mt-1">7 derniers jours</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-xs font-semibold text-slate-500 uppercase">Ce mois-ci</p>
-            <p className="text-xl sm:text-2xl font-black text-emerald-700 mt-1 tabular-nums">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ce mois-ci</p>
+            <p className="text-xl sm:text-2xl font-black text-emerald-700 mt-1.5 tabular-nums">
               {financialStats.thisMonth.toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500">FCFA</span>
             </p>
-            <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Mois en cours</p>
+            <p className="text-[11px] text-emerald-600 font-semibold mt-1">Mois en cours</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
-            <p className="text-xs font-semibold text-[#4c3882] uppercase">Total Cumulé</p>
-            <p className="text-xl sm:text-2xl font-black text-[#4c3882] mt-1 tabular-nums">
-              {financialStats.total.toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500">FCFA</span>
+          <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+            <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider">Total Cumulé</p>
+            <p className="text-xl sm:text-2xl font-black text-indigo-900 mt-1.5 tabular-nums">
+              {financialStats.total.toLocaleString('fr-FR')} <span className="text-xs font-normal text-indigo-400">FCFA</span>
             </p>
-            <p className="text-[11px] text-[#4c3882] font-semibold mt-0.5">Toutes les matières</p>
+            <p className="text-[11px] text-indigo-600 font-semibold mt-1">Toutes les matières</p>
           </div>
         </div>
 
         {/* Barres de répartition Wave / Orange Money */}
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+        <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-4">
           <div className="flex items-center justify-between text-xs font-bold text-slate-700">
             <span>Répartition des modes de paiement</span>
-            <span className="text-slate-400">Wave &amp; Orange Money</span>
+            <span className="text-slate-400 font-medium">Wave &amp; Orange Money</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="flex items-center gap-1.5 text-cyan-700 font-bold">
-                  <Smartphone className="w-3.5 h-3.5 text-[#1dc8f2]" /> Wave
+              <div className="flex justify-between text-xs font-semibold mb-1.5">
+                <span className="flex items-center gap-1.5 text-cyan-800 font-bold">
+                  <Smartphone className="w-4 h-4 text-cyan-500" /> Wave
                 </span>
-                <span className="font-bold text-slate-900">{financialStats.waveTotal.toLocaleString('fr-FR')} FCFA</span>
+                <span className="font-extrabold text-slate-900">{financialStats.waveTotal.toLocaleString('fr-FR')} FCFA</span>
               </div>
-              <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+              <div className="h-2.5 rounded-full bg-slate-200 overflow-hidden">
                 <div
                   className="h-full bg-cyan-500 rounded-full transition-all duration-500"
                   style={{
@@ -543,13 +571,13 @@ const TeacherOverviewTab = ({
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="flex items-center gap-1.5 text-orange-700 font-bold">
-                  <Smartphone className="w-3.5 h-3.5 text-orange-500" /> Orange Money
+              <div className="flex justify-between text-xs font-semibold mb-1.5">
+                <span className="flex items-center gap-1.5 text-orange-800 font-bold">
+                  <Smartphone className="w-4 h-4 text-orange-500" /> Orange Money
                 </span>
-                <span className="font-bold text-slate-900">{financialStats.orangeTotal.toLocaleString('fr-FR')} FCFA</span>
+                <span className="font-extrabold text-slate-900">{financialStats.orangeTotal.toLocaleString('fr-FR')} FCFA</span>
               </div>
-              <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+              <div className="h-2.5 rounded-full bg-slate-200 overflow-hidden">
                 <div
                   className="h-full bg-orange-500 rounded-full transition-all duration-500"
                   style={{
@@ -565,16 +593,16 @@ const TeacherOverviewTab = ({
       {/* 4. DEUX GRAPHIQUES STATISTIQUES INTERACTIFS (Revenus & Élèves) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Graphique 1 : Évolution des revenus */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xs border border-slate-200/80 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#4c3882]" />
+                <TrendingUp className="w-4 h-4 text-indigo-600" />
                 Évolution des Revenus (6 derniers mois)
               </h3>
               <p className="text-xs text-slate-400">Montant total encaissé en FCFA</p>
             </div>
-            <span className="text-xs font-extrabold text-[#4c3882] bg-indigo-50 px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-2.5 py-1 rounded-lg">
               FCFA
             </span>
           </div>
@@ -583,50 +611,32 @@ const TeacherOverviewTab = ({
             <svg viewBox="0 0 500 160" className="w-full h-full overflow-visible">
               <defs>
                 <linearGradient id="teacherRevGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#4c3882" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#4c3882" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
-              {/* Lignes horizontales de repère */}
               <line x1="0" y1="20" x2="500" y2="20" stroke="#f1f5f9" strokeDasharray="4 4" />
               <line x1="0" y1="70" x2="500" y2="70" stroke="#f1f5f9" strokeDasharray="4 4" />
               <line x1="0" y1="120" x2="500" y2="120" stroke="#f1f5f9" strokeDasharray="4 4" />
 
-              {/* Tracé de la surface et ligne */}
               {(() => {
                 const points = monthlyData.map((m, idx) => {
                   const x = 40 + idx * 84;
                   const y = 130 - (m.revenue / maxRevenue) * 110;
-                  return { x, y, ...m };
+                  return { x, y, revenue: m.revenue, label: m.label };
                 });
-
                 const pathD = points.reduce((acc, p, i) => `${acc} ${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`, '');
-                const areaD = `${pathD} L ${points[points.length - 1].x} 130 L ${points[0].x} 130 Z`;
+                const areaD = `${pathD} L ${points[points.length - 1].x} 140 L ${points[0].x} 140 Z`;
 
                 return (
                   <>
                     <path d={areaD} fill="url(#teacherRevGrad)" />
-                    <path d={pathD} fill="none" stroke="#4c3882" strokeWidth="3" strokeLinecap="round" />
-                    {points.map((p, idx) => (
-                      <g key={idx} className="cursor-pointer group">
-                        <circle cx={p.x} cy={p.y} r="5" fill="#ffffff" stroke="#4c3882" strokeWidth="2.5" />
-                        {/* Valeur au-dessus */}
-                        <text
-                          x={p.x}
-                          y={p.y - 10}
-                          textAnchor="middle"
-                          className="text-[10px] font-bold fill-slate-700 select-none"
-                        >
-                          {p.revenue > 0 ? `${(p.revenue / 1000).toFixed(0)}k` : '0'}
-                        </text>
-                        {/* Nom du mois */}
-                        <text
-                          x={p.x}
-                          y={150}
-                          textAnchor="middle"
-                          className="text-[11px] font-semibold fill-slate-400 capitalize select-none"
-                        >
+                    <path d={pathD} fill="none" stroke="#4f46e5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    {points.map((p, i) => (
+                      <g key={i}>
+                        <circle cx={p.x} cy={p.y} r="5" fill="#ffffff" stroke="#4f46e5" strokeWidth="2.5" />
+                        <text x={p.x} y="155" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#64748b">
                           {p.label}
                         </text>
                       </g>
@@ -638,17 +648,17 @@ const TeacherOverviewTab = ({
           </div>
         </div>
 
-        {/* Graphique 2 : Évolution des Inscriptions */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        {/* Graphique 2 : Inscriptions & Évolution des Élèves */}
+        <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xs border border-slate-200/80 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                <Users className="w-4 h-4 text-teal-600" />
-                Inscriptions &amp; Élèves (6 derniers mois)
+                <Users className="w-4 h-4 text-cyan-600" />
+                Inscriptions d'Élèves (6 derniers mois)
               </h3>
-              <p className="text-xs text-slate-400">Nombre de nouvelles inscriptions par mois</p>
+              <p className="text-xs text-slate-400">Nombre de nouveaux abonnements validés</p>
             </div>
-            <span className="text-xs font-extrabold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-extrabold text-cyan-700 bg-cyan-50 border border-cyan-200/70 px-2.5 py-1 rounded-lg">
               Élèves
             </span>
           </div>
@@ -661,34 +671,17 @@ const TeacherOverviewTab = ({
 
               {monthlyData.map((m, idx) => {
                 const x = 30 + idx * 84;
-                const barHeight = Math.max(8, (m.count / maxCount) * 110);
-                const y = 130 - barHeight;
+                const barWidth = 32;
+                const barHeight = Math.max(6, (m.count / maxCount) * 110);
+                const y = 135 - barHeight;
 
                 return (
-                  <g key={idx} className="cursor-pointer group">
-                    <rect
-                      x={x}
-                      y={y}
-                      width="34"
-                      height={barHeight}
-                      rx="6"
-                      fill="#009688"
-                      className="group-hover:fill-[#00796b] transition-colors"
-                    />
-                    <text
-                      x={x + 17}
-                      y={y - 8}
-                      textAnchor="middle"
-                      className="text-[11px] font-bold fill-slate-700 select-none"
-                    >
+                  <g key={idx}>
+                    <rect x={x} y={y} width={barWidth} height={barHeight} rx="6" fill="#06b6d4" opacity="0.85" />
+                    <text x={x + barWidth / 2} y={y - 6} textAnchor="middle" fontSize="10" fontWeight="bold" fill="#0e7490">
                       {m.count}
                     </text>
-                    <text
-                      x={x + 17}
-                      y={150}
-                      textAnchor="middle"
-                      className="text-[11px] font-semibold fill-slate-400 capitalize select-none"
-                    >
+                    <text x={x + barWidth / 2} y="155" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#64748b">
                       {m.label}
                     </text>
                   </g>
@@ -702,16 +695,18 @@ const TeacherOverviewTab = ({
       {/* 5. PERFORMANCES DES ÉLÈVES & SUIVI DES COURS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Colonne gauche (7 cols) : Suivi des cours & progression */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#4c3882]" />
+        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 shadow-2xs border border-slate-200/80 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                <BookOpen className="w-4 h-4" />
+              </div>
               <h3 className="text-base font-extrabold text-slate-900">Suivi Pédagogique par Matière</h3>
             </div>
             <button
               type="button"
               onClick={() => onNavigateTab('courses')}
-              className="text-xs font-bold text-[#4c3882] hover:underline"
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
             >
               Gérer les cours →
             </button>
@@ -721,29 +716,29 @@ const TeacherOverviewTab = ({
             {courseTrackings.map((c) => (
               <div
                 key={c._id}
-                className="p-4 rounded-xl bg-slate-50 hover:bg-indigo-50/40 border border-slate-100 transition space-y-2.5"
+                className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 hover:bg-indigo-50/30 border border-slate-200/70 transition space-y-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm">{c.title}</h4>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-400 mt-0.5">
                       {c.subject} • {c.level} • {c.totalLessons} leçons
                     </p>
                   </div>
-                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-white text-slate-800 border border-slate-200">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-white text-slate-800 border border-slate-200 shadow-2xs">
                     {c.enrolledCount} inscrit{c.enrolledCount > 1 ? 's' : ''}
                   </span>
                 </div>
 
                 {/* Barre de progression moyenne */}
                 <div>
-                  <div className="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                  <div className="flex justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
                     <span>Progression moyenne de la classe</span>
-                    <span className="font-bold text-[#4c3882]">{c.avgProgress}%</span>
+                    <span className="font-bold text-indigo-700">{c.avgProgress}%</span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#4c3882] to-[#2563eb] transition-all duration-500"
+                      className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-blue-500 transition-all duration-500"
                       style={{ width: `${c.avgProgress}%` }}
                     />
                   </div>
@@ -754,9 +749,10 @@ const TeacherOverviewTab = ({
                   <button
                     type="button"
                     onClick={() => onNavigateTab('students')}
-                    className="font-bold text-[#4c3882] hover:underline flex items-center gap-1"
+                    className="font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 cursor-pointer"
                   >
-                    Voir les inscrits <ChevronRight className="w-3 h-3" />
+                    <span>Voir les inscrits</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -765,31 +761,41 @@ const TeacherOverviewTab = ({
         </div>
 
         {/* Colonne droite (5 cols) : Tableau d'honneur (Top 5 élèves) */}
-        <div className="lg:col-span-5 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-500" />
+        <div className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-7 shadow-2xs border border-slate-200/80 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                <Trophy className="w-4 h-4" />
+              </div>
               <h3 className="text-base font-extrabold text-slate-900">Tableau d'Honneur</h3>
             </div>
-            <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-md">
+            <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
               Top Élèves
             </span>
           </div>
 
           {performanceStats.topStudents.length === 0 ? (
-            <p className="text-xs text-slate-400 py-8 text-center">Aucune note de quiz enregistrée pour l'instant.</p>
+            <p className="text-xs text-slate-400 py-10 text-center">Aucune note de quiz enregistrée pour l'instant.</p>
           ) : (
             <div className="space-y-3">
               {performanceStats.topStudents.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs"
+                  className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/70 text-xs hover:bg-amber-50/30 transition"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-6 text-center font-black text-slate-400 text-sm">
-                      {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                    <div className="w-7 text-center font-black text-xs">
+                      {idx === 0 ? (
+                        <span className="inline-block px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 font-black">#1</span>
+                      ) : idx === 1 ? (
+                        <span className="inline-block px-2 py-0.5 rounded-lg bg-slate-200 text-slate-700 font-bold">#2</span>
+                      ) : idx === 2 ? (
+                        <span className="inline-block px-2 py-0.5 rounded-lg bg-orange-100 text-orange-800 font-bold">#3</span>
+                      ) : (
+                        <span className="text-slate-400 font-bold">#{idx + 1}</span>
+                      )}
                     </div>
-                    <div className="w-9 h-9 rounded-full overflow-hidden bg-white border border-slate-200 shrink-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-slate-200 shrink-0">
                       {item.student?.avatar ? (
                         <img src={item.student.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -800,15 +806,15 @@ const TeacherOverviewTab = ({
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-slate-900 truncate">{item.student?.name || 'Élève'}</p>
-                      <p className="text-[11px] text-slate-400 truncate">{item.completedLessons} leçon(s) validée(s)</p>
+                      <p className="text-[11px] text-slate-400 truncate mt-0.5">{item.completedLessons} leçon(s) validée(s)</p>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="font-extrabold text-emerald-600 text-sm">
+                    <span className="font-black text-emerald-600 text-sm">
                       {item.avgScore !== null ? `${item.avgScore}%` : '—'}
                     </span>
-                    <span className="block text-[10px] text-slate-400">Score Quiz</span>
+                    <span className="block text-[10px] text-slate-400 font-medium">Score Quiz</span>
                   </div>
                 </div>
               ))}
@@ -818,10 +824,12 @@ const TeacherOverviewTab = ({
       </div>
 
       {/* 6. FLUX D'ACTIVITÉ RÉCENTE MULTI-SOURCES */}
-      <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[#4c3882]" />
+      <section className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xs border border-slate-200/80 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+              <Clock className="w-4 h-4" />
+            </div>
             <h3 className="text-base font-extrabold text-slate-900">Fil d'Activité Récente</h3>
           </div>
 
@@ -839,9 +847,9 @@ const TeacherOverviewTab = ({
                 key={f.id}
                 type="button"
                 onClick={() => setActivityFilter(f.id)}
-                className={`px-3 py-1 rounded-lg transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
                   activityFilter === f.id
-                    ? 'bg-white text-slate-900 shadow-sm font-bold'
+                    ? 'bg-white text-slate-900 shadow-2xs font-bold'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -852,16 +860,16 @@ const TeacherOverviewTab = ({
         </div>
 
         {filteredActivities.length === 0 ? (
-          <p className="text-xs text-slate-400 py-8 text-center">Aucune activité dans cette catégorie.</p>
+          <p className="text-xs text-slate-400 py-10 text-center">Aucune activité dans cette catégorie.</p>
         ) : (
           <div className="divide-y divide-slate-100">
             {filteredActivities.slice(0, 10).map((act) => (
               <div
                 key={act.id}
                 onClick={() => onNavigateTab(act.targetTab)}
-                className="py-3.5 flex items-center justify-between gap-3 hover:bg-slate-50/80 px-2 rounded-xl transition cursor-pointer"
+                className="py-3.5 flex items-center justify-between gap-3 hover:bg-slate-50 px-3 rounded-2xl transition cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                     {act.avatar ? (
                       <img src={act.avatar} alt="" className="w-full h-full object-cover" />
@@ -881,7 +889,7 @@ const TeacherOverviewTab = ({
                   <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${act.badgeColor}`}>
                     {act.badge}
                   </span>
-                  <span className="text-[11px] text-slate-400 hidden sm:inline">
+                  <span className="text-[11px] text-slate-400 hidden sm:inline font-medium">
                     {formatDateShort(act.date)}
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400" />

@@ -376,7 +376,7 @@ const AdminUsersTab = ({
                           type="button"
                           onClick={() => onDeleteUser(u._id)}
                           title="Supprimer définitivement"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                          className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 hover:scale-105 transition-all cursor-pointer border border-rose-200 shadow-xs"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

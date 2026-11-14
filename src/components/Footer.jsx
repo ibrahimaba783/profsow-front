@@ -41,13 +41,11 @@ const Footer = () => {
 
   const CONTACT_PHONE_DISPLAY = settings.channels?.contactPhone || '+221 77 102 33 99';
   const CONTACT_PHONE_LINK = `tel:${CONTACT_PHONE_DISPLAY.replace(/\s+/g, '')}`;
-  const CONTACT_EMAIL = settings.channels?.contactEmail || 'Sowaliou2504@gmail.com';
+  const CONTACT_EMAIL = settings.channels?.contactEmail || 'sowaliou2504@gmail.com';
   const YOUTUBE_URL =
     settings.channels?.youtubeUrl || 'https://youtube.com/@dermannaltv4340?si=Jk86Ads8TMVEx6vv';
   const TIKTOK_URL = settings.channels?.tiktokUrl || 'https://www.tiktok.com/@aliousow9216';
   const FACEBOOK_URL = settings.channels?.facebookUrl || `mailto:${CONTACT_EMAIL}`;
-  const subjectsList =
-    settings.subjects?.length > 0 ? settings.subjects : ['Mathématiques', 'Physique-Chimie'];
 
   const handleAnchorClick = (id) => (e) => {
     if (location.pathname === '/') {
@@ -64,36 +62,76 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-white border-t border-slate-200 text-slate-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-        {/* Colonne 1 : Présentation (format Bakeli) */}
-        <div>
-          <Link to="/" onClick={handleTopClick} className="inline-flex items-center gap-2.5 mb-4">
-            <img src={logo} alt="Aliou Sow Academy" className="h-9 w-auto" />
+    <footer className="bg-[#071727] text-slate-400 text-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10">
+        {/* Colonne 1 : Logo & Présentation */}
+        <div className="lg:col-span-4 space-y-4">
+          <Link to="/" onClick={handleTopClick} className="inline-flex items-center gap-3">
+            <img src={logo} alt="Aliou Sow Academy" className="h-10 w-auto object-contain bg-white/95 p-1 rounded-xl shadow-xs" />
             <span className="leading-tight">
-              <span className="block text-sm font-extrabold text-slate-900 tracking-wide">ALIOU SOW</span>
-              <span className="block text-[9px] font-bold tracking-[0.24em] text-[#009688]">ACADEMY</span>
+              <span className="block text-sm font-black tracking-wider text-white">ALIOU SOW</span>
+              <span className="block text-[10px] font-bold tracking-[0.28em] text-[#009688]">ACADEMY</span>
             </span>
           </Link>
-          <p className="text-sm text-slate-600 leading-relaxed max-w-xs">
-            {settings.siteInfo?.platformName || 'Aliou Sow Academy'} est une plateforme de formation en ligne dédiée aux Mathématiques et à la
-            Physique-Chimie, conçue par {settings.siteInfo?.teacherDisplayName || 'M. Aliou Sow'} pour accompagner les élèves de la 4ème à la Terminale S.
+
+          <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-sm">
+            Des cours de sciences accessibles, structurés et adaptés au programme sénégalais pour aider chaque élève à réussir.
           </p>
+
+          <div className="flex items-center gap-3 pt-2">
+            <a
+              href={YOUTUBE_URL}
+              aria-label="YouTube"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-[#009688] text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200"
+            >
+              <YoutubeIcon className="w-4 h-4" />
+            </a>
+            <a
+              href={TIKTOK_URL}
+              aria-label="TikTok"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-[#009688] text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200"
+            >
+              <TikTokIcon className="w-4 h-4" />
+            </a>
+            <a
+              href={FACEBOOK_URL}
+              aria-label="Facebook"
+              target={settings.channels?.facebookUrl ? '_blank' : undefined}
+              rel={settings.channels?.facebookUrl ? 'noopener noreferrer' : undefined}
+              className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-[#009688] text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200"
+            >
+              <FacebookIcon className="w-4 h-4" />
+            </a>
+          </div>
         </div>
 
-        {/* Colonne 2 : OBTENIR DE L'AIDE */}
-        <div>
-          <h3 className="text-xs font-extrabold tracking-wider uppercase text-slate-900 mb-4">
-            OBTENIR DE L'AIDE
+        {/* Colonne 2 : Obtenir de l'aide */}
+        <div className="lg:col-span-2 space-y-4">
+          <h3 className="text-sm font-bold text-white tracking-wide">
+            Obtenir de l'aide
           </h3>
-          <ul className="space-y-2.5 text-sm text-slate-600">
+          <ul className="space-y-2.5 text-xs sm:text-sm">
             <li>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-[#009688] transition-colors">
-                Contactez-Nous
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                onClick={() => {
+                  window.open(
+                    `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(CONTACT_EMAIL)}`,
+                    '_blank',
+                    'noopener,noreferrer'
+                  );
+                }}
+                className="hover:text-white transition-colors cursor-pointer"
+              >
+                Contactez-nous
               </a>
             </li>
             <li>
-              <Link to="/courses" className="hover:text-[#009688] transition-colors">
+              <Link to="/courses" className="hover:text-white transition-colors">
                 Toutes nos matières
               </Link>
             </li>
@@ -101,120 +139,97 @@ const Footer = () => {
               <Link
                 to="/#faq"
                 onClick={handleAnchorClick('faq')}
-                className="hover:text-[#009688] transition-colors"
+                className="hover:text-white transition-colors"
               >
                 FAQ
               </Link>
             </li>
             <li>
-              <Link to="/register" className="hover:text-[#009688] transition-colors">
+              <Link to="/register" className="hover:text-white transition-colors">
                 Créer un compte
               </Link>
             </li>
           </ul>
         </div>
 
-        {/* Colonne 3 : DOMAINES */}
-        <div>
-          <h3 className="text-xs font-extrabold tracking-wider uppercase text-slate-900 mb-4">
-            DOMAINES &amp; NIVEAUX
+        {/* Colonne 3 : Domaines & niveaux */}
+        <div className="lg:col-span-3 space-y-4">
+          <h3 className="text-sm font-bold text-white tracking-wide">
+            Domaines &amp; niveaux
           </h3>
-          <ul className="space-y-2.5 text-sm text-slate-600">
-            {subjectsList.slice(0, 3).map((sub) => (
-              <li key={sub}>
-                <Link
-                  to="/#catalogue"
-                  state={{ subject: sub, level: 'Tous' }}
-                  onClick={handleAnchorClick('catalogue')}
-                  className="hover:text-[#009688] transition-colors"
-                >
-                  {sub}
-                </Link>
-              </li>
-            ))}
+          <ul className="space-y-2.5 text-xs sm:text-sm">
             <li>
               <Link
-                to="/#catalogue"
-                state={{ subject: 'Tous', level: '3ème' }}
-                onClick={handleAnchorClick('catalogue')}
-                className="hover:text-[#009688] transition-colors"
+                to="/courses?subject=Mathématiques"
+                className="hover:text-white transition-colors"
               >
-                Collège (4ème - 3ème)
+                Mathématiques
               </Link>
             </li>
             <li>
               <Link
-                to="/#catalogue"
-                state={{ subject: 'Tous', level: 'TS' }}
-                onClick={handleAnchorClick('catalogue')}
-                className="hover:text-[#009688] transition-colors"
+                to="/courses?subject=Physique-Chimie"
+                className="hover:text-white transition-colors"
               >
-                Lycée (2nde S - 1ère S - TS)
+                Physique-Chimie
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/courses?level=3ème"
+                className="hover:text-white transition-colors"
+              >
+                Collège 4ème - 3ème
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/courses?level=TS"
+                className="hover:text-white transition-colors"
+              >
+                Lycée 2nde S - 1ère S - TS
               </Link>
             </li>
           </ul>
         </div>
 
-        {/* Colonne 4 : CONTACTEZ NOUS */}
-        <div>
-          <h3 className="text-xs font-extrabold tracking-wider uppercase text-slate-900 mb-4">
-            CONTACTEZ NOUS
+        {/* Colonne 4 : Contactez-nous */}
+        <div className="lg:col-span-3 space-y-4">
+          <h3 className="text-sm font-bold text-white tracking-wide">
+            Contactez-nous
           </h3>
-          <div className="space-y-2 text-sm text-slate-600">
-            <p>Plateforme e-learning scientifique — Sénégal (4ème à Terminale S)</p>
-            <p>
-              Tel:{' '}
-              <a href={CONTACT_PHONE_LINK} className="text-[#009688] font-medium hover:underline">
+          <ul className="space-y-2.5 text-xs sm:text-sm text-slate-400">
+            <li>Sénégal</li>
+            <li>
+              <a href={CONTACT_PHONE_LINK} className="hover:text-white transition-colors">
                 {CONTACT_PHONE_DISPLAY}
               </a>
-            </p>
-            <p>
-              Mail:{' '}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#009688] font-medium hover:underline">
+            </li>
+            <li>
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                onClick={() => {
+                  window.open(
+                    `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(CONTACT_EMAIL)}`,
+                    '_blank',
+                    'noopener,noreferrer'
+                  );
+                }}
+                title={`Envoyer un e-mail à ${CONTACT_EMAIL}`}
+                className="hover:text-white hover:underline transition-colors whitespace-nowrap block text-slate-300 font-medium cursor-pointer"
+              >
                 {CONTACT_EMAIL}
               </a>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 mt-5 text-slate-900">
-            <a
-              href={YOUTUBE_URL}
-              aria-label="YouTube"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="YouTube"
-              className="hover:text-[#009688] transition-colors"
-            >
-              <YoutubeIcon className="w-5 h-5" />
-            </a>
-            <a
-              href={TIKTOK_URL}
-              aria-label="TikTok"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="TikTok"
-              className="hover:text-[#009688] transition-colors"
-            >
-              <TikTokIcon className="w-5 h-5" />
-            </a>
-            <a
-              href={FACEBOOK_URL}
-              aria-label="Facebook / Contact"
-              target={settings.channels?.facebookUrl ? '_blank' : undefined}
-              rel={settings.channels?.facebookUrl ? 'noopener noreferrer' : undefined}
-              title="Contact"
-              className="hover:text-[#009688] transition-colors"
-            >
-              <FacebookIcon className="w-5 h-5" />
-            </a>
-          </div>
+            </li>
+          </ul>
         </div>
       </div>
 
-      {/* Barre du bas */}
-      <div className="border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} {settings.siteInfo?.platformName || 'Aliou Sow Academy'} — Tous droits réservés.
+      {/* Barre de copyright */}
+      <div className="border-t border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <span>&copy; {new Date().getFullYear()} Aliou Sow Academy — Tous droits réservés.</span>
+          <span>Conçu pour la réussite des élèves sénégalais.</span>
         </div>
       </div>
     </footer>

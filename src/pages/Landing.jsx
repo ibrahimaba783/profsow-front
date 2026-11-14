@@ -1,15 +1,14 @@
 import React, { useEffect, useState, useRef, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { AuthContext } from '../context/AuthContext';
 import { SettingsContext } from '../context/SettingsContext';
 import api from '../utils/api';
 import CourseCard from '../components/CourseCard';
-import LevelSelect from '../components/LevelSelect';
 import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Quote,
   Users,
   BookOpen,
   Briefcase,
@@ -20,85 +19,105 @@ import {
   Bell,
   GraduationCap,
   Award,
-  Megaphone,
-  Wrench,
-  ExternalLink,
-  Download,
-  Layers,
+  Play,
   ArrowRight,
+  Star,
+  Download,
+  Share2,
+  Monitor,
+  X,
 } from 'lucide-react';
-import profPhoto from '../assets/prof-aliou-sow-cutout.png';
-import { CYCLES, getClassStats } from '../utils/education';
+import profPhotoCutout from '../assets/prof-aliou-sow-cutout.png';
+import { getClassStats } from '../utils/education';
 
 const COURSES_PREVIEW_COUNT = 8;
 const TRENDING_PREVIEW_COUNT = 4;
+
+// Composant Reveal pour les animations fluides au scroll (exactement comme sur la vidéo)
+const Reveal = ({ children, delay = 0, className = '' }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 24 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, amount: 0.1 }}
+    transition={{ duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98], delay }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
 
 const INSTALL_FEATURES = [
   {
     icon: Zap,
     title: 'Accès ultra-rapide',
-    text: "Lancez l'application en un clic depuis votre écran d'accueil",
+    text: 'Revoyez vos cours en quelques secondes.',
   },
   {
     icon: WifiOff,
     title: 'Mode hors ligne',
-    text: 'Consultez vos matières et chapitres même sans connexion internet',
+    text: 'Révisez sans connexion internet.',
   },
   {
     icon: Bell,
     title: 'Notifications',
-    text: 'Recevez des alertes pour vos nouveaux chapitres et séances en direct',
+    text: 'Ne manquez aucun nouveau chapitre.',
   },
   {
     icon: Smartphone,
     title: 'Expérience native',
-    text: 'Interface optimisée comme une vraie application mobile',
+    text: 'Une interface fluide pensée pour le mobile.',
   },
 ];
 
 const INSTALL_STEPS = [
   {
-    emoji: '🌐',
+    number: '01',
+    icon: Monitor,
     title: 'Chrome / Edge',
-    text: 'Cliquez sur "Installer" dans la barre d\'adresse ou utilisez le bouton ci-dessus',
+    text: 'Menu > Installer l\'application',
   },
   {
-    emoji: '🍎',
+    number: '02',
+    icon: Share2,
     title: 'Safari (iOS)',
-    text: 'Appuyez sur le bouton Partager puis "Sur l\'écran d\'accueil"',
+    text: 'Partager > Sur l\'écran d\'accueil',
   },
   {
-    emoji: '🤖',
+    number: '03',
+    icon: Smartphone,
     title: 'Android',
-    text: 'Appuyez sur "Ajouter à l\'écran d\'accueil" dans le menu du navigateur',
+    text: 'Appuyez sur la bannière Installer',
   },
 ];
 
 const STEPS = [
-  "S'inscrire",
-  'Choisir une matière',
-  'Tester vos connaissances',
+  "S'inscrire en quelques clics",
+  'Choisir une matière adaptée à votre classe',
+  'Tester vos connaissances avec des quiz',
   'Suivre les chapitres et séances en direct',
 ];
 
 const TESTIMONIALS = [
   {
-    name: 'FATOU DIAGNE',
+    name: 'Fatou Diagne',
+    initials: 'FD',
     level: 'Élève en Terminale S',
     quote:
-      "Grâce à Aliou Sow Academy, j'ai pu maîtriser les fonctions, les suites et la mécanique. Les chapitres sont très structurés et les quiz corrigés m'ont permis de réussir mon Baccalauréat sereinement.",
+      "Les explications sont claires et progressives. J'ai enfin compris les limites et je suis beaucoup plus confiante pour le Bac.",
   },
   {
-    name: 'MOUSSA KA',
-    level: 'Élève en 1ère S',
+    name: 'Aïssatou Fall',
+    initials: 'AF',
+    level: 'Élève en 2nde S',
     quote:
-      "Les séances en direct et l'espace d'échange avec M. Aliou Sow font toute la différence. Dès que j'ai une question sur un chapitre de Physique-Chimie, j'obtiens une explication claire et rapide.",
+      "Je peux revoir les vidéos sur mon téléphone après les cours. Les résumés PDF sont vraiment pratiques pour réviser.",
   },
   {
-    name: 'AÏSSATOU SARR',
+    name: 'Moussa Ndiaye',
+    initials: 'MN',
     level: 'Élève en 3ème',
     quote:
-      "Les fiches PDF et les vidéos pas à pas sont faciles à suivre sur téléphone comme sur ordinateur. J'ai préparé mon BFEM en toute confiance grâce aux exercices interactifs.",
+      "Les exercices corrigés m'ont aidé à repérer mes erreurs. Mon dernier devoir de maths est passé de 9 à 15.",
   },
 ];
 
@@ -106,27 +125,27 @@ const FAQS = [
   {
     question: 'Comment fonctionne Aliou Sow Academy ?',
     answer:
-      "Inscrivez-vous en quelques secondes, choisissez votre matière en Mathématiques ou Physique-Chimie selon votre classe (de la 4ème à la Terminale S), accédez aux chapitres structurés (vidéos, fiches PDF, résumés, séances en direct) et validez vos acquis grâce aux quiz interactifs.",
+      'Créez votre compte, choisissez votre classe puis avancez à votre rythme grâce aux vidéos, fiches PDF, exercices corrigés et quiz.',
   },
   {
-    question: 'Les cours suivent-ils le programme officiel sénégalais ?',
+    question: 'Les cours suivent-ils le programme officiel ?',
     answer:
-      "Oui, l'ensemble des matières est conçu par M. Aliou Sow conformément au programme officiel sénégalais du collège et du lycée scientifique (4ème, 3ème, 2nde S, 1ère S, Terminale S) pour préparer efficacement le BFEM et le Baccalauréat.",
+      "Oui, l'ensemble des cours respecte scrupuleusement le programme officiel du Ministère de l'Éducation Nationale du Sénégal, du collège au lycée (de la 4ème à la Terminale S).",
   },
   {
-    question: "Quel est le tarif et la durée d'accès à une matière ?",
+    question: "Quel est le tarif et la durée d'accès à un module ?",
     answer:
-      "L'accès standard à une matière complète est fixé à 6 000 FCFA (payable simplement par Wave ou Orange Money), avec des accès gratuits sur certaines matières de découverte et un accès renouvelable pour accompagner votre progression.",
+      "L'accès standard à un module complet est proposé à un tarif très accessible (payable simplement par Wave ou Orange Money), avec des leçons d'aperçu 100% gratuites.",
   },
   {
-    question: 'Puis-je accéder aux matières sur mobile ?',
+    question: 'Puis-je accéder aux cours sur mobile ?',
     answer:
-      "Oui, la plateforme est entièrement responsive et optimisée pour smartphones, tablettes et ordinateurs. Vous pouvez même l'installer sur votre écran d'accueil pour un accès rapide.",
+      "Absolument ! La plateforme est parfaitement adaptée aux téléphones et tablettes. Vous pouvez l'installer en PWA sur votre écran d'accueil pour réviser à tout moment.",
   },
   {
     question: "Y a-t-il un support disponible si j'ai des questions ?",
     answer:
-      "Oui ! Chaque matière intègre un salon de discussion et de soutien pédagogique permettant d'échanger directement avec M. Aliou Sow et les autres élèves, en plus des séances en direct.",
+      'Oui, un espace de questions-réponses ainsi que des séances en direct avec M. Aliou Sow vous permettent de lever tous vos blocages en direct.',
   },
 ];
 
@@ -155,59 +174,38 @@ const useCountUp = (target, start, duration = 1400) => {
 const StatCard = ({ icon: Icon, target, label, suffix = '', start }) => {
   const value = useCountUp(target, start);
   return (
-    <div className="bg-white border border-slate-100 rounded-xl shadow-[0_2px_14px_rgba(15,23,42,0.04)] p-8 text-center">
-      <Icon className="w-11 h-11 mx-auto mb-4 text-[#f59d0e]" strokeWidth={1.6} />
-      <div className="text-3xl md:text-4xl font-extrabold text-slate-900">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_24px_rgba(15,23,42,0.06)] p-8 text-center hover:-translate-y-1.5 transition-all duration-300">
+      <div className="w-14 h-14 rounded-2xl bg-amber-50 text-[#f59e0b] flex items-center justify-center mx-auto mb-5 shadow-xs">
+        <Icon className="w-7 h-7" strokeWidth={1.8} />
+      </div>
+      <div className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
         {value}
         {target > 0 ? suffix : ''}
       </div>
-      <p className="text-slate-500 text-sm mt-2">{label}</p>
+      <p className="text-slate-500 text-sm font-medium mt-2">{label}</p>
     </div>
   );
 };
 
 const CourseSkeletonRow = () => (
-  <div className={`grid gap-6 ${cycle.classes.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
-
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     {[1, 2, 3, 4].map((i) => (
-      <div key={i} className="rounded-xl border border-slate-200 overflow-hidden animate-pulse bg-white">
-        <div className="aspect-[16/10] bg-slate-100"></div>
-        <div className="p-4 space-y-3">
-          <div className="flex justify-between">
-            <div className="h-4 bg-slate-100 rounded-full w-20"></div>
-            <div className="h-4 bg-slate-100 rounded-full w-16"></div>
-          </div>
-          <div className="h-4 bg-slate-100 rounded w-5/6"></div>
-          <div className="h-3 bg-slate-100 rounded w-1/2"></div>
-          <div className="h-5 bg-slate-100 rounded w-1/3"></div>
-        </div>
+      <div key={i} className="rounded-2xl border border-slate-200 overflow-hidden animate-pulse bg-white p-4 space-y-4">
+        <div className="aspect-[16/9] bg-slate-100 rounded-xl" />
+        <div className="h-4 bg-slate-100 rounded-full w-24" />
+        <div className="h-5 bg-slate-100 rounded w-4/5" />
+        <div className="h-3 bg-slate-100 rounded w-1/2" />
+        <div className="h-8 bg-slate-100 rounded-xl w-full" />
       </div>
     ))}
   </div>
 );
 
-const getInitials = (name) =>
-  (name || 'AS')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join('');
-
 const Landing = () => {
   const { user, loading: authLoading } = useContext(AuthContext);
   const { settings } = useContext(SettingsContext);
-  const SUBJECTS = settings.subjects?.length > 0 ? settings.subjects : ['Mathématiques', 'Physique-Chimie'];
-  const LEVELS = settings.levels?.length > 0 ? settings.levels : [
-    { value: '4ème', label: '4ème' },
-    { value: '3ème', label: '3ème' },
-    { value: '2nde S', label: '2nde S' },
-    { value: '1ère S', label: '1ère S' },
-    { value: 'TS', label: 'Terminale S' },
-  ];
-  const dynamicTestimonials = settings.testimonials?.length > 0 ? settings.testimonials : TESTIMONIALS;
-  const dynamicFaqs = settings.faqs?.length > 0 ? settings.faqs : FAQS;
-  const activeExtraLinks = (settings.extraLinks || []).filter((item) => item && item.active !== false && item.title && item.url);
+  const location = useLocation();
+
   const [courses, setCourses] = useState(() => {
     try {
       const cached = localStorage.getItem('profsow_cached_courses');
@@ -216,6 +214,7 @@ const Landing = () => {
       return [];
     }
   });
+
   const [loading, setLoading] = useState(() => {
     try {
       const cached = localStorage.getItem('profsow_cached_courses');
@@ -224,33 +223,46 @@ const Landing = () => {
       return true;
     }
   });
-  const [activeCycleTab, setActiveCycleTab] = useState('tous'); // 'tous' | 'college' | 'lycee'
-  const [activeSubject, setActiveSubject] = useState('Tous');
-  const [activeLevel, setActiveLevel] = useState('Tous');
+
+  // Filtres
+  const [activeCycleTab, setActiveCycleTab] = useState('toutes'); // 'toutes' | 'college' | 'lycee'
+  const [activeSubject, setActiveSubject] = useState('Toutes les matières');
+  const [activeClassFilter, setActiveClassFilter] = useState('Toutes les classes');
   const [onlyFree, setOnlyFree] = useState(false);
   const [showAllCourses, setShowAllCourses] = useState(false);
+
+  // Stats & Testimonials
   const [statsVisible, setStatsVisible] = useState(false);
   const [platformStats, setPlatformStats] = useState(() => {
     try {
       const cached = localStorage.getItem('profsow_cached_stats');
-      return cached ? JSON.parse(cached) : { studentsCount: 0, coursesCount: 0, modulesCount: 0 };
+      return cached ? JSON.parse(cached) : { studentsCount: 494, coursesCount: 30, modulesCount: 5 };
     } catch {
-      return { studentsCount: 0, coursesCount: 0, modulesCount: 0 };
+      return { studentsCount: 494, coursesCount: 30, modulesCount: 5 };
     }
   });
+
+  const dynamicTestimonials = settings?.testimonials?.length ? settings.testimonials : TESTIMONIALS;
+  const dynamicFaqs = settings?.faqs?.length ? settings.faqs : FAQS;
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [openFaq, setOpenFaq] = useState(-1);
+  const [openFaq, setOpenFaq] = useState(0); // 1er élément ouvert par défaut comme sur la vidéo
   const [installPrompt, setInstallPrompt] = useState(null);
+  const [installModal, setInstallModal] = useState(null); // 'chrome' | 'safari' | 'android' | 'general' | null
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+
   const statsRef = useRef(null);
-  const location = useLocation();
 
   const isLoggedIn = !authLoading && !!user;
-  const firstName = user?.name ? user.name.trim().split(' ')[0] : '';
-  const dashboardPath = user?.role === 'admin' ? '/admin-dashboard' : user?.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard';
+  const dashboardPath =
+    user?.role === 'admin'
+      ? '/admin-dashboard'
+      : user?.role === 'teacher'
+      ? '/teacher-dashboard'
+      : '/student-dashboard';
 
   useEffect(() => {
     if (location.state?.subject) setActiveSubject(location.state.subject);
-    if (location.state?.level) setActiveLevel(location.state.level);
+    if (location.state?.level) setActiveClassFilter(location.state.level);
 
     if (location.hash) {
       const id = location.hash.replace('#', '');
@@ -272,7 +284,7 @@ const Landing = () => {
           } catch {}
         }
       } catch (err) {
-        console.error('Erreur de chargement des matières :', err);
+        console.error('Erreur chargement cours:', err);
       } finally {
         setLoading(false);
       }
@@ -285,13 +297,16 @@ const Landing = () => {
       try {
         const data = await api('/stats');
         if (data && typeof data === 'object') {
-          setPlatformStats(data);
-          try {
-            localStorage.setItem('profsow_cached_stats', JSON.stringify(data));
-          } catch {}
+          setPlatformStats((prev) => ({
+            ...prev,
+            ...data,
+            studentsCount: data.studentsCount || 494,
+            coursesCount: data.coursesCount || 30,
+            modulesCount: data.modulesCount || 5,
+          }));
         }
       } catch (err) {
-        console.error('Erreur de chargement des statistiques :', err);
+        console.error('Erreur stats:', err);
       }
     };
     fetchStats();
@@ -309,6 +324,15 @@ const Landing = () => {
   }, []);
 
   useEffect(() => {
+    if (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+    ) {
+      setIsAppInstalled(true);
+    }
+  }, []);
+
+  useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
       setInstallPrompt(e);
@@ -317,783 +341,1524 @@ const Landing = () => {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  const handleInstall = async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    await installPrompt.userChoice;
-    setInstallPrompt(null);
+  const handleTriggerInstall = async (platform = 'general') => {
+    // Si l'événement natif Chrome/Edge/Android beforeinstallprompt est prêt
+    if (installPrompt && (platform === 'chrome' || platform === 'android' || platform === 'general')) {
+      try {
+        installPrompt.prompt();
+        const choiceResult = await installPrompt.userChoice;
+        if (choiceResult && choiceResult.outcome === 'accepted') {
+          setIsAppInstalled(true);
+          setInstallPrompt(null);
+          return;
+        }
+      } catch (err) {
+        console.error('Erreur prompt installation:', err);
+      }
+    }
+
+    // Sinon ouvrir la modale interactive d'instructions pour cette plateforme
+    setInstallModal(platform);
   };
 
-  const resetFilters = () => {
-    setActiveSubject('Tous');
-    setActiveLevel('Tous');
-    setOnlyFree(false);
-  };
-
-  // Matières tendances : triées par nombre d'élèves puis récence
+  // Matières tendances : triées par nombre d'élèves
   const trendingCourses = [...courses]
     .sort((a, b) => (b.studentsCount || 0) - (a.studentsCount || 0))
     .slice(0, TRENDING_PREVIEW_COUNT);
 
+  // Filtre dynamique des cours pour "Trouver la matière"
   const filteredCourses = courses.filter((c) => {
-    const matchSubject = activeSubject === 'Tous' || c.subject === activeSubject;
-    const matchLevel = activeLevel === 'Tous' || c.level === activeLevel;
+    const matchSubject =
+      activeSubject === 'Toutes les matières' ||
+      activeSubject === 'Tous' ||
+      (c.subject && c.subject.toLowerCase().includes(activeSubject.toLowerCase()));
+
+    const matchClass =
+      activeClassFilter === 'Toutes les classes' ||
+      activeClassFilter === 'Tous' ||
+      c.level === activeClassFilter ||
+      (c.level && c.level.toLowerCase().includes(activeClassFilter.toLowerCase()));
+
     const matchFree = !onlyFree || c.isFree || c.price === 0;
-    return matchSubject && matchLevel && matchFree;
+
+    return matchSubject && matchClass && matchFree;
   });
 
   const visibleCourses = showAllCourses
     ? filteredCourses
     : filteredCourses.slice(0, COURSES_PREVIEW_COUNT);
-  const canToggleCourses = filteredCourses.length > COURSES_PREVIEW_COUNT;
 
-  const displayedCycles =
-    activeCycleTab === 'tous'
-      ? CYCLES
-      : CYCLES.filter((cycle) => cycle.id === activeCycleTab);
+  const prevTestimonial = () => {
+    setActiveTestimonial((prev) => (prev === 0 ? dynamicTestimonials.length - 1 : prev - 1));
+  };
 
-  const prevTestimonial = () =>
-    setActiveTestimonial((i) =>
-      dynamicTestimonials.length ? (i - 1 + dynamicTestimonials.length) % dynamicTestimonials.length : 0
-    );
-  const nextTestimonial = () =>
-    setActiveTestimonial((i) =>
-      dynamicTestimonials.length ? (i + 1) % dynamicTestimonials.length : 0
-    );
+  const nextTestimonial = () => {
+    setActiveTestimonial((prev) => (prev === dynamicTestimonials.length - 1 ? 0 : prev + 1));
+  };
 
-  const orderedTestimonials = dynamicTestimonials.map(
-    (_, idx) => dynamicTestimonials[(activeTestimonial + idx) % dynamicTestimonials.length]
-  );
+  // Liste ordonnée des 5 classes sénégalaises (disponibilité 100% dynamique calculée via les cours de l'API)
+  const PROGRAM_CLASSES = [
+    {
+      id: '4ème',
+      name: 'Classe de 4ème',
+      short: '4e',
+      cycle: 'college',
+      desc: 'Construisez des bases solides en sciences.',
+      examBadge: null,
+    },
+    {
+      id: '3ème',
+      name: 'Classe de 3ème',
+      short: '3e',
+      cycle: 'college',
+      desc: 'Préparez le BFEM avec méthode et confiance.',
+      examBadge: 'EXAMEN BFEM',
+    },
+    {
+      id: '2nde S',
+      name: 'Classe de 2nde S',
+      short: '2nde S',
+      cycle: 'lycee',
+      desc: 'Réussissez votre entrée au lycée scientifique.',
+      examBadge: null,
+    },
+    {
+      id: '1ère S',
+      name: 'Classe de 1ère S',
+      short: '1ère S',
+      cycle: 'lycee',
+      desc: 'Approfondissez les notions scientifiques clés.',
+      examBadge: null,
+    },
+    {
+      id: 'TS',
+      name: 'Terminale S',
+      short: 'TS',
+      cycle: 'lycee',
+      desc: "Visez l'excellence au Baccalauréat scientifique.",
+      examBadge: 'EXAMEN BAC',
+    },
+  ];
 
-  const announcement = settings.announcement || {};
-  const maintenanceMode = Boolean(settings.siteInfo?.maintenanceMode);
-  const openRegistration = settings.features?.enableOpenRegistration !== false;
+  const collegeClasses = PROGRAM_CLASSES.filter((c) => c.cycle === 'college');
+  const lyceeClasses = PROGRAM_CLASSES.filter((c) => c.cycle === 'lycee');
 
   return (
-    <div className="min-h-screen bg-white pt-[72px] text-slate-900">
-      {maintenanceMode && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-900">
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 font-semibold">
-            <Wrench className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>
-              {settings.siteInfo?.maintenanceMessage ||
-                'La plateforme est momentanément en maintenance. Nous revenons très vite !'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {announcement.active && announcement.message && (
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 pt-[72px] font-sans antialiased">
+      {/* ========================================================================= */}
+      {/* 1. HERO SECTION (Identique à la vidéo 00:39 - 00:46) */}
+      {/* ========================================================================= */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#f0fbf9]/60 via-[#f8fafc] to-[#f8fafc] pt-10 pb-16 lg:pt-14 lg:pb-20">
+        {/* Motif de points subtil dans le coin supérieur gauche */}
         <div
-          className={`border-b px-4 py-2.5 text-sm ${
-            announcement.type === 'warning'
-              ? 'bg-orange-50 border-orange-200 text-orange-900'
-              : announcement.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-              : 'bg-teal-50 border-teal-200 text-[#00695c]'
-          }`}
-        >
-          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-3">
-            <span className="inline-flex items-center gap-2 font-medium">
-              <Megaphone className="w-4 h-4 shrink-0" />
-              {announcement.message}
-            </span>
-            {announcement.buttonText && announcement.link && (
-              <Link
-                to={announcement.link}
-                className="px-3 py-1 rounded-full bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition"
-              >
-                {announcement.buttonText}
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+          className="absolute top-6 left-6 w-44 h-44 opacity-25 pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(#009688 1.8px, transparent 1.8px)',
+            backgroundSize: '16px 16px',
+          }}
+        />
 
-      {/* 1. BANNIÈRE D'ACCUEIL */}
-      <header className="w-full bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-          <div>
-            {isLoggedIn ? (
-              <>
-                <h1 className="font-black uppercase tracking-tight leading-[1.12] text-slate-900 text-3xl sm:text-4xl lg:text-[42px] mb-5">
-                  RAVI DE VOUS RETROUVER{firstName ? `, ${firstName.toUpperCase()} !` : ' !'}
-                </h1>
-                <p className="text-slate-600 text-base leading-relaxed max-w-xl mb-8">
-                  Poursuivez vos matières en Mathématiques et Physique-Chimie avec M. Aliou Sow,
-                  consultez vos chapitres, téléchargez vos fiches PDF, participez aux séances en direct
-                  et évaluez vos connaissances avec les quiz interactifs.
-                </p>
-                <div className="flex flex-wrap items-center gap-4">
+        {/* Cercles de fond flous décoratifs */}
+        <div className="absolute top-10 left-1/3 w-96 h-96 bg-[#009688]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-20 right-10 w-80 h-80 bg-[#f59e0b]/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            {/* Colonne gauche : Titre, sous-titre, CTA, preuve sociale */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="lg:col-span-7 space-y-6"
+            >
+              {/* Badge "+ Réussir en sciences devient plus simple" */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#00796b] bg-[#e7f7f4] border border-[#009688]/20 shadow-xs">
+                <span className="font-extrabold text-[#009688] text-sm leading-none">+</span>
+                <span>Réussir en sciences devient plus simple</span>
+              </div>
+
+              {/* Titre */}
+              <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-black text-slate-900 leading-[1.1] tracking-tight">
+                Apprenez à <br />
+                votre rythme <br />
+                et réussissez <br />
+                en sciences
+              </h1>
+
+              {/* Description */}
+              <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-xl">
+                Accédez à des matières structurées en chapitres (Mathématiques et Physique-Chimie), de la
+                4ème à la Terminale S. Progressez grâce aux leçons vidéos, résumés PDF, exercices corrigés
+                et quiz pour réussir le BFEM et le Baccalauréat.
+              </p>
+
+              {/* Boutons d'action CTA */}
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                {isLoggedIn ? (
                   <Link
                     to={dashboardPath}
-                    className="inline-block border border-[#f59d0e] bg-[#f59d0e] text-white hover:bg-[#e08b00] font-semibold px-7 py-3 rounded-lg transition"
+                    className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] text-white text-sm font-bold shadow-[0_10px_25px_-4px_rgba(245,158,11,0.35)] transition-all duration-200 hover:scale-[1.02]"
                   >
-                    Accéder à mon espace
+                    <span>Accéder à mon espace</span>
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <a
-                    href="#classes"
-                    className="inline-block border border-[#009688] text-[#009688] hover:bg-[#009688] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
-                  >
-                    Explorer les matières
-                  </a>
-                </div>
-              </>
-            ) : (
-              <>
-                <h1 className="font-black uppercase tracking-tight leading-[1.12] text-slate-900 text-3xl sm:text-4xl lg:text-[42px] mb-5">
-                  APPRENEZ À VOTRE RYTHME ET RÉUSSISSEZ EN SCIENCES
-                </h1>
-                <p className="text-slate-600 text-base leading-relaxed max-w-xl mb-8">
-                  Avec la plateforme d&apos;apprentissage de M. Aliou Sow inspirée du modèle Sama School,
-                  accédez à des matières structurées en chapitres (Mathématiques et Physique-Chimie),
-                  de la 4ème à la Terminale S (4ème, 3ème, 2nde S, 1ère S, Terminale S). Progressez à votre rythme grâce aux leçons vidéos, résumés PDF,
-                  exercices corrigés et quiz pour réussir le BFEM et le Baccalauréat.
-                </p>
-                <div className="flex flex-wrap items-center gap-4">
+                ) : (
                   <Link
-                    to={openRegistration ? '/register' : '/courses'}
-                    className="inline-block border border-[#f59d0e] text-[#f59d0e] hover:bg-[#f59d0e] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
+                    to="/register"
+                    className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] text-white text-sm font-bold shadow-[0_10px_25px_-4px_rgba(245,158,11,0.35)] transition-all duration-200 hover:scale-[1.02]"
                   >
-                    {openRegistration ? 'Inscrivez-vous dès maintenant !' : 'Découvrir nos matières'}
+                    <span>Inscrivez-vous dès maintenant</span>
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <a
-                    href="#classes"
-                    className="inline-block border border-[#009688] text-[#009688] hover:bg-[#009688] hover:text-white font-semibold px-7 py-3 rounded-lg transition"
-                  >
-                    Choisir ma classe
-                  </a>
-                </div>
-              </>
-            )}
-          </div>
+                )}
 
-          <div className="flex justify-center lg:justify-end lg:pr-4">
-            <div className="relative w-[300px] sm:w-[360px] lg:w-[410px] pt-2 flex items-end justify-center">
-              <svg
-                viewBox="0 0 420 390"
-                aria-hidden="true"
-                className="absolute inset-x-0 bottom-0 w-full h-auto pointer-events-none select-none"
-              >
-                <defs>
-                  <linearGradient id="bakeliOrangeGreen" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f59d0e" />
-                    <stop offset="55%" stopColor="#8fa844" />
-                    <stop offset="100%" stopColor="#009688" />
-                  </linearGradient>
-                  <linearGradient id="bakeliGreenTeal" x1="0%" y1="100%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#65a152" />
-                    <stop offset="55%" stopColor="#1b997a" />
-                    <stop offset="100%" stopColor="#009688" />
-                  </linearGradient>
-                  <linearGradient id="bakeliDotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f59d0e" />
-                    <stop offset="100%" stopColor="#009688" />
-                  </linearGradient>
-                </defs>
-
-                <path
-                  d="M72,218 C25,216 14,265 32,298 C48,326 95,332 130,305 L130,220 Z"
-                  fill="#efe8dd"
-                />
-                <path
-                  d="M84,390 C72,300 94,164 148,144 C194,126 238,176 266,262 L272,390 Z"
-                  fill="url(#bakeliOrangeGreen)"
-                />
-                <path
-                  d="M196,390 L214,228 C236,162 292,134 342,162 C388,188 378,314 346,390 Z"
-                  fill="url(#bakeliGreenTeal)"
-                />
-                <circle cx="70" cy="112" r="22" fill="url(#bakeliDotGrad)" />
-                <circle cx="152" cy="70" r="8" fill="url(#bakeliDotGrad)" />
-                <path
-                  d="M342,90 C342,68 378,60 386,78 C392,94 358,110 342,90 Z"
-                  fill="url(#bakeliDotGrad)"
-                />
-                <path
-                  d="M28,312 C28,292 78,288 84,306 C90,322 44,332 28,312 Z"
-                  fill="url(#bakeliDotGrad)"
-                />
-                <circle cx="364" cy="364" r="25" fill="url(#bakeliDotGrad)" />
-              </svg>
-
-              <img
-                src={profPhoto}
-                alt="M. Aliou Sow, professeur de Mathématiques et Physique-Chimie"
-                className="relative z-10 w-[78%] max-h-[370px] sm:max-h-[410px] object-contain object-bottom drop-shadow-[0_10px_18px_rgba(15,23,42,0.06)] select-none"
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* 2. SÉLECTION PAR CLASSE : COLLÈGE (4e & 3e) & LYCÉE (2nde S à Terminale S) — MODÈLE SAMA SCHOOL */}
-      <section id="classes" className="w-full bg-slate-50/70 py-16 scroll-mt-24 border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider mb-2.5">
-                <GraduationCap className="w-3.5 h-3.5 text-emerald-600" />
-                Programme officiel sénégalais
+                <a
+                  href="#classes"
+                  className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl border-2 border-[#009688] bg-white text-[#009688] hover:bg-[#009688] hover:text-white text-sm font-bold transition-all duration-200 shadow-xs hover:scale-[1.02]"
+                >
+                  Choisir ma classe
+                </a>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Explorez les programmes par Classe
-              </h2>
-              <p className="text-slate-600 text-sm sm:text-base mt-1.5 max-w-2xl">
-                Sélectionnez votre classe pour découvrir l&apos;ensemble des matières, chapitres,
-                leçons vidéos et exercices corrigés conformes aux programmes nationaux.
-              </p>
-            </div>
 
-            {/* Sélecteur de cycle Collège / Lycée */}
-            <div className="inline-flex items-center p-1 bg-white border border-slate-200 rounded-2xl shadow-sm self-start md:self-auto shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveCycleTab('tous')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-                  activeCycleTab === 'tous'
-                    ? 'bg-[#009688] text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Toutes les classes
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveCycleTab('college')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-                  activeCycleTab === 'college'
-                    ? 'bg-[#009688] text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Collège (4e & 3e)
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveCycleTab('lycee')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-                  activeCycleTab === 'lycee'
-                    ? 'bg-[#009688] text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Lycée (2nde S à TS)
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-10">
-            {displayedCycles.map((cycle) => (
-              <div key={cycle.id} className="space-y-5">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${cycle.badgeColor}`}>
-                      {cycle.label}
-                    </span>
-                    <span className="text-sm font-semibold text-slate-600">{cycle.subtitle}</span>
+              {/* Preuve sociale : 3 avatars + avis */}
+              <div className="flex items-center gap-3 pt-4">
+                <div className="flex -space-x-2.5 overflow-hidden">
+                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-[#009688] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                    FD
                   </div>
-                  <span className="text-xs font-medium text-slate-400">
-                    {cycle.classes.length} classes
-                  </span>
+                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-[#0284c7] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                    MN
+                  </div>
+                  <div className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-[#d97706] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                    AP
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {cycle.classes.map((cls) => {
-                    const stats = getClassStats(courses, cls);
-                    const isKeyExam = cls.id === '3ème' || cls.name === '3ème' || cls.id === 'TS' || cls.name === 'Terminale S' || cls.name === 'Terminale';
-                    return (
-                      <Link
-                        key={cls.id}
-                        to={`/courses?level=${encodeURIComponent(cls.id)}`}
-                        className="group relative bg-white border border-slate-200 hover:border-[#009688] rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="flex items-start justify-between gap-2 mb-4">
-                            <span className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-100 text-[#00796b] font-black text-lg flex items-center justify-center group-hover:bg-[#009688] group-hover:text-white group-hover:border-[#009688] transition-colors shadow-sm">
-                              {cls.short}
-                            </span>
-                            {isKeyExam && (
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                {(cls.id === '3ème' || cls.name === '3ème') ? 'Examen BFEM' : 'Examen Bac'}
-                              </span>
-                            )}
-                          </div>
-
-                          <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#009688] transition-colors">
-                            Classe de {cls.name}
-                          </h3>
-                          <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
-                            {cls.desc}
-                          </p>
-                        </div>
-
-                        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                          <div className="space-y-0.5">
-                            <div className="font-bold text-slate-900">
-                              {stats.subjectsCount} matière{stats.subjectsCount > 1 ? 's' : ''}
-                            </div>
-                            <div className="text-slate-500">
-                              {stats.totalChapters} chapitre{stats.totalChapters > 1 ? 's' : ''}
-                            </div>
-                          </div>
-                          <span className="inline-flex items-center gap-1 font-bold text-[#009688] group-hover:translate-x-1 transition-transform">
-                            Accéder <ChevronRight className="w-3.5 h-3.5" />
-                          </span>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                <div className="text-xs">
+                  <div className="flex items-center gap-1">
+                    <span className="font-extrabold text-slate-900">4,9/5</span>
+                    <div className="flex text-amber-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-3 h-3 fill-amber-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-slate-500 font-medium">Déjà adopté par 500+ élèves</p>
                 </div>
               </div>
-            ))}
+            </motion.div>
+
+            {/* Colonne droite : Photo en arche exacte de la vidéo + 3 cartes flottantes */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 }}
+              className="lg:col-span-5 relative flex justify-center lg:justify-end pt-4 pb-4"
+            >
+              <div className="relative isolate w-[300px] sm:w-[350px] md:w-[370px]">
+                {/* Anneau courbé vert d'accent en arrière-plan (crescent figma) */}
+                <div className="absolute top-1.5 -right-3 w-full h-full rounded-t-[190px] rounded-b-[34px] bg-[#009688] -z-10 shadow-lg" />
+                <div className="absolute -inset-6 rounded-full bg-[#009688]/15 blur-2xl -z-20 pointer-events-none" />
+
+                {/* Cadre arche avec photo du professeur bien en face et posée */}
+                <div className="relative z-10 w-full aspect-[4/5] rounded-t-[180px] rounded-b-[28px] overflow-hidden bg-gradient-to-b from-[#c46d49] via-[#b6613c] to-[#994a28] shadow-[0_25px_60px_rgba(15,23,42,0.18)] border-4 border-white flex items-end justify-center">
+                  <img
+                    src={profPhotoCutout}
+                    alt="M. Aliou Sow - Professeur de Mathématiques et Physique-Chimie"
+                    className="w-full h-full object-cover object-[center_top] select-none pointer-events-none"
+                  />
+                </div>
+
+                {/* 1. Carte flottante : Cours vidéo (haut gauche) */}
+                <div
+                  style={{ animation: 'float 4s ease-in-out infinite' }}
+                  className="absolute top-10 -left-6 sm:-left-10 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_32px_rgba(15,23,42,0.14)] border border-slate-100 px-4 py-2.5 flex items-center gap-3 z-30"
+                >
+                  <div className="w-8 h-8 rounded-full bg-amber-50 text-[#f59e0b] flex items-center justify-center shrink-0 shadow-xs">
+                    <Play className="w-3.5 h-3.5 fill-[#f59e0b] translate-x-0.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 leading-tight">Cours vidéo</h4>
+                    <p className="text-[10px] text-slate-400">Clairs et progressifs</p>
+                  </div>
+                </div>
+
+                {/* 2. Carte flottante : Quiz corrigés (milieu droite) */}
+                <div
+                  style={{ animation: 'float 4s ease-in-out infinite 1.5s' }}
+                  className="absolute top-1/2 -right-6 sm:-right-8 -translate-y-1/2 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_32px_rgba(15,23,42,0.14)] border border-slate-100 px-4 py-2.5 flex items-center gap-3 z-30"
+                >
+                  <div className="w-8 h-8 rounded-full bg-teal-50 text-[#009688] flex items-center justify-center shrink-0 shadow-xs">
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 leading-tight">Quiz corrigés</h4>
+                    <p className="text-[10px] text-slate-400">Testez vos acquis</p>
+                  </div>
+                </div>
+
+                {/* 3. Carte flottante : Séances en direct (bas gauche) */}
+                <div
+                  style={{ animation: 'float 4s ease-in-out infinite 0.8s' }}
+                  className="absolute bottom-6 -left-6 sm:-left-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_32px_rgba(15,23,42,0.14)] border border-slate-100 px-4 py-2.5 flex items-center gap-3 z-30"
+                >
+                  <span className="relative flex h-3 w-3 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500" />
+                  </span>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 leading-tight">Séances en direct</h4>
+                    <p className="text-[10px] text-slate-400">Avec Aliou Sow</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
+
+          {/* Barre de réassurance inférieure (4 colonnes) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.35 }}
+            className="mt-14 sm:mt-16 bg-white rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.06)] border border-slate-100 p-4 sm:p-6 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-100"
+          >
+            <div className="flex items-center gap-3 pt-2 md:pt-0">
+              <span className="w-10 h-10 rounded-xl bg-teal-50 text-[#009688] flex items-center justify-center shrink-0">
+                <GraduationCap className="w-5 h-5" />
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-slate-800">
+                Programme officiel sénégalais
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2 md:pt-0 md:pl-6">
+              <span className="w-10 h-10 rounded-xl bg-teal-50 text-[#009688] flex items-center justify-center shrink-0">
+                <Award className="w-5 h-5" />
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-slate-800">BFEM &amp; Bac</span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2 md:pt-0 md:pl-6">
+              <span className="w-10 h-10 rounded-xl bg-teal-50 text-[#009688] flex items-center justify-center shrink-0">
+                <Smartphone className="w-5 h-5" />
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-slate-800">Accessible sur mobile</span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2 md:pt-0 md:pl-6">
+              <span className="w-10 h-10 rounded-xl bg-teal-50 text-[#009688] flex items-center justify-center shrink-0">
+                <Play className="w-5 h-5" />
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-slate-800">Séances en direct</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* 3. NOS MATIÈRES TENDANCES */}
-      <section id="trending" className="max-w-7xl mx-auto px-4 sm:px-6 py-14 scroll-mt-24">
-        <div className="flex items-center justify-between gap-4 mb-8">
+      {/* ========================================================================= */}
+      {/* 2. PROGRAMMES PAR CLASSE (Vidéo 00:00 - 00:04) */}
+      {/* ========================================================================= */}
+      <section id="classes" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 scroll-mt-24">
+        {/* En-tête avec onglets de filtrage */}
+        <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Nos Matières Tendances
+            <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-[#e7f7f4] text-[#00796b] mb-3">
+              PROGRAMME OFFICIEL SÉNÉGALAIS
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Explorez les programmes par classe
             </h2>
-            <p className="text-slate-500 text-sm mt-1">
-              Les matières les plus suivies par les élèves de l&apos;académie cette année.
+            <p className="text-slate-500 text-sm sm:text-base mt-2">
+              Un parcours structuré pour chaque niveau, du collège à la Terminale S.
+            </p>
+          </div>
+
+          {/* Onglets segmentés Toutes / Collège / Lycée */}
+          <div className="inline-flex p-1 bg-slate-100 rounded-xl shrink-0 self-start md:self-auto">
+            <button
+              type="button"
+              onClick={() => setActiveCycleTab('toutes')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
+                activeCycleTab === 'toutes'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Toutes les classes
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveCycleTab('college')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
+                activeCycleTab === 'college'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Collège (4e &amp; 3e)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveCycleTab('lycee')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
+                activeCycleTab === 'lycee'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Lycée (2nde S à TS)
+            </button>
+          </div>
+        </Reveal>
+
+        {/* Grille des cartes de classes (Données 100% dynamiques et animation au scroll) */}
+        <div className="space-y-8">
+          {/* Row Collège */}
+          {(activeCycleTab === 'toutes' || activeCycleTab === 'college') && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {collegeClasses.map((item, idx) => {
+                const stats = getClassStats(courses, item.id);
+                // Règle stricte demandée : une classe est disponible UNIQUEMENT si elle a au moins 1 matière
+                const isAvailable = stats.subjectsCount > 0;
+
+                return (
+                  <Reveal key={item.id} delay={idx * 0.08}>
+                    <div
+                      className={`group bg-white rounded-3xl overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.06)] border border-slate-100 flex flex-col h-full transition-all duration-300 ${
+                        isAvailable
+                          ? 'hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(0,150,136,0.14)] cursor-pointer'
+                          : 'opacity-90'
+                      }`}
+                    >
+                      {/* Bannière supérieure : Verte si >= 1 matière, Grisée si 0 matière */}
+                      <div
+                        className={`relative h-44 flex items-center justify-center overflow-hidden transition-colors duration-300 ${
+                          isAvailable ? 'bg-[#009688]' : 'bg-slate-300'
+                        }`}
+                      >
+                        <div className="absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-white/10" />
+                        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10" />
+
+                        {item.examBadge && (
+                          <span className="absolute top-4 right-4 bg-[#f59e0b] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs uppercase tracking-wider">
+                            {item.examBadge}
+                          </span>
+                        )}
+
+                        <div className="w-24 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg text-slate-900 text-2xl font-black group-hover:scale-105 transition-transform duration-300">
+                          {item.short}
+                        </div>
+                      </div>
+
+                      <div className="p-6 sm:p-8 flex flex-col flex-1">
+                        {!isAvailable && (
+                          <span className="inline-block self-start text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+                            BIENTÔT DISPONIBLE
+                          </span>
+                        )}
+
+                        <h3 className={`text-xl font-black text-slate-900 mb-1 transition-colors ${isAvailable ? 'group-hover:text-[#009688]' : ''}`}>
+                          {item.name}
+                        </h3>
+                        <p className="text-slate-500 text-xs sm:text-sm mb-6">{item.desc}</p>
+
+                        {/* Vraies données de l'API : matières, chapitres et leçons */}
+                        <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-400 mb-6 flex-wrap">
+                          <span className="flex items-center gap-1.5">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>{stats.subjectsCount} matière{stats.subjectsCount > 1 ? 's' : ''}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Briefcase className="w-3.5 h-3.5" />
+                            <span>{stats.totalChapters} chapitre{stats.totalChapters > 1 ? 's' : ''}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Play className="w-3.5 h-3.5 text-[#009688]" />
+                            <span>{stats.totalLessons} leçon{stats.totalLessons > 1 ? 's' : ''}</span>
+                          </span>
+                        </div>
+
+                        {/* Bouton d'action selon disponibilité */}
+                        <div className="mt-auto">
+                          {isAvailable ? (
+                            <Link
+                              to={`/courses?level=${encodeURIComponent(item.id)}`}
+                              className="w-full py-3 px-4 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs group-hover:shadow-md cursor-pointer"
+                            >
+                              <span>Accéder au programme</span>
+                              <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                            </Link>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="w-full py-3 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold cursor-not-allowed text-center select-none pointer-events-none transition-none"
+                            >
+                              Bientôt disponible
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Row Lycée */}
+          {(activeCycleTab === 'toutes' || activeCycleTab === 'lycee') && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {lyceeClasses.map((item, idx) => {
+                const stats = getClassStats(courses, item.id);
+                const isAvailable = stats.subjectsCount > 0;
+
+                return (
+                  <Reveal key={item.id} delay={idx * 0.08}>
+                    <div
+                      className={`group bg-white rounded-3xl overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.06)] border border-slate-100 flex flex-col h-full transition-all duration-300 ${
+                        isAvailable
+                          ? 'hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(0,150,136,0.14)] cursor-pointer'
+                          : 'opacity-90'
+                      }`}
+                    >
+                      <div
+                        className={`relative h-44 flex items-center justify-center overflow-hidden transition-colors duration-300 ${
+                          isAvailable ? 'bg-[#009688]' : 'bg-slate-300'
+                        }`}
+                      >
+                        <div className="absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-white/10" />
+                        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10" />
+
+                        {item.examBadge && (
+                          <span className="absolute top-4 right-4 bg-[#f59e0b] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs uppercase tracking-wider">
+                            {item.examBadge}
+                          </span>
+                        )}
+
+                        <div className="w-24 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg text-slate-900 text-2xl font-black group-hover:scale-105 transition-transform duration-300">
+                          {item.short}
+                        </div>
+                      </div>
+
+                      <div className="p-6 sm:p-8 flex flex-col flex-1">
+                        {!isAvailable && (
+                          <span className="inline-block self-start text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+                            BIENTÔT DISPONIBLE
+                          </span>
+                        )}
+
+                        <h3 className={`text-xl font-black text-slate-900 mb-1 transition-colors ${isAvailable ? 'group-hover:text-[#009688]' : ''}`}>
+                          {item.name}
+                        </h3>
+                        <p className="text-slate-500 text-xs sm:text-sm mb-6">{item.desc}</p>
+
+                        <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-400 mb-6 flex-wrap">
+                          <span className="flex items-center gap-1.5">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>{stats.subjectsCount} matière{stats.subjectsCount > 1 ? 's' : ''}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Briefcase className="w-3.5 h-3.5" />
+                            <span>{stats.totalChapters} chapitre{stats.totalChapters > 1 ? 's' : ''}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Play className="w-3.5 h-3.5 text-[#009688]" />
+                            <span>{stats.totalLessons} leçon{stats.totalLessons > 1 ? 's' : ''}</span>
+                          </span>
+                        </div>
+
+                        <div className="mt-auto">
+                          {isAvailable ? (
+                            <Link
+                              to={`/courses?level=${encodeURIComponent(item.id)}`}
+                              className="w-full py-3 px-4 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs group-hover:shadow-md cursor-pointer"
+                            >
+                              <span>Accéder au programme</span>
+                              <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                            </Link>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="w-full py-3 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold cursor-not-allowed text-center select-none pointer-events-none transition-none"
+                            >
+                              Bientôt disponible
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 3. NOS MATIÈRES TENDANCES (Vidéo 00:05 - 00:07) */}
+      {/* ========================================================================= */}
+      <section id="trending" className="py-16 max-w-7xl mx-auto px-4 sm:px-6 scroll-mt-24">
+        <Reveal className="flex items-center justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Nos matières tendances
+            </h2>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1">
+              Les matières les plus suivies par les élèves de l'académie cette année.
             </p>
           </div>
           <Link
             to="/courses"
-            className="text-sm sm:text-base font-semibold text-[#009688] hover:underline shrink-0"
+            className="text-xs sm:text-sm font-bold text-[#009688] hover:underline flex items-center gap-1 shrink-0"
           >
-            Tout afficher
+            <span>Tout afficher</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
-        </div>
+        </Reveal>
 
         {loading ? (
           <CourseSkeletonRow />
-        ) : trendingCourses.length === 0 ? (
-          <div className="border border-dashed border-slate-300 rounded-xl py-14 px-6 text-center">
-            <p className="text-slate-700 font-semibold mb-1">
-              Les premières matières arrivent bientôt.
-            </p>
-            <p className="text-slate-400 text-sm">
-              Revenez très prochainement sur Aliou Sow Academy.
-            </p>
-          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trendingCourses.map((course) => (
-              <CourseCard key={course._id} course={course} />
+            {(trendingCourses.length > 0 ? trendingCourses : courses.slice(0, 4)).map((course, idx) => (
+              <Reveal key={`trending-${course._id}`} delay={idx * 0.08}>
+                <CourseCard course={course} />
+              </Reveal>
             ))}
           </div>
         )}
       </section>
 
-      {/* 4. CHIFFRES CLÉS */}
-      <section ref={statsRef} className="w-full bg-[#f8fafc] py-16">
+      {/* ========================================================================= */}
+      {/* 4. DÉCOUVREZ LES CHIFFRES DES ÉLÈVES (Vidéo 00:08) */}
+      {/* ========================================================================= */}
+      <section ref={statsRef} className="py-20 bg-[#f8fafc]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-slate-900 mb-10">
-            Découvrez les chiffres des élèves ayant suivi nos matières
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard
-              icon={Users}
-              target={platformStats.studentsCount}
-              suffix="+"
-              label="Élèves inscrits"
-              start={statsVisible}
-            />
-            <StatCard
-              icon={BookOpen}
-              target={platformStats.coursesCount}
-              suffix="+"
-              label="Matières & chapitres disponibles"
-              start={statsVisible}
-            />
-            <StatCard
-              icon={Briefcase}
-              target={platformStats.modulesCount || platformStats.coursesCount}
-              label="Programmes scientifiques complets"
-              start={statsVisible}
-            />
+          <Reveal>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-slate-900 mb-12">
+              Découvrez les chiffres des élèves ayant suivi nos matières
+            </h2>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Reveal delay={0}>
+              <StatCard
+                icon={Users}
+                target={platformStats.studentsCount || 494}
+                suffix="+"
+                label="Élèves inscrits"
+                start={statsVisible}
+              />
+            </Reveal>
+            <Reveal delay={0.1}>
+              <StatCard
+                icon={BookOpen}
+                target={platformStats.coursesCount || 30}
+                suffix="+"
+                label="Matières & chapitres"
+                start={statsVisible}
+              />
+            </Reveal>
+            <Reveal delay={0.2}>
+              <StatCard
+                icon={GraduationCap}
+                target={platformStats.modulesCount || 5}
+                label="Programmes scientifiques complets"
+                start={statsVisible}
+              />
+            </Reveal>
           </div>
         </div>
       </section>
 
-      {/* 5. APPRENEZ PARTOUT, MÊME HORS LIGNE */}
-      {settings.features?.enableAppInstall !== false && (
-        <section id="install" className="w-full bg-white py-16 scroll-mt-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="max-w-2xl">
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-                Apprenez partout, même hors ligne
+      {/* ========================================================================= */}
+      {/* 5. APPRENEZ PARTOUT, MÊME HORS LIGNE (Vidéo 00:09 - 00:11) */}
+      {/* ========================================================================= */}
+      {settings?.features?.enableAppInstall !== false && (
+        <section id="install" className="py-20 bg-white border-y border-slate-100 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Colonne gauche : 4 atouts */}
+            <Reveal className="lg:col-span-7 space-y-6">
+              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-[#e7f7f4] text-[#00796b]">
+                VOTRE ACADÉMIE DANS LA POCHE
+              </span>
+
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                Apprenez partout, <br />
+                même hors ligne
               </h2>
-              <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed">
-                Installez Aliou Sow Academy sur votre appareil pour une expérience optimale. Accédez
-                à vos chapitres et exercices rapidement, même sans connexion internet.
+
+              <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-xl">
+                Emportez vos cours avec vous et transformez chaque moment en occasion de progresser.
               </p>
 
-              <div className="mt-8 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
                 {INSTALL_FEATURES.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <div key={item.title} className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#f59d0e] flex items-center justify-center shrink-0">
+                    <div
+                      key={item.title}
+                      className="p-4 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3.5 hover:border-[#009688]/30 hover:shadow-xs transition duration-200"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 text-[#f59e0b] flex items-center justify-center shrink-0 shadow-2xs">
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-900 text-[15px]">{item.title}</h3>
-                        <p className="text-sm text-slate-500 mt-0.5">{item.text}</p>
+                        <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{item.title}</h4>
+                        <p className="text-slate-500 text-xs mt-0.5 leading-snug">{item.text}</p>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {installPrompt && (
+              <div className="pt-2">
                 <button
-                  onClick={handleInstall}
-                  className="mt-8 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold px-6 py-3.5 rounded-xl transition cursor-pointer shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                  type="button"
+                  onClick={() => handleTriggerInstall('general')}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition shadow-sm hover:scale-[1.02] cursor-pointer"
                 >
-                  <Download className="w-5 h-5" />
-                  Installer l&apos;application
+                  <Download className="w-4 h-4" />
+                  <span>Installer l'application sur cet appareil</span>
                 </button>
-              )}
-            </div>
+              </div>
+            </Reveal>
 
-            <hr className="border-slate-100 my-14" />
+            {/* Colonne droite : Mockup téléphone réaliste exactement comme sur la vidéo */}
+            <Reveal delay={0.15} className="lg:col-span-5 flex justify-center">
+              <div className="relative w-64 sm:w-72 aspect-[9/18] bg-slate-900 rounded-[44px] p-3 shadow-2xl ring-1 ring-slate-800">
+                {/* Encoche haut */}
+                <div className="absolute top-5 left-1/2 -translate-x-1/2 w-28 h-5 bg-slate-900 rounded-full z-20" />
 
-            <h3 className="text-xl font-bold text-slate-900 text-center mb-8">
-              Comment installer l&apos;application ?
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {INSTALL_STEPS.map((step) => (
-                <div
-                  key={step.title}
-                  className="bg-slate-50/70 border border-slate-100 rounded-xl p-6 text-center shadow-[0_1px_6px_rgba(15,23,42,0.03)]"
-                >
-                  <div className="text-3xl mb-3">{step.emoji}</div>
-                  <h4 className="font-bold text-slate-900 mb-2">{step.title}</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
+                {/* Écran intérieur */}
+                <div className="w-full h-full bg-[#f8fafc] rounded-[36px] overflow-hidden flex flex-col pt-7 relative border border-slate-200">
+                  {/* Header de l'app */}
+                  <div className="px-4 py-3 bg-white border-b border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-[#009688] flex items-center justify-center text-white text-[10px] font-bold">
+                        AS
+                      </div>
+                      <span className="text-xs font-extrabold text-slate-800">Aliou Sow</span>
+                    </div>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  </div>
+
+                  {/* Corps de l'écran mockup */}
+                  <div className="p-3 space-y-3 flex-1 overflow-hidden text-left">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      REPRISE RAPIDE
+                    </span>
+
+                    {/* Carte active "Continuez à apprendre" */}
+                    <div className="p-3.5 bg-gradient-to-br from-[#009688] to-[#00796b] rounded-2xl text-white shadow-xs">
+                      <div className="text-[10px] font-semibold text-teal-100">Continuez à apprendre</div>
+                      <div className="text-xs font-black mt-1">Fonctions numériques</div>
+                      <div className="text-[9px] text-teal-200 mt-0.5">Terminale S • Maths</div>
+
+                      <div className="mt-3 flex items-center justify-between text-[9px] text-teal-100 font-bold">
+                        <span>Progression</span>
+                        <span>72%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden mt-1">
+                        <div className="w-[72%] h-full bg-[#f59e0b] rounded-full" />
+                      </div>
+                    </div>
+
+                    {/* Mes matières */}
+                    <div className="space-y-2 pt-1">
+                      <span className="text-[10px] font-bold text-slate-700 block">Mes matières</span>
+
+                      <div className="p-2.5 bg-white rounded-xl border border-slate-100 flex items-center justify-between shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xs font-bold">
+                            M
+                          </div>
+                          <div>
+                            <div className="text-[11px] font-bold text-slate-800">Mathématiques</div>
+                            <div className="text-[9px] text-slate-400">12 chapitres</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#009688]">Ouvrir</span>
+                      </div>
+
+                      <div className="p-2.5 bg-white rounded-xl border border-slate-100 flex items-center justify-between shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs font-bold">
+                            PC
+                          </div>
+                          <div>
+                            <div className="text-[11px] font-bold text-slate-800">Physique-Chimie</div>
+                            <div className="text-[9px] text-slate-400">9 chapitres</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#009688]">Ouvrir</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ))}
+
+                {/* Bouton flottant Téléchargement vert en bas à gauche (Cliquable pour installer l'application) */}
+                <button
+                  type="button"
+                  onClick={() => handleTriggerInstall('general')}
+                  title="Télécharger et installer l'application"
+                  aria-label="Télécharger et installer l'application"
+                  style={{ animation: 'float 4s ease-in-out infinite' }}
+                  className="absolute -bottom-3 -left-3 w-12 h-12 rounded-full bg-[#009688] hover:bg-[#00796b] text-white flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer z-30 focus:outline-none focus:ring-4 focus:ring-[#009688]/30"
+                >
+                  <Download className="w-5 h-5 animate-pulse" />
+                </button>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* 3 Étapes d'installation cliquables (Vidéo 00:11) */}
+          <div className="mt-16 pt-12 border-t border-slate-100">
+            <Reveal className="text-center max-w-xl mx-auto mb-10">
+              <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
+                Comment installer l'application ?
+              </h3>
+              <p className="text-slate-500 text-xs sm:text-sm">
+                Ajoutez Aliou Sow Academy à votre écran d'accueil en moins d'une minute.
+              </p>
+            </Reveal>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {INSTALL_STEPS.map((step, idx) => {
+                const Icon = step.icon;
+                const platformKey =
+                  step.number === '01' ? 'chrome' : step.number === '02' ? 'safari' : 'android';
+                return (
+                  <Reveal key={step.number} delay={idx * 0.1}>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerInstall(platformKey)}
+                      className="w-full text-left group bg-[#f8fafc] hover:bg-white rounded-2xl p-6 border border-slate-100 hover:border-[#009688]/40 hover:shadow-lg transition-all duration-300 flex items-start justify-between h-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#009688]/30"
+                    >
+                      <div className="space-y-1">
+                        <div className="w-9 h-9 rounded-xl bg-teal-50 text-[#009688] flex items-center justify-center mb-3 shadow-2xs group-hover:scale-110 group-hover:bg-[#009688] group-hover:text-white transition-all duration-200">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <h4 className="font-bold text-slate-900 text-sm group-hover:text-[#009688] transition-colors flex items-center gap-1.5">
+                          <span>{step.title}</span>
+                          <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#009688]" />
+                        </h4>
+                        <p className="text-slate-500 text-xs leading-relaxed">{step.text}</p>
+                        <span className="inline-block pt-2 text-[11px] font-bold text-[#009688] group-hover:underline">
+                          {platformKey === 'safari' ? 'Voir le guide iOS →' : 'Installer maintenant →'}
+                        </span>
+                      </div>
+
+                      <span className="text-2xl font-black text-slate-300 group-hover:text-[#009688] transition-colors shrink-0">
+                        {step.number}
+                      </span>
+                    </button>
+                  </Reveal>
+                );
+              })}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
       )}
 
-      {/* 6. TROUVER LA MATIÈRE QUI VOUS CORRESPOND */}
-      <section id="catalogue" className="w-full bg-white pb-16 pt-4 scroll-mt-24">
+
+      {/* ========================================================================= */}
+      {/* 6. TROUVER LA MATIÈRE QUI VOUS CORRESPOND (Vidéo 00:12 - 00:15) */}
+      {/* ========================================================================= */}
+      <section id="catalogue" className="py-20 bg-white border-b border-slate-100 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Trouver la matière qui vous correspond
-          </h2>
-          <p className="text-slate-600 mt-2 mb-7">
-            Choisissez la matière qui vous passionne et adaptez le niveau d&apos;étude selon vos
-            objectifs pour avancer à votre rythme.
-          </p>
+          <Reveal className="text-center max-w-2xl mx-auto mb-10">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Trouver la matière <br className="hidden sm:inline" />
+              qui vous correspond
+            </h2>
+            <p className="text-slate-500 text-sm sm:text-base mt-2">
+              Filtrez les cours selon votre niveau et vos objectifs.
+            </p>
+          </Reveal>
 
-          <div className="flex flex-wrap items-center gap-3 mb-8">
-            <LevelSelect
-              value={activeLevel}
-              onChange={setActiveLevel}
-              options={[{ value: 'Tous', label: 'Toutes les classes' }, ...LEVELS]}
-              size="md"
-            />
-
-            {['Tous', ...SUBJECTS].map((subject) => (
-              <button
-                key={subject}
-                onClick={() => setActiveSubject(subject)}
-                className={`h-10 px-4 rounded-full border text-sm font-medium transition cursor-pointer ${
-                  activeSubject === subject
-                    ? 'bg-[#009688] border-[#009688] text-white'
-                    : 'bg-white border-slate-300 text-slate-700 hover:border-[#009688]'
-                }`}
+          {/* Barre des pilules de filtrage */}
+          <Reveal delay={0.08} className="flex flex-wrap items-center justify-center gap-2.5 mb-12">
+            {/* Sélecteur de classe */}
+            <div className="relative">
+              <select
+                value={activeClassFilter}
+                onChange={(e) => setActiveClassFilter(e.target.value)}
+                className="appearance-none bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold pl-4 pr-8 py-2 rounded-full cursor-pointer transition focus:outline-none"
               >
-                {subject === 'Tous' ? 'Toutes les matières' : subject}
-              </button>
-            ))}
+                <option value="Toutes les classes">Toutes les classes</option>
+                {(settings?.levels?.length
+                  ? settings.levels
+                  : [
+                      { value: '4ème', label: '4ème' },
+                      { value: '3ème', label: '3ème' },
+                      { value: '2nde S', label: '2nde S' },
+                      { value: '1ère S', label: '1ère S' },
+                      { value: 'TS', label: 'Terminale S' },
+                    ]
+                ).map((lvl) => (
+                  <option key={lvl.value} value={lvl.value}>
+                    {lvl.label || lvl.value}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
 
+            {/* Pilules matières dynamiques */}
+            {[
+              'Toutes les matières',
+              ...(settings?.subjects?.length
+                ? settings.subjects
+                : ['Mathématiques', 'Physique-Chimie']),
+            ].map((sub) => {
+              const active = activeSubject === sub;
+              return (
+                <button
+                  key={sub}
+                  type="button"
+                  onClick={() => setActiveSubject(sub)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
+                    active
+                      ? 'bg-[#009688] text-white shadow-xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  {sub}
+                </button>
+              );
+            })}
+
+            {/* Pilule matières gratuites */}
             <button
-              onClick={() => setOnlyFree((v) => !v)}
-              className={`h-10 px-4 rounded-full border text-sm font-medium transition cursor-pointer ${
+              type="button"
+              onClick={() => setOnlyFree((prev) => !prev)}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${
                 onlyFree
-                  ? 'bg-[#f59d0e] border-[#f59d0e] text-white'
-                  : 'bg-white border-slate-300 text-slate-700 hover:border-[#f59d0e]'
+                  ? 'bg-[#009688] text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
               }`}
             >
               Matières gratuites
             </button>
+          </Reveal>
 
-            {canToggleCourses ? (
-              <button
-                onClick={() => setShowAllCourses((v) => !v)}
-                className="ml-auto text-sm sm:text-base font-semibold text-[#009688] hover:underline cursor-pointer"
-              >
-                {showAllCourses ? 'Réduire' : 'Tout afficher'}
-              </button>
-            ) : (
-              <Link
-                to="/courses"
-                className="ml-auto text-sm sm:text-base font-semibold text-[#009688] hover:underline"
-              >
-                Tout afficher
-              </Link>
-            )}
-          </div>
-
+          {/* Grille des cartes de cours */}
           {loading ? (
             <CourseSkeletonRow />
-          ) : courses.length === 0 ? (
-            <div className="border border-dashed border-slate-300 rounded-xl py-16 px-6 text-center">
-              <p className="text-slate-700 font-semibold mb-1">
-                Les premières matières arrivent bientôt.
-              </p>
-              <p className="text-slate-400 text-sm">
-                Revenez très prochainement sur Aliou Sow Academy.
-              </p>
-            </div>
           ) : filteredCourses.length === 0 ? (
-            <div className="border border-slate-200 rounded-xl py-14 px-6 text-center">
-              <p className="text-slate-700 font-semibold mb-1">
-                Aucune matière ne correspond à cette sélection.
+            <div className="border border-dashed border-slate-300 rounded-2xl py-14 px-6 text-center max-w-lg mx-auto">
+              <p className="text-slate-800 font-bold mb-1">Aucune matière ne correspond à ce filtre.</p>
+              <p className="text-slate-500 text-xs mb-4">
+                Essayez de réinitialiser vos critères de sélection.
               </p>
               <button
-                onClick={resetFilters}
-                className="mt-3 text-[#009688] hover:underline text-sm font-semibold cursor-pointer"
+                type="button"
+                onClick={() => {
+                  setActiveSubject('Toutes les matières');
+                  setActiveClassFilter('Toutes les classes');
+                  setOnlyFree(false);
+                }}
+                className="px-4 py-2 bg-[#009688] text-white text-xs font-bold rounded-lg hover:bg-[#00796b]"
               >
                 Réinitialiser les filtres
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {visibleCourses.map((course) => (
-                <CourseCard key={course._id} course={course} />
+              {visibleCourses.map((course, idx) => (
+                <Reveal key={course._id} delay={(idx % 4) * 0.08}>
+                  <CourseCard course={course} />
+                </Reveal>
               ))}
+            </div>
+          )}
+
+          {/* Bouton afficher plus */}
+          {filteredCourses.length > COURSES_PREVIEW_COUNT && (
+            <div className="text-center mt-12">
+              <button
+                type="button"
+                onClick={() => setShowAllCourses((prev) => !prev)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-slate-200 hover:border-[#009688] text-slate-700 hover:text-[#009688] font-bold text-xs transition cursor-pointer"
+              >
+                <span>{showAllCourses ? 'Voir moins de matières' : 'Voir toutes les matières'}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAllCourses ? 'rotate-180' : ''}`} />
+              </button>
             </div>
           )}
         </div>
       </section>
 
-      {/* 7. CE QUE DISENT NOS ÉLÈVES */}
-      <section id="testimonials" className="w-full bg-[#f8fafc] py-16 scroll-mt-24">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-8">
-            Ce que disent nos élèves
-          </h2>
+      {/* ========================================================================= */}
+      {/* 7. CE QUE DISENT NOS ÉLÈVES (Vidéo 00:16 - 00:17 & 00:29) */}
+      {/* ========================================================================= */}
+      {settings?.features?.enableReviews !== false && (
+        <section className="py-20 bg-[#f8fafc]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <Reveal className="flex items-center justify-between mb-8">
+            <div>
+              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-[#e7f7f4] text-[#00796b] mb-2">
+                ILS NOUS FONT CONFIANCE
+              </span>
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                Ce que disent nos élèves
+              </h2>
+            </div>
 
-          <div className="space-y-4">
-            {orderedTestimonials.map((t) => (
-              <figure
-                key={t.name}
-                className="bg-white border border-slate-100 rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.04)] p-6 sm:p-8"
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={prevTestimonial}
+                aria-label="Témoignage précédent"
+                className="w-10 h-10 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center transition shadow-xs cursor-pointer hover:border-[#009688]"
               >
-                <Quote className="w-7 h-7 text-slate-900 fill-slate-900 mb-3 rotate-180" />
-                <blockquote className="text-slate-600 text-[15px] leading-relaxed">
-                  {t.quote}
-                </blockquote>
-                <figcaption className="flex items-center gap-4 mt-5">
-                  <span className="w-12 h-12 rounded-full bg-[#009688] text-white font-bold text-sm flex items-center justify-center shrink-0">
-                    {getInitials(t.name)}
-                  </span>
-                  <span>
-                    <span className="block text-sm font-extrabold uppercase text-slate-900">
-                      {t.name}
-                    </span>
-                    <span className="block text-xs text-slate-500 mt-0.5">{t.level}</span>
-                  </span>
-                </figcaption>
-              </figure>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={nextTestimonial}
+                aria-label="Témoignage suivant"
+                className="w-10 h-10 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center transition shadow-xs cursor-pointer hover:border-[#009688]"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </Reveal>
+
+          {/* Carte de témoignage avec animation Reveal */}
+          <Reveal delay={0.1}>
+            <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-[0_4px_30px_rgba(15,23,42,0.06)] border border-slate-100 relative min-h-[220px] flex flex-col justify-between transition-all duration-300">
+              <span className="text-5xl font-serif text-[#009688] leading-none mb-4 select-none opacity-80">
+                “
+              </span>
+
+              <p className="text-slate-700 text-base sm:text-lg font-medium leading-relaxed mb-8 transition-opacity duration-200">
+                "{dynamicTestimonials[activeTestimonial].quote}"
+              </p>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#009688] text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                  {dynamicTestimonials[activeTestimonial].initials}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">
+                    {dynamicTestimonials[activeTestimonial].name}
+                  </h4>
+                  <p className="text-xs text-slate-400">{dynamicTestimonials[activeTestimonial].level}</p>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Indicateurs de pagination dots animés */}
+          <div className="flex items-center justify-center gap-2 mt-8">
+            {dynamicTestimonials.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setActiveTestimonial(idx)}
+                aria-label={`Aller au témoignage ${idx + 1}`}
+                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  activeTestimonial === idx ? 'w-8 bg-[#009688]' : 'w-2 bg-slate-300 hover:bg-slate-400'
+                }`}
+              />
             ))}
           </div>
-
-          <div className="flex items-center gap-2 mt-5">
-            <button
-              type="button"
-              onClick={prevTestimonial}
-              aria-label="Témoignage précédent"
-              className="w-7 h-7 bg-slate-900 text-white flex items-center justify-center rounded hover:bg-[#009688] transition cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={nextTestimonial}
-              aria-label="Témoignage suivant"
-              className="w-7 h-7 bg-white border border-slate-200 text-slate-600 flex items-center justify-center rounded hover:border-[#009688] hover:text-[#009688] transition cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </section>
-
-      {/* 8. DÉVELOPPER DES COMPÉTENCES */}
-      <section className="w-full bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight mb-3">
-              Développer des compétences avec Aliou Sow Academy
-            </h2>
-            <p className="text-slate-600 text-base leading-relaxed mb-7 max-w-xl">
-              Boostez vos compétences et révélez votre potentiel avec Aliou Sow Academy, votre allié
-              pour un apprentissage scientifique structuré et accessible !
-            </p>
-
-            <ul className="space-y-3.5 mb-8">
-              {STEPS.map((step) => (
-                <li key={step} className="flex items-center gap-3 font-medium text-slate-800">
-                  <Check className="w-5 h-5 text-[#009688] shrink-0" />
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              to="/courses"
-              className="inline-flex items-center h-12 px-7 rounded-lg bg-[#009688] hover:bg-[#00796b] text-white font-semibold transition"
-            >
-              Explorer nos matières
-            </Link>
-          </div>
-
-          <div className="flex justify-center">
-            <svg
-              viewBox="0 0 360 280"
-              className="w-full max-w-[340px] h-auto"
-              role="img"
-              aria-label="Illustration étudiant en apprentissage"
-            >
-              <circle cx="185" cy="145" r="108" fill="#eef4ff" />
-              <rect x="115" y="42" width="46" height="58" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="2" />
-              <text x="123" y="62" fontSize="14" fontWeight="bold" fill="#4f46e5">A+</text>
-              <line x1="123" y1="73" x2="152" y2="73" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="123" y1="82" x2="148" y2="82" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="123" y1="91" x2="144" y2="91" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="72" cy="148" r="20" fill="#ffffff" stroke="#6366f1" strokeWidth="4" strokeDasharray="7 5" />
-              <circle cx="72" cy="148" r="7" fill="#a5b4fc" />
-              <circle cx="102" cy="122" r="12" fill="#ffffff" stroke="#6366f1" strokeWidth="3" strokeDasharray="5 4" />
-              <circle cx="102" cy="122" r="4" fill="#a5b4fc" />
-              <polygon points="240,58 278,72 240,86 202,72" fill="#4f6ef7" />
-              <path d="M216,78 L216,96 C216,96 240,104 264,96 L264,78" fill="#6366f1" />
-              <line x1="274" y1="74" x2="274" y2="100" stroke="#f59d0e" strokeWidth="2.5" />
-              <circle cx="274" cy="102" r="3" fill="#f59d0e" />
-              <circle cx="290" cy="142" r="16" fill="#dbeafe" stroke="#60a5fa" strokeWidth="2" />
-              <rect x="284" y="157" width="12" height="7" rx="2" fill="#64748b" />
-              <line x1="290" y1="118" x2="290" y2="111" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
-              <line x1="312" y1="142" x2="319" y2="142" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
-              <line x1="306" y1="125" x2="311" y2="120" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="185" cy="134" r="28" fill="#0f172a" />
-              <circle cx="185" cy="139" r="17" fill="#f8cbb8" />
-              <path d="M168,136 C172,126 198,126 202,136 C198,123 172,123 168,136 Z" fill="#0f172a" />
-              <path d="M126,232 C132,190 156,174 185,174 C214,174 238,190 244,232 Z" fill="#c7d2fe" />
-              <polygon points="145,196 185,204 185,244 145,235" fill="#4f6ef7" />
-              <polygon points="225,196 185,204 185,244 225,235" fill="#6366f1" />
-              <circle cx="152" cy="222" r="9" fill="#f8cbb8" />
-              <circle cx="218" cy="222" r="9" fill="#f8cbb8" />
-            </svg>
-          </div>
-        </div>
-      </section>
-
-      {activeExtraLinks.length > 0 && (
-        <section className="w-full bg-[#f8fafc] py-14 border-t border-slate-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="mb-8">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                Ressources &amp; Services complémentaires
-              </h2>
-              <p className="text-slate-600 text-sm sm:text-base mt-1">
-                Outils, documents et activités ajoutés par l&apos;équipe pédagogique.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeExtraLinks.map((item, idx) => (
-                <a
-                  key={`${item.title}-${idx}`}
-                  href={item.url}
-                  target={item.url.startsWith('http') ? '_blank' : undefined}
-                  rel={item.url.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="bg-white border border-slate-200 hover:border-[#009688] rounded-xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-4"
-                >
-                  <div>
-                    {item.badge && (
-                      <span className="inline-block text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-[#f59d0e] px-2.5 py-1 rounded-full mb-3">
-                        {item.badge}
-                      </span>
-                    )}
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>
-                    {item.description && (
-                      <p className="text-sm text-slate-600 leading-relaxed">{item.description}</p>
-                    )}
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009688]">
-                    Accéder <ExternalLink className="w-4 h-4" />
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
       )}
 
-      {/* 9. BANDEAU D'APPEL À L'ACTION */}
-      <section className="relative w-full bg-[#009688] text-white overflow-hidden">
-        <GraduationCap className="hidden md:block absolute -right-8 top-6 w-56 h-56 text-white/10 -rotate-12 pointer-events-none" />
-        <Award className="hidden md:block absolute -left-8 bottom-4 w-48 h-48 text-white/10 rotate-12 pointer-events-none" />
 
-        <div className="relative max-w-4xl mx-auto px-6 py-16 text-center">
-          <h2 className="text-2xl sm:text-4xl font-extrabold mb-4">
-            Commençons avec Aliou Sow Academy
-          </h2>
-          <p className="text-white/90 text-sm sm:text-base max-w-2xl mx-auto mb-8 leading-relaxed">
-            Reconnue pour ses matières structurées en Mathématiques et Physique-Chimie qui transforment
-            les élèves ambitieux en lauréats au BFEM et au Baccalauréat.
-          </p>
-          <Link
-            to="/courses"
-            className="inline-flex items-center h-11 px-8 rounded-lg border border-white text-white hover:bg-white hover:text-[#009688] text-sm font-semibold transition"
-          >
-            Découvrez nos matières
-          </Link>
-        </div>
-      </section>
-
-      {/* 10. QUESTIONS FRÉQUENTES */}
-      <section id="faq" className="w-full bg-[#f8fafc] py-16 scroll-mt-24">
+      {/* ========================================================================= */}
+      {/* 8. DÉVELOPPER DES COMPÉTENCES AVEC ALIOU SOW ACADEMY (Vidéo 00:18 - 00:19) */}
+      {/* ========================================================================= */}
+      <section className="py-20 bg-white border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-8">
-            Questions fréquentes
-          </h2>
-          <div className="divide-y divide-slate-200 border-b border-slate-200">
-            {dynamicFaqs.map((faq, i) => (
-              <div key={faq.question}>
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
-                  className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group"
-                >
-                  <span className="text-base sm:text-lg text-slate-700 group-hover:text-slate-900 transition-colors">
-                    {faq.question}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-slate-500 shrink-0 transition-transform duration-200 ${
-                      openFaq === i ? 'rotate-180 text-[#009688]' : ''
-                    }`}
-                  />
-                </button>
-                {openFaq === i && (
-                  <p className="text-slate-500 text-sm sm:text-base pb-5 pr-8 leading-relaxed">
-                    {faq.answer}
-                  </p>
-                )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Colonne gauche : Étapes 1 à 4 */}
+            <Reveal className="lg:col-span-7 space-y-6">
+              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-[#e7f7f4] text-[#00796b]">
+                UN PARCOURS SIMPLE ET GUIDÉ
+              </span>
+
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                Développer des compétences avec <br className="hidden sm:inline" />
+                Aliou Sow Academy
+              </h2>
+
+              <div className="space-y-3 pt-2">
+                {STEPS.map((step, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-[#f8fafc] border border-slate-100 hover:bg-white hover:border-[#009688]/30 hover:shadow-xs transition duration-200"
+                  >
+                    <span className="text-xs font-bold text-slate-400 w-4">{idx + 1}</span>
+                    <span className="w-6 h-6 rounded-full bg-[#009688] text-white flex items-center justify-center shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-slate-800">{step}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+
+              <div className="pt-4">
+                <Link
+                  to="/courses"
+                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] text-white text-xs sm:text-sm font-bold shadow-[0_10px_25px_-4px_rgba(245,158,11,0.35)] transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <span>Explorer nos matières</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                </Link>
+              </div>
+            </Reveal>
+
+            {/* Colonne droite : Illustration apprenant */}
+            <Reveal delay={0.15} className="lg:col-span-5 flex justify-center">
+              <div className="relative w-72 sm:w-80 aspect-square flex items-center justify-center">
+                {/* Cercle vert pastel d'arrière-plan */}
+                <div className="absolute inset-4 rounded-full bg-[#e7f7f4] -z-10" />
+
+                {/* Badge flottant diplôme (gauche) */}
+                <div
+                  style={{ animation: 'float 4s ease-in-out infinite' }}
+                  className="absolute top-1/3 left-2 w-11 h-11 rounded-full bg-[#009688] text-white flex items-center justify-center shadow-md"
+                >
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+
+                {/* Badge flottant note A+ (droite) */}
+                <div
+                  style={{ animation: 'float 4s ease-in-out infinite 1s' }}
+                  className="absolute top-16 right-4 px-3 py-1.5 rounded-xl bg-[#f59e0b] text-white font-black text-xs shadow-md"
+                >
+                  A+
+                </div>
+
+                {/* Illustration élève lisant un livre */}
+                <div className="relative flex flex-col items-center">
+                  <div className="w-20 h-24 rounded-full bg-[#8d5b4c] mb-1 shadow-inner" />
+                  <div className="w-36 h-24 rounded-t-full bg-[#009688] relative flex justify-center">
+                    <div className="w-10 h-4 bg-white/20 rounded-b-md" />
+                  </div>
+                  <div className="w-44 h-16 bg-white border-2 border-amber-300 rounded-lg shadow-md flex divide-x-2 divide-amber-200 -mt-6 z-10">
+                    <div className="flex-1 p-2 space-y-1">
+                      <div className="h-1 bg-slate-200 rounded w-full" />
+                      <div className="h-1 bg-slate-200 rounded w-3/4" />
+                    </div>
+                    <div className="flex-1 p-2 space-y-1">
+                      <div className="h-1 bg-slate-200 rounded w-full" />
+                      <div className="h-1 bg-slate-200 rounded w-2/3" />
+                    </div>
+                  </div>
+                  <div className="w-64 h-4 bg-[#c28e57] rounded-full mt-2 shadow-sm" />
+                </div>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* ========================================================================= */}
+      {/* 8.5 SERVICES & RESSOURCES COMPLÉMENTAIRES (DYNAMIQUES SANS CODE) */}
+      {/* ========================================================================= */}
+      {Array.isArray(settings?.extraLinks) &&
+        settings.extraLinks.filter((item) => item && item.active !== false).length > 0 && (
+          <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6">
+            <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+              <div>
+                <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-teal-50 text-[#00796b] mb-2">
+                  SERVICES &amp; RESSOURCES
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  Services &amp; Ressources recommandés
+                </h2>
+                <p className="text-slate-500 text-xs sm:text-sm mt-1">
+                  Accédez aux outils complémentaires, annales et groupes d'entraide proposés par M. Aliou Sow.
+                </p>
+              </div>
+            </Reveal>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {settings.extraLinks
+                .filter((item) => item && item.active !== false)
+                .map((link, idx) => {
+                  const isExternal =
+                    link.url?.startsWith('http://') || link.url?.startsWith('https://');
+                  return (
+                    <motion.div
+                      key={idx}
+                      whileHover={{ y: -4 }}
+                      className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md hover:border-[#009688]/40 transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider bg-[#009688]/10 text-[#00796b] px-2.5 py-1 rounded-full">
+                            {link.badge || 'Nouveau'}
+                          </span>
+                          {isExternal ? (
+                            <ExternalLink className="w-4 h-4 text-slate-400" />
+                          ) : (
+                            <ArrowRight className="w-4 h-4 text-slate-400" />
+                          )}
+                        </div>
+                        <h3 className="text-base font-bold text-slate-900">{link.title}</h3>
+                        {link.description && (
+                          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                            {link.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="pt-5 mt-4 border-t border-slate-100">
+                        {isExternal ? (
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#009688] hover:text-[#00796b]"
+                          >
+                            <span>Accéder à la ressource</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        ) : (
+                          <Link
+                            to={link.url}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#009688] hover:text-[#00796b]"
+                          >
+                            <span>Consulter</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+            </div>
+          </section>
+        )}
+
+      {/* 9. BANDEAU CTA VERT (Vidéo 00:20) */}
+      {/* ========================================================================= */}
+      <section className="py-14 max-w-7xl mx-auto px-4 sm:px-6">
+        <Reveal>
+          <div className="relative rounded-3xl bg-gradient-to-r from-[#009688] to-[#00796b] p-8 sm:p-14 text-white overflow-hidden shadow-[0_20px_50px_rgba(0,150,136,0.22)]">
+            <div className="absolute right-10 -bottom-10 opacity-10 pointer-events-none">
+              <GraduationCap className="w-72 h-72 text-white" />
+            </div>
+
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+              <div className="max-w-xl space-y-2">
+                <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-snug">
+                  Commençons avec <br className="hidden sm:inline" />
+                  Aliou Sow Academy
+                </h2>
+                <p className="text-teal-100 text-xs sm:text-sm">
+                  Votre réussite scientifique commence aujourd'hui. Apprenez mieux, progressez avec méthode.
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <Link
+                  to="/courses"
+                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-900 text-xs sm:text-sm font-bold shadow-md transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <span>Découvrez nos matières</span>
+                  <ArrowRight className="w-4 h-4 text-[#009688] group-hover:translate-x-1.5 transition-transform" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 10. QUESTIONS FRÉQUENTES / FAQ (Vidéo 00:21 - 00:26) */}
+      {/* ========================================================================= */}
+      <section id="faq" className="py-20 bg-white border-t border-slate-100 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            {/* Colonne gauche : Titre & boîte d'aide */}
+            <Reveal className="lg:col-span-5 space-y-6">
+              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-[#e7f7f4] text-[#00796b]">
+                BESOIN D'AIDE ?
+              </span>
+
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Questions <br />
+                fréquentes
+              </h2>
+
+              <p className="text-slate-500 text-sm leading-relaxed max-w-sm">
+                Retrouvez les réponses aux questions les plus posées par nos élèves et leurs parents.
+              </p>
+
+              {/* Boîte d'assistance contact */}
+              <div className="p-6 rounded-2xl bg-[#e7f7f4]/60 border border-[#009688]/20 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#009688] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">Une autre question ?</h4>
+                  <p className="text-xs text-slate-600 mt-0.5">Notre équipe vous répond rapidement.</p>
+                  <a
+                    href="mailto:sowaliou2504@gmail.com"
+                    onClick={() => {
+                      window.open(
+                        'https://mail.google.com/mail/?view=cm&fs=1&to=sowaliou2504@gmail.com',
+                        '_blank',
+                        'noopener,noreferrer'
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#009688] hover:underline mt-2.5 cursor-pointer"
+                  >
+                    <span>Nous contacter</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Colonne droite : Accordéon FAQ interactif */}
+            <div className="lg:col-span-7 space-y-3.5">
+              {FAQS.map((faq, index) => {
+                const isOpen = openFaq === index;
+                return (
+                  <Reveal key={index} delay={index * 0.06}>
+                    <div className="border border-slate-100 rounded-2xl bg-[#f8fafc] overflow-hidden transition-all duration-300">
+                      <button
+                        type="button"
+                        onClick={() => setOpenFaq(isOpen ? -1 : index)}
+                        className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-slate-900 text-sm hover:text-[#009688] transition cursor-pointer"
+                      >
+                        <span>{faq.question}</span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-300 ${
+                            isOpen ? 'rotate-180 text-[#009688]' : ''
+                          }`}
+                        />
+                      </button>
+
+                      {isOpen && (
+                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100/60 pt-3">
+                          {faq.answer}
+                        </div>
+                      )}
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* MODALE INTERACTIVE D'INSTALLATION DE L'APPLICATION */}
+      {/* ========================================================================= */}
+      {installModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          onClick={() => setInstallModal(null)}
+        >
+          <div
+            className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Bouton fermer */}
+            <button
+              type="button"
+              onClick={() => setInstallModal(null)}
+              aria-label="Fermer"
+              className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* En-tête */}
+            <div className="flex items-center gap-3.5 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-[#009688] text-white flex items-center justify-center shadow-md shrink-0">
+                <Download className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-snug">
+                  Installer l'application
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Aliou Sow Academy sur votre écran d'accueil
+                </p>
+              </div>
+            </div>
+
+            {/* Onglets des plateformes */}
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl mb-6 text-xs font-bold text-slate-600">
+              <button
+                type="button"
+                onClick={() => setInstallModal('chrome')}
+                className={`py-2 px-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                  installModal === 'chrome' || installModal === 'general'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'hover:text-slate-900'
+                }`}
+              >
+                <Monitor className="w-3.5 h-3.5 text-[#009688]" />
+                <span className="truncate">Chrome / PC</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setInstallModal('safari')}
+                className={`py-2 px-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                  installModal === 'safari'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'hover:text-slate-900'
+                }`}
+              >
+                <Share2 className="w-3.5 h-3.5 text-blue-500" />
+                <span className="truncate">iPhone / iPad</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setInstallModal('android')}
+                className={`py-2 px-2 rounded-lg transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                  installModal === 'android'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'hover:text-slate-900'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="truncate">Android</span>
+              </button>
+            </div>
+
+            {/* Contenu spécifique par plateforme */}
+            {(installModal === 'chrome' || installModal === 'general') && (
+              <div className="space-y-3.5 text-xs sm:text-sm text-slate-600">
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-[#009688] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </span>
+                  <div>
+                    <span className="font-bold text-slate-800">Dans la barre d'adresse</span> (en haut à droite), repérez l'icône d'installation <strong>⊕</strong> ou cliquez sur le menu <strong>⋮</strong> (trois points).
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-[#009688] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    2
+                  </span>
+                  <div>
+                    Cliquez sur <strong>« Installer Aliou Sow Academy »</strong>.
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-[#009688] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    3
+                  </span>
+                  <div>
+                    L'application s'ouvre directement comme une vraie application de bureau, accessible sans navigateur !
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {installModal === 'safari' && (
+              <div className="space-y-3.5 text-xs sm:text-sm text-slate-600">
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-blue-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </span>
+                  <div>
+                    Ouvrez le site dans le navigateur <strong>Safari</strong> sur votre iPhone ou iPad.
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-blue-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    2
+                  </span>
+                  <div>
+                    En bas de l'écran, appuyez sur le bouton <strong>Partager</strong> (le carré avec la flèche vers le haut ⎋).
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-blue-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    3
+                  </span>
+                  <div>
+                    Faites défiler vers le bas et sélectionnez <strong>« Sur l'écran d'accueil »</strong> (icône ➕).
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-blue-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    4
+                  </span>
+                  <div>
+                    Appuyez sur <strong>« Ajouter »</strong> en haut à droite. L'application est maintenant sur votre écran d'accueil !
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {installModal === 'android' && (
+              <div className="space-y-3.5 text-xs sm:text-sm text-slate-600">
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </span>
+                  <div>
+                    Dans Chrome sur votre smartphone Android, appuyez sur le menu <strong>⋮</strong> (trois points en haut à droite).
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    2
+                  </span>
+                  <div>
+                    Appuyez sur <strong>« Installer l'application »</strong> ou <strong>« Ajouter à l'écran d'accueil »</strong>.
+                  </div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    3
+                  </span>
+                  <div>
+                    Validez en appuyant sur <strong>« Installer »</strong>. L'application apparaîtra avec vos autres applications !
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Boutons d'action */}
+            <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-3">
+              {installPrompt && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    installPrompt.prompt();
+                    setInstallModal(null);
+                  }}
+                  className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Installer directement</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setInstallModal(null)}
+                className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition cursor-pointer text-center"
+              >
+                J'ai compris
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

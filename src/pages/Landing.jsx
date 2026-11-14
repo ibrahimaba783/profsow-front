@@ -80,7 +80,7 @@ const INSTALL_STEPS = [
     number: '02',
     icon: Share2,
     title: 'Safari (iOS)',
-    text: 'Partager > Sur l\'écran d\'accueil',
+    text: "Menu adresse > Partager > Sur l'écran d'accueil",
   },
   {
     number: '03',
@@ -236,9 +236,9 @@ const Landing = () => {
   const [platformStats, setPlatformStats] = useState(() => {
     try {
       const cached = localStorage.getItem('profsow_cached_stats');
-      return cached ? JSON.parse(cached) : { studentsCount: 494, coursesCount: 30, modulesCount: 5 };
+      return cached ? JSON.parse(cached) : { studentsCount: 0, coursesCount: 0, modulesCount: 0 };
     } catch {
-      return { studentsCount: 494, coursesCount: 30, modulesCount: 5 };
+      return { studentsCount: 0, coursesCount: 0, modulesCount: 0 };
     }
   });
 
@@ -310,13 +310,15 @@ const Landing = () => {
       try {
         const data = await api('/stats');
         if (data && typeof data === 'object') {
-          setPlatformStats((prev) => ({
-            ...prev,
-            ...data,
-            studentsCount: data.studentsCount || 494,
-            coursesCount: data.coursesCount || 30,
-            modulesCount: data.modulesCount || 5,
-          }));
+          const fresh = {
+            studentsCount: typeof data.studentsCount === 'number' ? data.studentsCount : 0,
+            coursesCount: typeof data.coursesCount === 'number' ? data.coursesCount : 0,
+            modulesCount: typeof data.modulesCount === 'number' ? data.modulesCount : 0,
+          };
+          setPlatformStats(fresh);
+          try {
+            localStorage.setItem('profsow_cached_stats', JSON.stringify(fresh));
+          } catch {}
         }
       } catch (err) {
         console.error('Erreur stats:', err);
@@ -962,8 +964,8 @@ const Landing = () => {
             <Reveal delay={0}>
               <StatCard
                 icon={Users}
-                target={platformStats.studentsCount || 494}
-                suffix="+"
+                target={platformStats.studentsCount ?? 0}
+                suffix={platformStats.studentsCount > 0 ? "+" : ""}
                 label="Élèves inscrits"
                 start={statsVisible}
               />
@@ -971,8 +973,8 @@ const Landing = () => {
             <Reveal delay={0.1}>
               <StatCard
                 icon={BookOpen}
-                target={platformStats.coursesCount || 30}
-                suffix="+"
+                target={platformStats.coursesCount ?? 0}
+                suffix={platformStats.coursesCount > 0 ? "+" : ""}
                 label="Matières & chapitres"
                 start={statsVisible}
               />
@@ -980,7 +982,8 @@ const Landing = () => {
             <Reveal delay={0.2}>
               <StatCard
                 icon={GraduationCap}
-                target={platformStats.modulesCount || 5}
+                target={platformStats.modulesCount ?? 0}
+                suffix={platformStats.modulesCount > 0 ? "+" : ""}
                 label="Programmes scientifiques complets"
                 start={statsVisible}
               />
@@ -1797,7 +1800,7 @@ const Landing = () => {
                     2
                   </span>
                   <div>
-                    En bas de l'écran, appuyez sur le bouton <strong>Partager</strong> (le carré avec la flèche vers le haut ⎋).
+                    Appuyez sur le menu de la barre d’adresse, puis sur <strong>Partager</strong> (ou directement sur le bouton Partager ⎋ en bas).
                   </div>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3">

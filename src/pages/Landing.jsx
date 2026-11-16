@@ -325,6 +325,8 @@ const Landing = () => {
       }
     };
     fetchStats();
+    window.addEventListener('focus', fetchStats);
+    return () => window.removeEventListener('focus', fetchStats);
   }, []);
 
   useEffect(() => {
@@ -973,7 +975,7 @@ const Landing = () => {
               <StatCard
                 icon={Users}
                 target={platformStats.studentsCount ?? 0}
-                suffix={platformStats.studentsCount > 0 ? "+" : ""}
+                suffix=""
                 label="Élèves inscrits"
                 start={statsVisible}
               />
@@ -982,7 +984,7 @@ const Landing = () => {
               <StatCard
                 icon={BookOpen}
                 target={platformStats.coursesCount ?? 0}
-                suffix={platformStats.coursesCount > 0 ? "+" : ""}
+                suffix=""
                 label="Matières & chapitres"
                 start={statsVisible}
               />
@@ -991,7 +993,7 @@ const Landing = () => {
               <StatCard
                 icon={GraduationCap}
                 target={platformStats.modulesCount ?? 0}
-                suffix={platformStats.modulesCount > 0 ? "+" : ""}
+                suffix=""
                 label="Programmes scientifiques complets"
                 start={statsVisible}
               />

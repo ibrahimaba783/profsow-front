@@ -1897,3 +1897,626 @@ h1, h2, h3, h4, h5, h6 {
     transform: rotate(360deg);
   }
 }
+
+/* ===== TEACHER DASHBOARD DESIGN SYSTEM & ANIMATIONS ===== */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.teacher-card-hover {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+
+.teacher-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -4px rgba(37, 99, 235, 0.06);
+}
+
+.teacher-dashboard-inter,
+.teacher-dashboard-inter h1,
+.teacher-dashboard-inter h2,
+.teacher-dashboard-inter h3,
+.teacher-dashboard-inter h4 {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.015em;
+}
+
+/* ===== UIVERSE CONIC GRADIENT BUTTON (M4rco592) ===== */
+.gradient-button {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 50px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.14);
+}
+
+.gradient-button--sm {
+  padding: 9px 18px;
+  font-size: 12px;
+}
+
+.gradient-button:hover {
+  transform: scale(1.03);
+}
+
+.gradient-button:active {
+  transform: scale(0.99);
+}
+
+.gradient-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.gradient-button::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    #ff6b6b,
+    #4ecdc4,
+    #45b7d1,
+    #96ceb4,
+    #feca57,
+    #ff9ff3,
+    #ff6b6b
+  );
+  z-index: -2;
+  filter: blur(10px);
+  transform: rotate(0deg);
+  transition: transform 1.5s ease-in-out;
+}
+
+.gradient-button:hover::before {
+  transform: rotate(180deg);
+}
+
+.gradient-button::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: #ffffff;
+  border-radius: 47px;
+  z-index: -1;
+}
+
+.gradient-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #0f172a;
+  background: linear-gradient(90deg, #0f172a 0%, #2563eb 50%, #059669 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: hue-rotate(0deg);
+}
+
+.gradient-button:hover .gradient-text {
+  animation: hue-rotating 2s linear infinite;
+}
+
+@keyframes hue-rotating {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* ===== UIVERSE GLOW CARD (bhaveshxrawat - Mode Clair) ===== */
+.uiverse-glow-card {
+  isolation: isolate;
+  background: #ffffff;
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 8px 26px -8px rgba(15, 23, 42, 0.1);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+}
+
+.uiverse-glow-card:not(.absolute):not(.fixed) {
+  position: relative;
+}
+
+.uiverse-glow-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 34px -10px rgba(37, 99, 235, 0.18);
+}
+
+.uiverse-glow-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.uiverse-glow-card::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 110px;
+  height: 240%;
+  background-image: linear-gradient(180deg, rgb(0, 183, 255), rgb(255, 48, 255));
+  animation: rotBGimg 3.5s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uiverse-glow-card:hover::before {
+  background-image: linear-gradient(180deg, rgb(16, 185, 129), rgb(37, 99, 235));
+}
+
+.uiverse-glow-card::after {
+  content: "";
+  position: absolute;
+  background: #ffffff;
+  inset: 2.5px;
+  border-radius: 17.5px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes rotBGimg {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* ===== UIVERSE NEON FORM (yashasvi9199 - Mode Clair) ===== */
+.uiverse-form-card {
+  background-image: linear-gradient(163deg, #00c896 0%, #2563eb 100%);
+  border-radius: 22px;
+  padding: 2px;
+  transition: all 0.3s ease;
+}
+
+.uiverse-form-card:hover {
+  box-shadow: 0px 8px 30px 1px rgba(37, 99, 235, 0.18);
+}
+
+.uiverse-form-card2 {
+  background-color: #ffffff;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.uiverse-form-card2:hover {
+  transform: scale(0.995);
+}
+
+.uiverse-form-field {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  border-radius: 25px;
+  padding: 0.65em 1em;
+  border: 1px solid #e2e8f0;
+  outline: none;
+  color: #334155;
+  background-color: #f8fafc;
+  box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.05);
+}
+
+.uiverse-form-field:focus-within {
+  border-color: #2563eb;
+  background-color: #ffffff;
+}
+
+.uiverse-form-input {
+  background: none;
+  border: none;
+  outline: none;
+  width: 100%;
+  color: #0f172a;
+  font-size: 0.875rem;
+}
+
+.uiverse-form-input::placeholder {
+  color: #94a3b8;
+}
+
+.uiverse-form-btn {
+  padding: 0.65em 1.25em;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  outline: none;
+  transition: 0.25s ease-in-out;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.uiverse-form-btn:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.uiverse-form-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.uiverse-form-btn-danger {
+  padding: 0.55em 1em;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  outline: none;
+  transition: 0.25s ease-in-out;
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.uiverse-form-btn-danger:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+/* ===== UIVERSE NEON CHECKBOX (00Kubi) ===== */
+.neon-checkbox {
+  --primary: #00ffaa;
+  --primary-dark: #00cc88;
+  --primary-light: #88ffdd;
+  --size: 22px;
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  flex-shrink: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.neon-checkbox input {
+  display: none;
+}
+
+.neon-checkbox__frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.neon-checkbox__box {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  border-radius: 5px;
+  border: 2px solid var(--primary-dark);
+  transition: all 0.4s ease;
+}
+
+.neon-checkbox__check-container {
+  position: absolute;
+  inset: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neon-checkbox__check {
+  width: 80%;
+  height: 80%;
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  transform-origin: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neon-checkbox__glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 6px;
+  background: var(--primary);
+  opacity: 0;
+  filter: blur(8px);
+  transform: scale(1.2);
+  transition: all 0.4s ease;
+}
+
+.neon-checkbox__borders {
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.neon-checkbox__borders span {
+  position: absolute;
+  width: 40px;
+  height: 1px;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.neon-checkbox__borders span:nth-child(1) {
+  top: 0;
+  left: -100%;
+  animation: borderFlow1 2s linear infinite;
+}
+
+.neon-checkbox__borders span:nth-child(2) {
+  top: -100%;
+  right: 0;
+  width: 1px;
+  height: 40px;
+  animation: borderFlow2 2s linear infinite;
+}
+
+.neon-checkbox__borders span:nth-child(3) {
+  bottom: 0;
+  right: -100%;
+  animation: borderFlow3 2s linear infinite;
+}
+
+.neon-checkbox__borders span:nth-child(4) {
+  bottom: -100%;
+  left: 0;
+  width: 1px;
+  height: 40px;
+  animation: borderFlow4 2s linear infinite;
+}
+
+.neon-checkbox__particles span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  top: 50%;
+  left: 50%;
+  box-shadow: 0 0 6px var(--primary);
+}
+
+.neon-checkbox__rings {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+}
+
+.neon-checkbox__rings .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--primary);
+  opacity: 0;
+  transform: scale(0);
+}
+
+.neon-checkbox__sparks span {
+  position: absolute;
+  width: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+  opacity: 0;
+}
+
+.neon-checkbox:hover .neon-checkbox__box {
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.neon-checkbox input:checked ~ .neon-checkbox__frame .neon-checkbox__box {
+  border-color: var(--primary);
+  background: rgba(0, 255, 170, 0.14);
+}
+
+.neon-checkbox input:checked ~ .neon-checkbox__frame .neon-checkbox__check {
+  stroke-dashoffset: 0;
+  transform: scale(1.1);
+}
+
+.neon-checkbox input:checked ~ .neon-checkbox__frame .neon-checkbox__glow {
+  opacity: 0.25;
+}
+
+.neon-checkbox input:checked ~ .neon-checkbox__frame .neon-checkbox__borders span {
+  opacity: 1;
+}
+
+.neon-checkbox input:checked ~ .neon-checkbox__frame .neon-checkbox__particles span {
+  animation: particleExplosion 0.6s ease-out forwards;
+}
+
+.neon-checkbox input:checked ~ .neon-checkbox__frame .neon-checkbox__rings .ring {
+  animation: ringPulse 0.6s ease-out forwards;
+}
+
+.neon-checkbox input:checked ~ .neon-checkbox__frame .neon-checkbox__sparks span {
+  animation: sparkFlash 0.6s ease-out forwards;
+}
+
+@keyframes borderFlow1 {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(200%); }
+}
+@keyframes borderFlow2 {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(200%); }
+}
+@keyframes borderFlow3 {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-200%); }
+}
+@keyframes borderFlow4 {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-200%); }
+}
+
+@keyframes particleExplosion {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--x, 20px)), calc(-50% + var(--y, 20px))) scale(0); opacity: 0; }
+}
+
+@keyframes ringPulse {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes sparkFlash {
+  0% { transform: rotate(var(--r, 0deg)) translateX(0) scale(1); opacity: 1; }
+  100% { transform: rotate(var(--r, 0deg)) translateX(30px) scale(0); opacity: 0; }
+}
+
+.neon-checkbox__particles span:nth-child(1) { --x: 25px; --y: -25px; }
+.neon-checkbox__particles span:nth-child(2) { --x: -25px; --y: -25px; }
+.neon-checkbox__particles span:nth-child(3) { --x: 25px; --y: 25px; }
+.neon-checkbox__particles span:nth-child(4) { --x: -25px; --y: 25px; }
+.neon-checkbox__particles span:nth-child(5) { --x: 35px; --y: 0px; }
+.neon-checkbox__particles span:nth-child(6) { --x: -35px; --y: 0px; }
+.neon-checkbox__particles span:nth-child(7) { --x: 0px; --y: 35px; }
+.neon-checkbox__particles span:nth-child(8) { --x: 0px; --y: -35px; }
+.neon-checkbox__particles span:nth-child(9) { --x: 20px; --y: -30px; }
+.neon-checkbox__particles span:nth-child(10) { --x: -20px; --y: 30px; }
+.neon-checkbox__particles span:nth-child(11) { --x: 30px; --y: 20px; }
+.neon-checkbox__particles span:nth-child(12) { --x: -30px; --y: -20px; }
+
+.neon-checkbox__sparks span:nth-child(1) { --r: 0deg; top: 50%; left: 50%; }
+.neon-checkbox__sparks span:nth-child(2) { --r: 90deg; top: 50%; left: 50%; }
+.neon-checkbox__sparks span:nth-child(3) { --r: 180deg; top: 50%; left: 50%; }
+.neon-checkbox__sparks span:nth-child(4) { --r: 270deg; top: 50%; left: 50%; }
+
+.neon-checkbox__rings .ring:nth-child(1) { animation-delay: 0s; }
+.neon-checkbox__rings .ring:nth-child(2) { animation-delay: 0.1s; }
+.neon-checkbox__rings .ring:nth-child(3) { animation-delay: 0.2s; }
+
+/* ===== UIVERSE SOCIAL TOOLTIPS (wilsondesouza) ===== */
+.uiverse-social-list {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.uiverse-social-list .icon-content {
+  position: relative;
+}
+
+.uiverse-social-list .icon-content .tooltip {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  padding: 5px 10px;
+  border-radius: 6px;
+  opacity: 0;
+  visibility: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 20;
+}
+
+.uiverse-social-list .icon-content:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  top: -42px;
+}
+
+.uiverse-social-list .icon-content a {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: #1e293b;
+  background-color: #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+
+.uiverse-social-list .icon-content a:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+}
+
+.uiverse-social-list .icon-content a svg {
+  position: relative;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+}
+
+.uiverse-social-list .icon-content a .filled {
+  position: absolute;
+  top: auto;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  background-color: #000000;
+  transition: all 0.3s ease-in-out;
+}
+
+.uiverse-social-list .icon-content a:hover .filled {
+  height: 100%;
+}
+
+.uiverse-social-list .icon-content a[data-social="whatsapp"] .filled,
+.uiverse-social-list .icon-content a[data-social="whatsapp"] ~ .tooltip {
+  background-color: #128c7e;
+}
+
+.uiverse-social-list .icon-content a[data-social="facebook"] .filled,
+.uiverse-social-list .icon-content a[data-social="facebook"] ~ .tooltip {
+  background-color: #3b5998;
+}
+
+.uiverse-social-list .icon-content a[data-social="tiktok"] .filled,
+.uiverse-social-list .icon-content a[data-social="tiktok"] ~ .tooltip {
+  background: linear-gradient(135deg, #00f2ea 0%, #0f172a 50%, #ff0050 100%);
+}
+
+.uiverse-social-list .icon-content a[data-social="youtube"] .filled,
+.uiverse-social-list .icon-content a[data-social="youtube"] ~ .tooltip {
+  background-color: #ff0000;
+}

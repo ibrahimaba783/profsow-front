@@ -104,96 +104,112 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Côté droit : carte de connexion */}
-        <div className="w-full max-w-md mx-auto lg:max-w-lg bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 xl:p-7">
-          <div className="text-center mb-3 sm:mb-4">
-            <Link to="/" title="Retour à l'accueil" className="inline-block transition-transform hover:scale-105 cursor-pointer">
-              <img src={logo} alt="Aliou Sow Academy" className="h-9 sm:h-10 w-auto mx-auto mb-2" />
-            </Link>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">Connectez-vous</h2>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-2.5 rounded-lg text-xs sm:text-sm mb-3">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <GoogleLoginButton onError={setError} text="signin_with" />
-
-          <div className="flex items-center gap-3 my-2.5 sm:my-3">
-            <div className="flex-1 border-t border-slate-200"></div>
-            <span className="text-xs text-slate-400 font-medium">OU</span>
-            <div className="flex-1 border-t border-slate-200"></div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label className="block text-xs sm:text-sm font-semibold text-slate-800 mb-1">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={inputClass}
-                placeholder="exemple@gmail.com"
-              />
+        {/* Côté droit : carte de connexion Uiverse (Mode Clair) */}
+        <div className="w-full max-w-md mx-auto lg:max-w-lg uiverse-form-card">
+          <div className="uiverse-form-card2 p-6 sm:p-8">
+            <div className="text-center mb-4">
+              <Link to="/" title="Retour à l'accueil" className="inline-block transition-transform hover:scale-105 cursor-pointer">
+                <img src={logo} alt="Aliou Sow Academy" className="h-9 sm:h-10 w-auto mx-auto mb-2" />
+              </Link>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">Connectez-vous</h2>
             </div>
 
-            <div>
-              <label className="block text-xs sm:text-sm font-semibold text-slate-800 mb-1">
-                Mot de passe <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
+            {error && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 p-2.5 rounded-xl text-xs sm:text-sm mb-3">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <GoogleLoginButton onError={setError} text="signin_with" />
+
+            <div className="flex items-center gap-3 my-3">
+              <div className="flex-1 border-t border-slate-200"></div>
+              <span className="text-xs text-slate-400 font-medium">OU</span>
+              <div className="flex-1 border-t border-slate-200"></div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div className="uiverse-form-field">
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  height="16"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="shrink-0 text-slate-500"
+                >
+                  <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.199-1.354.328-2.29.328-2.926 0-4.813-1.88-4.813-4.798 0-2.844 1.921-4.881 4.594-4.881 2.735 0 4.608 1.688 4.608 4.156 0 1.682-.554 2.769-1.416 2.769-.492 0-.772-.28-.772-.76V5.206H8.923v.834h-.11c-.266-.595-.881-.964-1.6-.964-1.4 0-2.378 1.162-2.378 2.823 0 1.737.957 2.906 2.379 2.906.8 0 1.415-.39 1.709-1.087h.11c.081.67.703 1.148 1.503 1.148 1.572 0 2.57-1.415 2.57-3.643zm-7.177.704c0-1.197.54-1.907 1.456-1.907.93 0 1.524.738 1.524 1.907S8.308 9.84 7.371 9.84c-.895 0-1.442-.725-1.442-1.914z" />
+                </svg>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="uiverse-form-input"
+                  placeholder="Email (ex: exemple@gmail.com)"
+                />
+              </div>
+
+              <div className="uiverse-form-field">
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  height="16"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="shrink-0 text-slate-500"
+                >
+                  <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+                </svg>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`${inputClass} pr-10`}
-                  placeholder="••••••••"
+                  className="uiverse-form-input"
+                  placeholder="Mot de passe"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 cursor-pointer"
+                  className="text-slate-400 hover:text-slate-700 cursor-pointer shrink-0"
                   tabIndex={-1}
                   aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-[#f59d0e] hover:bg-[#e08b00] text-white font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2 mt-1 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer text-sm"
-            >
-              {submitting ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <span>Se connecter</span>
-              )}
-            </button>
-          </form>
+              <div className="grid grid-cols-2 gap-2.5 pt-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="uiverse-form-btn flex items-center justify-center"
+                >
+                  {submitting ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <span>Se connecter</span>
+                  )}
+                </button>
+                <Link
+                  to={redirectUrl ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : "/register"}
+                  className="uiverse-form-btn flex items-center justify-center text-center"
+                >
+                  S&apos;inscrire
+                </Link>
+              </div>
 
-          <div className="text-right mt-2">
-            <Link to="/forgot-password" className="text-xs text-slate-500 hover:text-[#009688]">
-              Mot de passe oublié ?
-            </Link>
-          </div>
-
-          <div className="text-center mt-3 text-xs sm:text-sm text-slate-500">
-            <span>Vous n&apos;avez pas de compte ? </span>
-            <Link to={redirectUrl ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : "/register"} className="font-bold text-[#009688] hover:underline">
-              S&apos;inscrire
-            </Link>
+              <Link
+                to="/forgot-password"
+                className="uiverse-form-btn-danger block w-full text-center"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </form>
           </div>
         </div>
       </div>

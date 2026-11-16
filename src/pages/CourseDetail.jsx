@@ -2041,12 +2041,12 @@ const CourseDetail = () => {
                 <button
                   type="submit"
                   disabled={paying}
-                  className={orangeBtn}
+                  className="w-full gradient-button gradient-button--sm"
                 >
                   {paying ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <span>Confirmer et accéder au cours</span>
+                    <span className="gradient-text">Confirmer et accéder au cours</span>
                   )}
                 </button>
               </form>
@@ -3179,10 +3179,11 @@ const CourseDetail = () => {
                                   href={getInlinePdfUrl(activeLesson.pdfPath)}
                                   target="_blank"
                                   rel="noopener noreferrer"
+                                  download
                                   className="px-5 py-2.5 bg-[#009688] hover:bg-[#00796b] text-white rounded-xl text-xs font-bold shrink-0 cursor-pointer transition inline-flex items-center gap-1.5"
                                 >
                                   <FileText className="w-3.5 h-3.5" />
-                                  <span>Ouvrir le PDF</span>
+                                  <span>Télécharger / Ouvrir le PDF</span>
                                 </a>
                               ) : (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200/80 text-slate-600 text-xs font-medium">
@@ -3191,12 +3192,6 @@ const CourseDetail = () => {
                                 </span>
                               )}
                             </div>
-
-                            {(features.enablePdfDownload !== false || isStaff) && (
-                              <div className="hidden md:block w-full h-[520px] rounded-xl overflow-hidden border border-slate-200">
-                                <embed src={getInlinePdfUrl(activeLesson.pdfPath)} type="application/pdf" width="100%" height="100%" />
-                              </div>
-                            )}
                           </div>
                         )}
 

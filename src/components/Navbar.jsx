@@ -171,9 +171,9 @@ const Navbar = () => {
               </Link>
               <Link
                 to="/register"
-                className="h-10 px-5 inline-flex items-center justify-center rounded-full border border-[#009688] bg-white text-[#009688] hover:bg-[#009688] hover:text-white text-xs font-bold transition whitespace-nowrap shadow-xs"
+                className="gradient-button gradient-button--sm whitespace-nowrap"
               >
-                S'inscrire
+                <span className="gradient-text">S'inscrire</span>
               </Link>
             </>
           )}

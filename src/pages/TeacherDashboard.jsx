@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Trash2,
   Edit,
+  Edit3,
+  GripVertical,
   ExternalLink,
   X,
   AlignLeft,
@@ -65,8 +67,14 @@ import {
 } from 'lucide-react';
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 import TeacherOverviewTab from '../components/teacher/TeacherOverviewTab';
+import TeacherCoursesTab from '../components/teacher/TeacherCoursesTab';
+import TeacherExercisesQuizTab from '../components/teacher/TeacherExercisesQuizTab';
 import TeacherStudentsTab from '../components/teacher/TeacherStudentsTab';
+import TeacherRevenueTab from '../components/teacher/TeacherRevenueTab';
+import TeacherSettingsTab from '../components/teacher/TeacherSettingsTab';
 import TeacherHistoryModal from '../components/teacher/TeacherHistoryModal';
+import { matchesClassLevel } from '../utils/education';
+import { Atom, Wallet } from 'lucide-react';
 
 const getSubscriptionState = (sub) => {
   if (!sub) return 'expired';
@@ -112,7 +120,9 @@ const TeacherDashboard = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [view, setView] = useState('overview'); // overview | courses | exercises | quizzes | students | qa | reviews | communication | profile
+  const [view, setView] = useState('overview'); // overview | courses | exercises | students | revenue | profile | qa | reviews | communication
+  const [subjectFilter, setSubjectFilter] = useState('all'); // all | Mathématiques | Physique-Chimie
+  const [levelFilter, setLevelFilter] = useState('all'); // all | 4ème | 3ème | 2nde S | 1ère S | TS
   const [sidebarOpen, setSidebarOpen] = useState(
     () => typeof window !== 'undefined' && window.innerWidth >= 768
   );
@@ -131,12 +141,18 @@ const TeacherDashboard = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subject, setSubject] = useState('Mathématiques');
-  const [level, setLevel] = useState('TS');
+  const [level, setLevel] = useState('4ème');
   const [duration, setDuration] = useState('3 mois');
-  const [price, setPrice] = useState(6000);
+  const [price, setPrice] = useState('');
   const [isFree, setIsFree] = useState(false);
   const [isPublished, setIsPublished] = useState(true);
-  const [originalPrice, setOriginalPrice] = useState(6000);
+  const [firstLessonFreePreview, setFirstLessonFreePreview] = useState(false);
+  const [expandedDraftSlot, setExpandedDraftSlot] = useState(null);
+  const [draftChapterTitle, setDraftChapterTitle] = useState('');
+  const [draftVideoUrl, setDraftVideoUrl] = useState('');
+  const [draftPdfFile, setDraftPdfFile] = useState(null);
+  const [draftExerciseTitle, setDraftExerciseTitle] = useState('');
+  const [originalPrice, setOriginalPrice] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [creating, setCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -227,6 +243,18 @@ const TeacherDashboard = () => {
   const [profileAvatarFile, setProfileAvatarFile] = useState(null);
   const [prefEmailNotifs, setPrefEmailNotifs] = useState(user?.preferences?.emailNotifications !== false);
   const [prefLiveReminders, setPrefLiveReminders] = useState(user?.preferences?.liveReminders !== false);
+  const [platformTitle, setPlatformTitle] = useState(
+    user?.preferences?.platformTitle || settings?.siteInfo?.platformName || 'Aliou Sow Academy'
+  );
+  const [waveNumber, setWaveNumber] = useState(
+    user?.preferences?.waveNumber || settings?.siteInfo?.waveNumber || user?.phone || ''
+  );
+  const [orangeNumber, setOrangeNumber] = useState(
+    user?.preferences?.orangeMoneyNumber || settings?.siteInfo?.orangeMoneyNumber || user?.phone || ''
+  );
+  const [autoPayout, setAutoPayout] = useState(user?.preferences?.autoPayout !== false);
+  const [watermarkEnabled, setWatermarkEnabled] = useState(user?.preferences?.watermarkEnabled !== false);
+  const [freePreviewCount, setFreePreviewCount] = useState(user?.preferences?.freePreviewCount || '2');
   const [savingProfile, setSavingProfile] = useState(false);
 
   const showToast = (type, text) => {
@@ -260,8 +288,30 @@ const TeacherDashboard = () => {
       setProfileSubjects(Array.isArray(user.subjects) ? user.subjects : []);
       setPrefEmailNotifs(user.preferences?.emailNotifications !== false);
       setPrefLiveReminders(user.preferences?.liveReminders !== false);
+      setPlatformTitle(user.preferences?.platformTitle || settings?.siteInfo?.platformName || 'Aliou Sow Academy');
+      setWaveNumber(user.preferences?.waveNumber || settings?.siteInfo?.waveNumber || user.phone || '');
+      setOrangeNumber(user.preferences?.orangeMoneyNumber || settings?.siteInfo?.orangeMoneyNumber || user.phone || '');
+      setAutoPayout(user.preferences?.autoPayout !== false);
+      setWatermarkEnabled(user.preferences?.watermarkEnabled !== false);
+      setFreePreviewCount(user.preferences?.freePreviewCount || '2');
     }
-  }, [user]);
+  }, [user, settings]);
+
+  const filteredCoursesByHeader = useMemo(() => {
+    return courses.filter((c) => {
+      if (subjectFilter !== 'all') {
+        const subj = String(c.subject || '').toLowerCase();
+        if (subjectFilter === 'Mathématiques' && !subj.includes('math')) return false;
+        if (subjectFilter === 'Physique-Chimie' && !subj.includes('physique') && !subj.includes('chimie')) {
+          return false;
+        }
+      }
+      if (levelFilter !== 'all' && !matchesClassLevel(c.level, levelFilter)) {
+        return false;
+      }
+      return true;
+    });
+  }, [courses, subjectFilter, levelFilter]);
 
   const fetchDashboardData = async () => {
     try {
@@ -433,16 +483,22 @@ const TeacherDashboard = () => {
 
   // ================= GESTION DES COURS (CRUD + PUBLICATION) =================
   const resetCourseForm = () => {
-    const defaultPrice = settings.siteInfo?.defaultPrice ?? 6000;
+    const defaultPrice = settings.siteInfo?.defaultPrice ?? '';
     const defaultDuration = settings.siteInfo?.defaultDuration || '3 mois';
     setTitle('');
     setDescription('');
     setSubject(availableSubjects[0] || 'Mathématiques');
-    setLevel(availableLevels[availableLevels.length - 1]?.value || 'TS');
+    setLevel(availableLevels[0]?.value || '4ème');
     setDuration(defaultDuration);
     setPrice(defaultPrice);
     setIsFree(false);
     setIsPublished(true);
+    setFirstLessonFreePreview(false);
+    setExpandedDraftSlot(null);
+    setDraftChapterTitle('');
+    setDraftVideoUrl('');
+    setDraftPdfFile(null);
+    setDraftExerciseTitle('');
     setOriginalPrice(defaultPrice);
     setImageFile(null);
     setErrorMsg('');
@@ -451,7 +507,7 @@ const TeacherDashboard = () => {
 
   const openCreateModal = () => {
     resetCourseForm();
-    setShowCourseModal(true);
+    setView('create-course');
   };
 
   const handleEditCourse = (course) => {
@@ -467,7 +523,7 @@ const TeacherDashboard = () => {
     setOriginalPrice(course.originalPrice || course.price || 6000);
     setImageFile(null);
     setErrorMsg('');
-    setShowCourseModal(true);
+    setView('create-course');
   };
 
   const handleSubmitCourse = async (e) => {
@@ -492,11 +548,47 @@ const TeacherDashboard = () => {
         await api(`/courses/${editingCourse._id}`, { method: 'PUT', body: formData });
         showToast('success', 'Matière mise à jour.');
       } else {
-        await api('/courses', { method: 'POST', body: formData });
+        const created = await api('/courses', { method: 'POST', body: formData });
+        const hasDraftContent =
+          draftChapterTitle.trim() || draftVideoUrl.trim() || draftPdfFile;
+        if (created?._id && hasDraftContent) {
+          const updatedWithCh = await api(`/courses/${created._id}/chapters`, {
+            method: 'POST',
+            body: JSON.stringify({
+              title: draftChapterTitle.trim() || 'Chapitre 1 : Introduction',
+              isLocked: false,
+              isFree: firstLessonFreePreview,
+            }),
+          });
+          const chId = updatedWithCh?.chapters?.[0]?._id;
+          if (chId && draftVideoUrl.trim()) {
+            const vData = new FormData();
+            vData.append('title', 'Vidéo de cours 1');
+            vData.append('contentType', 'video');
+            vData.append('youtubeUrl', draftVideoUrl.trim());
+            vData.append('isFree', String(firstLessonFreePreview));
+            await api(`/courses/${created._id}/chapters/${chId}/lessons`, {
+              method: 'POST',
+              body: vData,
+            });
+          }
+          if (chId && draftPdfFile) {
+            const pData = new FormData();
+            pData.append('title', draftPdfFile.name.replace(/\.pdf$/i, '') || 'Fiche PDF 1');
+            pData.append('contentType', 'pdf');
+            pData.append('pdf', draftPdfFile);
+            pData.append('isFree', String(firstLessonFreePreview));
+            await api(`/courses/${created._id}/chapters/${chId}/lessons`, {
+              method: 'POST',
+              body: pData,
+            });
+          }
+        }
         showToast('success', 'Nouvelle matière créée.');
       }
       resetCourseForm();
       setShowCourseModal(false);
+      setView('courses');
       await fetchDashboardData();
     } catch (err) {
       setErrorMsg(err.message || 'Erreur lors de l’enregistrement du cours');
@@ -735,7 +827,7 @@ const TeacherDashboard = () => {
     setQuizPassingScore(50);
     setQuizMaxAttempts(0);
     setQuizQuestions([
-      { questionText: '', questionType: 'qcm', options: ['', ''], correctAnswerIndex: 0, correctAnswerText: '' },
+      { questionText: '', questionType: 'qcm', options: ['', '', '', ''], correctAnswerIndex: 0, correctAnswerText: '' },
     ]);
   };
 
@@ -1078,6 +1170,12 @@ const TeacherDashboard = () => {
           ...(user?.preferences || {}),
           emailNotifications: prefEmailNotifs,
           liveReminders: prefLiveReminders,
+          platformTitle: platformTitle.trim(),
+          waveNumber: waveNumber.trim(),
+          orangeMoneyNumber: orangeNumber.trim(),
+          autoPayout,
+          watermarkEnabled,
+          freePreviewCount,
         })
       );
       if (profilePassword.trim()) {
@@ -1104,28 +1202,25 @@ const TeacherDashboard = () => {
 
   if (loading) {
     return (
-      <div className="theme-myschools min-h-screen flex items-center justify-center bg-gradient-to-br from-[#6372e8] via-[#6b5cc4] to-[#7c52a5] px-4">
-        <div className="w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 flex flex-col items-center text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#f4f7fb] px-4">
+        <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center">
           <div className="relative mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#6372e8] shadow-sm">
-              <GraduationCap className="w-8 h-8 text-[#6372e8]" />
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#2563eb] shadow-xs">
+              <GraduationCap className="w-8 h-8 text-[#2563eb]" />
             </div>
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
-              <div className="w-3.5 h-3.5 border-2 border-indigo-200 border-t-[#6372e8] rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 border-2 border-blue-200 border-t-[#2563eb] rounded-full animate-spin" />
             </div>
           </div>
           <h2 className="text-base font-black text-slate-900 tracking-tight">
-            Aliou Sow Academy
+            {platformTitle || 'Aliou Sow Academy'}
           </h2>
-          <p className="text-[11px] font-bold text-[#6372e8] uppercase tracking-wider mt-0.5 mb-2">
-            Espace Enseignant
+          <p className="text-[11px] font-bold text-[#2563eb] uppercase tracking-wider mt-0.5 mb-2">
+            Espace Professeur
           </p>
           <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
-            Chargement de vos cours, devoirs, élèves et quiz...
+            Chargement de vos cours, exercices, élèves et paiements...
           </p>
-          <div className="w-40 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-4">
-            <div className="h-full bg-gradient-to-r from-[#6372e8] to-[#7c52a5] rounded-full animate-pulse w-full"></div>
-          </div>
         </div>
       </div>
     );
@@ -1194,74 +1289,180 @@ const TeacherDashboard = () => {
   };
 
   const sidebarItems = [
-    { key: 'overview', label: 'Tableau de bord', icon: LayoutDashboard, group: 'TABLEAU DE BORD' },
-    { key: 'courses', label: 'Matières & Contenu', icon: BookOpen, count: courses.length, group: 'PÉDAGOGIE' },
+    { key: 'overview', label: 'Tableau de bord', icon: LayoutDashboard, group: 'PRINCIPAL' },
+    { key: 'courses', label: 'Mes Cours & Leçons', icon: BookOpen, count: filteredCoursesByHeader.length, group: 'PRINCIPAL' },
     {
       key: 'exercises',
-      label: 'Exercices & Devoirs',
-      icon: Calculator,
-      count: pendingHomeworkCount > 0 ? pendingHomeworkCount : exercises.length,
+      label: 'Exercices & Quiz',
+      icon: FileText,
+      count: pendingHomeworkCount > 0 ? pendingHomeworkCount : undefined,
       alert: pendingHomeworkCount > 0,
-      group: 'PÉDAGOGIE',
+      group: 'PRINCIPAL',
     },
-    { key: 'quizzes', label: 'Quiz & Évaluations', icon: Award, count: quizzes.length, group: 'PÉDAGOGIE' },
-    { key: 'students', label: 'Suivi des élèves', icon: Users, count: metrics.activeSubs.length, group: 'SUIVI & ÉCHANGE' },
+    { key: 'students', label: 'Élèves inscrits', icon: Users, group: 'PRINCIPAL' },
+    { key: 'revenue', label: 'Revenus & Paiements', icon: Wallet, group: 'PRINCIPAL' },
+    { key: 'profile', label: 'Paramètres', icon: Settings, group: 'PRINCIPAL' },
     {
       key: 'qa',
       label: 'Questions & Réponses',
       icon: MessageSquare,
       count: metrics.unansweredQuestions.length,
       alert: metrics.unansweredQuestions.length > 0,
-      group: 'SUIVI & ÉCHANGE',
+      group: 'INTERACTIONS',
     },
-    { key: 'reviews', label: 'Avis élèves', icon: Star, count: reviews.length, group: 'SUIVI & ÉCHANGE' },
-    { key: 'communication', label: 'Communication', icon: Megaphone, group: 'SUIVI & ÉCHANGE' },
-    { key: 'profile', label: 'Profil & Paramètres', icon: Settings, group: 'PARAMÉTRAGE' },
+    { key: 'reviews', label: 'Avis & Notes', icon: Star, count: reviews.length, group: 'INTERACTIONS' },
+    { key: 'communication', label: 'Annonces', icon: Megaphone, group: 'INTERACTIONS' },
   ];
 
-  const sidebarGroups = ['TABLEAU DE BORD', 'PÉDAGOGIE', 'SUIVI & ÉCHANGE', 'PARAMÉTRAGE'];
+  const sidebarGroups = ['PRINCIPAL', 'INTERACTIONS'];
 
   // ================= RENDU : 1. TABLEAU DE BORD =================
   const renderOverview = () => (
     <TeacherOverviewTab
-      user={user}
-      courses={courses}
+      courses={filteredCoursesByHeader}
       students={students}
-      exercises={exercises}
-      exerciseSubmissions={exerciseSubmissions}
-      quizzes={quizzes}
-      quizResults={quizResults}
       discussions={discussions}
-      reviews={reviews}
       metrics={metrics}
       onNavigateTab={(tab) => {
         setView(tab);
         if (window.innerWidth < 768) setSidebarOpen(false);
       }}
+      onSelectCourse={(courseId) => {
+        setManagingCourseId(courseId);
+        setView('courses');
+      }}
+      onEditCourse={handleEditCourse}
+    />
+  );
+
+  // ================= RENDU : 2. MES COURS & LEÇONS =================
+  const renderNewCoursesSection = () => (
+    <TeacherCoursesTab
+      courses={filteredCoursesByHeader}
+      managingCourseId={managingCourseId}
+      setManagingCourseId={setManagingCourseId}
       onOpenCreateCourse={openCreateModal}
-      onOpenNewExercise={() => {
-        setView('exercises');
-        setExerciseTab('catalog');
+      onEditCourse={handleEditCourse}
+      onTogglePublishCourse={handleTogglePublishCourse}
+      onDeleteCourse={handleDeleteCourse}
+      newChapterTitle={newChapterTitle}
+      setNewChapterTitle={setNewChapterTitle}
+      newChapterIsFree={newChapterIsFree}
+      setNewChapterIsFree={setNewChapterIsFree}
+      handleAddChapter={handleAddChapter}
+      editingChapterId={editingChapterId}
+      editingChapterTitle={editingChapterTitle}
+      setEditingChapterId={setEditingChapterId}
+      setEditingChapterTitle={setEditingChapterTitle}
+      handleSaveChapterRename={handleSaveChapterRename}
+      handleToggleChapterLock={handleToggleChapterLock}
+      handleToggleChapterFree={handleToggleChapterFree}
+      handleMoveChapter={handleMoveChapter}
+      handleDeleteChapter={handleDeleteChapter}
+      collapsedChapters={collapsedChapters}
+      toggleChapterCollapse={toggleChapterCollapse}
+      openLessonModal={openLessonModal}
+      handleMoveLesson={handleMoveLesson}
+      handleDeleteLesson={handleDeleteLesson}
+    />
+  );
+
+  // ================= RENDU : 3. EXERCICES & QUIZ =================
+  const renderNewExercisesQuizSection = () => (
+    <TeacherExercisesQuizTab
+      courses={filteredCoursesByHeader}
+      allCourses={courses}
+      exercises={exercises}
+      exerciseSubmissions={exerciseSubmissions}
+      quizzes={quizzes}
+      quizResults={quizResults}
+      onOpenNewExercise={() =>
         setExerciseModalState({
           open: true,
-          courseId: courses[0]?._id || '',
-          chapterId: courses[0]?.chapters?.[0]?._id || '',
+          courseId: filteredCoursesByHeader[0]?._id || courses[0]?._id || '',
+          chapterId: filteredCoursesByHeader[0]?.chapters?.[0]?._id || courses[0]?.chapters?.[0]?._id || '',
           editing: null,
-        });
-      }}
-      onOpenNewQuiz={() => {
-        setView('quizzes');
-        setQuizTab('builder');
-        setEditingQuizId(null);
-      }}
-      onOpenLiveMeet={() => {
-        setView('courses');
-        showToast('info', 'Sélectionnez une leçon pour configurer un lien Google Meet / Jitsi.');
-      }}
-      onOpenBroadcast={() => {
-        setView('communication');
-      }}
+        })
+      }
+      onEditExercise={(ex) =>
+        setExerciseModalState({
+          open: true,
+          courseId: ex.course?._id || ex.course || '',
+          chapterId: ex.chapterId || '',
+          editing: ex,
+        })
+      }
+      onDeleteExercise={handleDeleteExercise}
+      gradeDrafts={gradeDrafts}
+      setGradeDrafts={setGradeDrafts}
+      handleSaveGrade={handleSaveGrade}
+      editingQuizId={editingQuizId}
+      quizCourseId={quizCourseId}
+      setQuizCourseId={setQuizCourseId}
+      quizChapterId={quizChapterId}
+      setQuizChapterId={setQuizChapterId}
+      quizTitle={quizTitle}
+      setQuizTitle={setQuizTitle}
+      quizPassingScore={quizPassingScore}
+      setQuizPassingScore={setQuizPassingScore}
+      quizMaxAttempts={quizMaxAttempts}
+      setQuizMaxAttempts={setQuizMaxAttempts}
+      quizQuestions={quizQuestions}
+      setQuizQuestions={setQuizQuestions}
+      savingQuiz={savingQuiz}
+      handleSaveQuiz={handleSaveQuiz}
+      startEditQuiz={startEditQuiz}
+      resetQuizForm={resetQuizForm}
+      handleDeleteQuiz={handleDeleteQuiz}
       formatDateShort={formatDateShort}
+    />
+  );
+
+  // ================= RENDU : 5. REVENUS & PAIEMENTS =================
+  const renderRevenueSection = () => (
+    <TeacherRevenueTab
+      user={user}
+      settings={settings}
+      students={students}
+      onNavigateSettings={() => setView('profile')}
+      showToast={showToast}
+    />
+  );
+
+  // ================= RENDU : 6. PARAMÈTRES =================
+  const renderNewSettingsSection = () => (
+    <TeacherSettingsTab
+      user={user}
+      profileName={profileName}
+      setProfileName={setProfileName}
+      profileEmail={profileEmail}
+      setProfileEmail={setProfileEmail}
+      profilePhone={profilePhone}
+      setProfilePhone={setProfilePhone}
+      profileBio={profileBio}
+      setProfileBio={setProfileBio}
+      profilePassword={profilePassword}
+      setProfilePassword={setProfilePassword}
+      profileAvatarFile={profileAvatarFile}
+      setProfileAvatarFile={setProfileAvatarFile}
+      platformTitle={platformTitle}
+      setPlatformTitle={setPlatformTitle}
+      waveNumber={waveNumber}
+      setWaveNumber={setWaveNumber}
+      orangeNumber={orangeNumber}
+      setOrangeNumber={setOrangeNumber}
+      autoPayout={autoPayout}
+      setAutoPayout={setAutoPayout}
+      watermarkEnabled={watermarkEnabled}
+      setWatermarkEnabled={setWatermarkEnabled}
+      freePreviewCount={freePreviewCount}
+      setFreePreviewCount={setFreePreviewCount}
+      prefEmailNotifs={prefEmailNotifs}
+      setPrefEmailNotifs={setPrefEmailNotifs}
+      prefLiveReminders={prefLiveReminders}
+      setPrefLiveReminders={setPrefLiveReminders}
+      savingProfile={savingProfile}
+      handleSaveTeacherProfile={handleSaveTeacherProfile}
     />
   );
 
@@ -3005,8 +3206,9 @@ const TeacherDashboard = () => {
   const renderStudentsSection = () => (
     <TeacherStudentsTab
       students={students}
-      courses={courses}
+      courses={filteredCoursesByHeader}
       quizResults={quizResults}
+      unansweredQuestionsCount={metrics.unansweredQuestions.length}
       onToggleStudentStatus={handleToggleStudentStatus}
       onOpenRemindModal={(sub) => setRemindModalSub(sub)}
       onExtendStudentSubscription={handleExtendStudentSubscription}
@@ -3295,154 +3497,187 @@ const TeacherDashboard = () => {
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
   const renderCommunicationSection = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Annonces aux élèves d'un cours */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xs border border-slate-200/80">
-        <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2.5 border-b border-slate-100 pb-4">
-          <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-            <Megaphone className="w-4 h-4" />
-          </div>
-          <span>Publier une annonce aux élèves</span>
-        </h3>
-
-        <form onSubmit={handlePostAnnouncement} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">Cours ciblé</label>
-            <select
-              required
-              value={annCourseId}
-              onChange={(e) => setAnnCourseId(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-bold text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500 shadow-2xs cursor-pointer"
-            >
-              {courses.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">Titre de l&apos;annonce</label>
-            <input
-              type="text"
-              required
-              value={annTitle}
-              onChange={(e) => setAnnTitle(e.target.value)}
-              placeholder="ex: Séance de révision Bac ce samedi à 10h"
-              className="w-full h-11 px-4 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500 shadow-2xs"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">Message</label>
-            <textarea
-              required
-              rows={3}
-              value={annMessage}
-              onChange={(e) => setAnnMessage(e.target.value)}
-              placeholder="Rédigez votre annonce pour les élèves inscrits..."
-              className="w-full p-4 rounded-2xl border border-slate-200 bg-slate-50/60 text-sm resize-none focus:outline-none focus:bg-white focus:border-indigo-500 shadow-2xs leading-relaxed"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => setAnnSendEmail((v) => !v)}
-            className={`w-full h-11 px-4 rounded-2xl border text-xs font-bold transition cursor-pointer flex items-center justify-between ${
-              annSendEmail
-                ? 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-2xs'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            <span>Envoyer également par e-mail aux élèves abonnés</span>
-            <Check className={`w-4 h-4 ${annSendEmail ? 'text-indigo-600' : 'text-slate-300'}`} />
-          </button>
-          <button
-            type="submit"
-            disabled={postingAnn || courses.length === 0}
-            className="w-full h-11 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-bold cursor-pointer disabled:opacity-50 shadow-2xs hover:shadow-xs transition hover:scale-[1.02] active:scale-[0.98]"
-          >
-            {postingAnn ? 'Envoi en cours...' : "Publier l'annonce"}
-          </button>
-        </form>
-
-        <div className="pt-4 border-t border-slate-100 space-y-3">
-          <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Annonces récentes</h4>
-          {allAnnouncements.length === 0 ? (
-            <p className="text-xs text-slate-400 py-4 text-center">Aucune annonce publiée pour le moment.</p>
-          ) : (
-            allAnnouncements.map((ann) => (
-              <div key={ann._id} className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 flex items-start justify-between gap-3 text-xs">
-                <div className="min-w-0">
-                  <p className="font-extrabold text-slate-900">{ann.title}</p>
-                  <p className="text-indigo-600 font-bold text-[11px] mt-0.5">{ann.courseTitle}</p>
-                  <p className="text-slate-600 mt-1 whitespace-pre-wrap leading-relaxed">{ann.message}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteAnnouncement(ann.courseId, ann._id)}
-                  className="p-1.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-400 hover:text-rose-600 rounded-lg cursor-pointer shrink-0 shadow-2xs"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
+    <div className="space-y-6 animate-fade-slide-up">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h1 className="text-2xl sm:text-[28px] font-extrabold text-slate-900 tracking-tight">
+          Annonces &amp; Séances en direct
+        </h1>
       </div>
 
-      {/* Séances en direct (Meet / Jitsi) */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xs border border-slate-200/80">
-        <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2.5 border-b border-slate-100 pb-4">
-          <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-            <Video className="w-4 h-4" />
-          </div>
-          <span>Séances en direct &amp; Visioconférences ({liveLessons.length})</span>
-        </h3>
-        {liveLessons.length === 0 ? (
-          <div className="text-center py-12 text-xs text-slate-400">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-400 flex items-center justify-center mx-auto mb-3">
-              <Video className="w-6 h-6" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Annonces aux élèves d'un cours */}
+        <div className="bg-white rounded-2xl p-5 sm:p-6 space-y-5 shadow-xs border border-slate-200/80">
+          <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2.5 border-b border-slate-100 pb-4">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#2563eb] flex items-center justify-center font-bold">
+              <Megaphone className="w-4 h-4" />
             </div>
-            <p className="text-sm font-bold text-slate-800">Aucune séance en direct programmée</p>
-            <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto mb-4">
-              Configurez des liens Google Meet ou Jitsi dans vos leçons pour animer vos sessions en direct.
-            </p>
+            <span>Publier une annonce aux élèves</span>
+          </h3>
+
+          <form onSubmit={handlePostAnnouncement} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Cours ciblé
+              </label>
+              <select
+                required
+                value={annCourseId}
+                onChange={(e) => setAnnCourseId(e.target.value)}
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2563eb] cursor-pointer"
+              >
+                {courses.length === 0 ? (
+                  <option value="">Aucun cours disponible</option>
+                ) : (
+                  courses.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.title}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Titre de l&apos;annonce
+              </label>
+              <input
+                type="text"
+                required
+                value={annTitle}
+                onChange={(e) => setAnnTitle(e.target.value)}
+                placeholder="ex: Séance de révision Bac ce samedi à 10h"
+                className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:border-[#2563eb]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Message
+              </label>
+              <textarea
+                required
+                rows={4}
+                value={annMessage}
+                onChange={(e) => setAnnMessage(e.target.value)}
+                placeholder="Rédigez votre annonce pour les élèves inscrits..."
+                className="w-full p-3.5 rounded-xl border border-slate-200 bg-white text-sm resize-none focus:outline-none focus:border-[#2563eb] leading-relaxed"
+              />
+            </div>
             <button
               type="button"
-              onClick={() => setView('courses')}
-              className="px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
+              onClick={() => setAnnSendEmail((v) => !v)}
+              className={`w-full h-10 px-4 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center justify-between ${
+                annSendEmail
+                  ? 'bg-blue-50/70 text-[#2563eb] border-[#2563eb]/30'
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }`}
             >
-              <span>Ajouter un cours en direct depuis &laquo; Matières &amp; Contenu &raquo;</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <span>Envoyer également par e-mail aux élèves abonnés</span>
+              <Check className={`w-4 h-4 ${annSendEmail ? 'text-[#2563eb]' : 'text-slate-300'}`} />
             </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {liveLessons.map((ll) => (
-              <div
-                key={ll._id}
-                className="p-4 sm:p-5 rounded-2xl bg-purple-50/40 border border-purple-200/80 flex flex-wrap items-center justify-between gap-3 text-xs"
-              >
-                <div>
-                  <h4 className="font-extrabold text-slate-900 text-sm">{ll.title}</h4>
-                  <p className="text-xs text-purple-700 font-semibold mt-0.5">
-                    {ll.courseTitle} • Chapitre : {ll.chapterTitle}
-                  </p>
-                </div>
-                {ll.meetLink && (
-                  <a
-                    href={ll.meetLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-2xs transition"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Lancer la séance</span>
-                  </a>
-                )}
+            <button
+              type="submit"
+              disabled={postingAnn || courses.length === 0}
+              className="w-full h-10 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold cursor-pointer disabled:opacity-50 shadow-xs transition"
+            >
+              {postingAnn ? 'Envoi en cours...' : "Publier l'annonce"}
+            </button>
+          </form>
+
+          <div className="pt-4 border-t border-slate-100 space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Annonces récentes
+            </h4>
+            {allAnnouncements.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-6 px-4 text-center">
+                <p className="text-xs font-medium text-slate-500">
+                  Aucune annonce publiée pour le moment.
+                </p>
               </div>
-            ))}
+            ) : (
+              allAnnouncements.map((ann) => (
+                <div
+                  key={ann._id}
+                  className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 flex items-start justify-between gap-3 text-xs"
+                >
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-900">{ann.title}</p>
+                    <p className="text-[#2563eb] font-semibold text-[11px] mt-0.5">
+                      {ann.courseTitle}
+                    </p>
+                    <p className="text-slate-600 mt-1 whitespace-pre-wrap leading-relaxed">
+                      {ann.message}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteAnnouncement(ann.courseId, ann._id)}
+                    className="p-1.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-400 hover:text-rose-600 rounded-lg cursor-pointer shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Séances en direct (Meet / Jitsi) */}
+        <div className="bg-white rounded-2xl p-5 sm:p-6 space-y-5 shadow-xs border border-slate-200/80">
+          <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2.5 border-b border-slate-100 pb-4">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#059669] flex items-center justify-center font-bold">
+              <Video className="w-4 h-4" />
+            </div>
+            <span>Séances en direct &amp; Visioconférences ({liveLessons.length})</span>
+          </h3>
+          {liveLessons.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 text-center py-12 px-4 text-xs">
+              <div className="w-11 h-11 rounded-xl bg-white border border-slate-200/80 shadow-2xs text-[#059669] flex items-center justify-center mx-auto mb-3">
+                <Video className="w-5 h-5" />
+              </div>
+              <p className="text-sm font-bold text-slate-800">
+                Aucune séance en direct programmée
+              </p>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto mb-4">
+                Configurez des liens Google Meet ou Jitsi dans vos leçons pour animer vos sessions en direct.
+              </p>
+              <button
+                type="button"
+                onClick={() => setView('courses')}
+                className="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#059669] text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition"
+              >
+                <span>Ajouter un cours en direct depuis &laquo; Mes Cours &amp; Leçons &raquo;</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {liveLessons.map((ll) => (
+                <div
+                  key={ll._id}
+                  className="p-4 rounded-xl bg-emerald-50/40 border border-emerald-200/80 flex flex-wrap items-center justify-between gap-3 text-xs"
+                >
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">{ll.title}</h4>
+                    <p className="text-xs text-[#059669] font-semibold mt-0.5">
+                      {ll.courseTitle} • Chapitre : {ll.chapterTitle}
+                    </p>
+                  </div>
+                  {ll.meetLink && (
+                    <a
+                      href={ll.meetLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-xl bg-[#059669] hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Lancer la séance</span>
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -3620,648 +3855,1217 @@ const TeacherDashboard = () => {
   const activeSidebarItem = sidebarItems.find((i) => i.key === view);
   const ActiveBannerIcon = activeSidebarItem?.icon || LayoutDashboard;
 
+  const HEADER_LEVELS = [
+    { value: '4ème', label: '4ème' },
+    { value: '3ème', label: '3ème' },
+    { value: '2nde S', label: '2nde S' },
+    { value: '1ère S', label: '1ère S' },
+    { value: 'TS', label: 'Terminale S' },
+  ];
+
   return (
-    <div className="theme-myschools min-h-screen bg-gradient-to-br from-[#6372e8] via-[#6b5cc4] to-[#7c52a5] text-slate-800 antialiased">
-      {/* Overlay mobile */}
-      {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-slate-950/50 backdrop-blur-[1px] z-30"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
+    <div className="teacher-dashboard-inter min-h-screen bg-[#f4f7fb] text-slate-900 antialiased">
+      {/* En-tête fixe */}
+      <header className="sticky top-0 z-40 bg-white border-b border-slate-200/80">
+        <div className="px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+          {/* Gauche : Menu mobile + Logo discret + Bascule rapide Matières */}
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((v) => !v)}
+              aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
+              className="md:hidden w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center cursor-pointer transition shrink-0"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
 
-      {/* Sidebar verticale violet-indigo style My Schools */}
-      <aside
-        className={`fixed top-0 bottom-0 left-0 w-64 bg-gradient-to-b from-[#4c3882] via-[#5b4397] to-[#3f2d70] text-white z-40 flex flex-col shadow-2xl transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        {/* Logo + Badge Rôle */}
-        <div className="px-5 pt-5 pb-4 border-b border-white/10">
-          <div className="flex items-center justify-between gap-2">
-            <Link to="/" className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center shrink-0">
-                <img src={logo} alt="Aliou Sow Academy" className="w-full h-full object-contain" />
-              </div>
-              <div className="min-w-0 leading-tight">
-                <span className="block text-[15px] font-bold tracking-tight text-white truncate">
-                  Aliou Sow
-                </span>
-                <span className="block text-[10px] font-semibold tracking-[0.18em] text-indigo-200 uppercase">
-                  Academy
-                </span>
-              </div>
+            <Link
+              to="/"
+              className="hidden xl:flex items-center gap-2 pr-2.5 mr-1 border-r border-slate-200 shrink-0"
+              title="Aliou Sow Academy"
+            >
+              <img src={logo} alt="Aliou Sow Academy" className="w-7 h-7 object-contain" />
             </Link>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(false)}
-              className="md:hidden p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white cursor-pointer"
-              aria-label="Fermer le menu"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="mt-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ef4444] text-white text-xs font-semibold shadow-sm">
-              <GraduationCap className="w-3.5 h-3.5" />
-              Professeur
-            </span>
-          </div>
-        </div>
 
-        {/* Navigation groupée */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
-          {sidebarGroups.map((group) => (
-            <div key={group} className="space-y-1">
-              <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/55 px-3 pt-1 pb-1">
-                {group}
-              </p>
-              {sidebarItems
-                .filter((i) => i.group === group)
-                .map((item) => {
-                  const Icon = item.icon;
-                  const active = view === item.key;
-                  return (
-                    <button
-                      key={item.key}
-                      onClick={() => {
-                        setView(item.key);
-                        if (item.key !== 'courses') setManagingCourseId(null);
-                        if (window.innerWidth < 768) setSidebarOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition cursor-pointer ${
-                        active
-                          ? 'bg-white text-[#4c3882] font-bold shadow-md shadow-black/10'
-                          : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#4c3882]' : 'text-white/80'}`} />
-                      <span className="flex-1 text-left truncate">{item.label}</span>
-                      {typeof item.count === 'number' && (
-                        <span
-                          className={`text-[11px] font-bold tabular-nums px-2 py-0.5 rounded-full ${
-                            item.alert
-                              ? 'bg-[#ef4444] text-white shadow-sm'
-                              : active
-                              ? 'bg-[#4c3882] text-white'
-                              : 'bg-white/15 text-white'
-                          }`}
-                        >
-                          {item.count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-            </div>
-          ))}
-
-          {user?.role === 'admin' && (
-            <div className="space-y-1 pt-2 border-t border-white/10">
-              <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/55 px-3 pt-1 pb-1">
-                RACCOURCIS
-              </p>
-              <Link
-                to="/admin-dashboard"
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium text-white/85 hover:bg-white/10 hover:text-white transition"
-              >
-                <Shield className="w-4 h-4 shrink-0" />
-                <span className="flex-1 text-left truncate">Back-Office Admin</span>
-              </Link>
-            </div>
-          )}
-        </nav>
-
-        {/* Profil épinglé en bas de la sidebar */}
-        <div className="border-t border-white/15 bg-black/15 p-3.5">
-          <div className="flex items-center gap-2.5">
-            {user?.avatar ? (
-              <img
-                src={user.avatar}
-                alt={user.name}
-                referrerPolicy="no-referrer"
-                className="w-9 h-9 rounded-full object-cover border-2 border-white/30 shrink-0"
-              />
-            ) : (
-              <span className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-semibold shrink-0">
-                {user?.name?.charAt(0)?.toUpperCase() || 'P'}
-              </span>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-semibold text-white truncate">{user?.name}</p>
-              <p className="text-[11px] text-white/70 truncate">{user?.email}</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              title="Se déconnecter"
-              className="p-2 rounded-lg bg-white/10 hover:bg-rose-500 text-white transition cursor-pointer shrink-0"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Contenu principal */}
-      <main className={`min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
-          {/* Barre supérieure flottante blanche */}
-          <header className="bg-white rounded-2xl shadow-lg px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 border border-slate-100 relative z-30">
-            <div className="flex items-center gap-3 min-w-0">
+            {/* Bascule rapide Mathématiques / Physique-Chimie (toujours colorées comme sur la maquette) */}
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={() => setSidebarOpen((v) => !v)}
-                aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
-                className="w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center cursor-pointer transition shrink-0"
+                onClick={() =>
+                  setSubjectFilter((prev) => (prev === 'Mathématiques' ? 'all' : 'Mathématiques'))
+                }
+                className={`h-8 px-3 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer bg-[#2563eb] hover:bg-[#1d4ed8] text-white ${
+                  subjectFilter === 'Mathématiques'
+                    ? 'ring-2 ring-blue-300 ring-offset-1'
+                    : subjectFilter === 'Physique-Chimie'
+                    ? 'opacity-70 hover:opacity-100'
+                    : ''
+                }`}
               >
-                {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                <Calculator className="w-3.5 h-3.5" />
+                <span>Mathématiques</span>
               </button>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[15px] sm:text-base font-bold tracking-tight text-slate-800 truncate">
-                    Aliou Sow Academy
-                  </span>
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#eef2fb] text-[#4c3882]">
-                    Espace Enseignant
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 truncate">
-                  Gérez vos cours, exercices, quiz, élèves, Q&amp;R et communication
-                </p>
-              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSubjectFilter((prev) =>
+                    prev === 'Physique-Chimie' ? 'all' : 'Physique-Chimie'
+                  )
+                }
+                className={`h-8 px-3 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer bg-[#059669] hover:bg-emerald-700 text-white ${
+                  subjectFilter === 'Physique-Chimie'
+                    ? 'ring-2 ring-emerald-300 ring-offset-1'
+                    : subjectFilter === 'Mathématiques'
+                    ? 'opacity-70 hover:opacity-100'
+                    : ''
+                }`}
+              >
+                <Atom className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Physique-Chimie</span>
+                <span className="sm:hidden">Physique</span>
+              </button>
             </div>
 
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <Link
-                to="/"
-                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-slate-200 hover:border-[#2563eb] text-[13px] font-semibold text-slate-700 hover:text-[#2563eb] transition"
-              >
-                <Globe className="w-3.5 h-3.5" />
-                Voir le site
-              </Link>
+            <div className="hidden lg:block h-5 w-px bg-slate-200 mx-2 shrink-0" />
 
-              {/* Bouton Nouveau Cours (placé exactement avant la cloche, comme sur l'Admin) */}
+            {/* Filtres par niveaux (4ème à Terminale S) */}
+            <div className="hidden lg:flex items-center gap-1.5">
+              <span className="text-xs font-medium text-slate-500 mr-1">Classes :</span>
+              {HEADER_LEVELS.map((lvl) => {
+                const active = levelFilter === lvl.value;
+                return (
+                  <button
+                    key={lvl.value}
+                    type="button"
+                    onClick={() =>
+                      setLevelFilter((prev) => (prev === lvl.value ? 'all' : lvl.value))
+                    }
+                    className={`h-7 px-3 rounded-full text-xs font-medium transition cursor-pointer ${
+                      active
+                        ? 'bg-[#eff6ff] text-[#2563eb] border border-blue-200 font-semibold'
+                        : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 border border-transparent'
+                    }`}
+                  >
+                    {lvl.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Droite : + Créer un cours + Cloche + Profil */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="gradient-button gradient-button--sm shrink-0"
+            >
+              <span className="gradient-text">
+                <Plus className="w-3.5 h-3.5 text-[#4ecdc4]" />
+                <span className="hidden sm:inline">Créer un cours</span>
+              </span>
+            </button>
+
+            {/* Cloche de notifications */}
+            <div className="relative">
               <button
-                onClick={openCreateModal}
-                className="h-9 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
+                type="button"
+                onClick={() => setShowNotifMenu((v) => !v)}
+                aria-label="Notifications"
+                className="relative w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center cursor-pointer transition"
+                title="Notifications et alertes"
               >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Nouvelle Matière</span>
+                <Bell className="w-4 h-4" />
+                {pendingTeacherAlerts > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ef4444] text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm">
+                    {pendingTeacherAlerts > 99 ? '99+' : pendingTeacherAlerts}
+                  </span>
+                )}
               </button>
 
-              {/* Cloche de notifications enseignant (identique à Admin) */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowNotifMenu((v) => !v)}
-                  aria-label="Notifications"
-                  className="relative w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center cursor-pointer transition shrink-0"
-                  title="Notifications et alertes"
-                >
-                  <Bell className="w-4 h-4" />
-                  {pendingTeacherAlerts > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ef4444] text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm animate-pulse">
-                      {pendingTeacherAlerts > 99 ? '99+' : pendingTeacherAlerts}
-                    </span>
-                  )}
-                </button>
-
-                {showNotifMenu && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowNotifMenu(false)} />
-                    <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 isolate">
-                      <div className="px-4 pb-2.5 border-b border-slate-100 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Bell className="w-4 h-4 text-[#4c3882]" />
-                          <span className="text-sm font-bold text-slate-900">Notifications Pédagogiques</span>
-                        </div>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-[#4c3882]">
-                          {pendingTeacherAlerts} active(s)
-                        </span>
+              {showNotifMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowNotifMenu(false)} />
+                  <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50 isolate">
+                    <div className="px-4 pb-2.5 border-b border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-[#2563eb]" />
+                        <span className="text-sm font-bold text-slate-900">Notifications</span>
                       </div>
-                      <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
-                        {metrics.unansweredQuestions?.slice(0, 4).map((q) => (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#2563eb]">
+                        {pendingTeacherAlerts} active(s)
+                      </span>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                      {metrics.unansweredQuestions?.slice(0, 4).map((q) => (
+                        <button
+                          key={q._id}
+                          onClick={() => {
+                            setView('qa');
+                            setQaFilter('unanswered');
+                            setShowNotifMenu(false);
+                          }}
+                          className="w-full text-left p-3.5 hover:bg-slate-50 flex items-start gap-3 transition cursor-pointer"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#2563eb] flex items-center justify-center shrink-0 mt-0.5">
+                            <MessageSquare className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-slate-800 truncate">
+                              Question de {q.sender?.name || 'Élève'}
+                            </p>
+                            <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">"{q.message}"</p>
+                            <span className="text-[10px] text-[#2563eb] font-semibold mt-1 inline-block">
+                              Cliquer pour répondre →
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                      {exerciseSubmissions
+                        ?.filter((s) => s.status === 'submitted')
+                        .slice(0, 4)
+                        .map((sub) => (
                           <button
-                            key={q._id}
+                            key={sub._id}
                             onClick={() => {
-                              setView('qa');
-                              setQaFilter('unanswered');
+                              setView('exercises');
                               setShowNotifMenu(false);
                             }}
                             className="w-full text-left p-3.5 hover:bg-slate-50 flex items-start gap-3 transition cursor-pointer"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                              <MessageSquare className="w-4 h-4" />
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                              <Calculator className="w-4 h-4" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="text-xs font-bold text-slate-800 truncate">
-                                Question de {q.sender?.name || 'Élève'}
+                                Devoir soumis : {sub.student?.name || 'Élève'}
                               </p>
-                              <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">"{q.message}"</p>
-                              <span className="text-[10px] text-blue-600 font-semibold mt-1 inline-block">
-                                Cliquer pour répondre →
+                              <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                                {sub.exercise?.title || 'Exercice'}
+                              </p>
+                              <span className="text-[10px] text-amber-600 font-semibold mt-1 inline-block">
+                                Cliquer pour corriger →
                               </span>
                             </div>
                           </button>
                         ))}
-                        {exerciseSubmissions
-                          ?.filter((s) => s.status === 'submitted')
-                          .slice(0, 4)
-                          .map((sub) => (
-                            <button
-                              key={sub._id}
-                              onClick={() => {
-                                setView('exercises');
-                                setExerciseTab('submissions');
-                                setShowNotifMenu(false);
-                              }}
-                              className="w-full text-left p-3.5 hover:bg-slate-50 flex items-start gap-3 transition cursor-pointer"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
-                                <Calculator className="w-4 h-4" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold text-slate-800 truncate">
-                                  Devoir soumis : {sub.student?.name || 'Élève'}
-                                </p>
-                                <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
-                                  {sub.exercise?.title || 'Exercice'}
-                                </p>
-                                <span className="text-[10px] text-amber-600 font-semibold mt-1 inline-block">
-                                  Cliquer pour corriger →
-                                </span>
-                              </div>
-                            </button>
-                          ))}
-                        {pendingTeacherAlerts === 0 && (
-                          <div className="p-6 text-center text-xs text-slate-400">
-                            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                            Toutes les questions sont répondues et tous les devoirs sont corrigés !
-                          </div>
+                      {pendingTeacherAlerts === 0 && (
+                        <div className="p-6 text-center text-xs text-slate-400">
+                          <CheckCircle2 className="w-8 h-8 text-[#059669] mx-auto mb-2" />
+                          Toutes les questions sont répondues !
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Profil enseignant */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 cursor-pointer transition"
+              >
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    referrerPolicy="no-referrer"
+                    className="w-9 h-9 rounded-full object-cover border border-slate-200"
+                  />
+                ) : (
+                  <span className="w-9 h-9 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-xs font-bold">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'P'}
+                  </span>
+                )}
+              </button>
+
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
+                  <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50 isolate">
+                    <div className="px-4 pb-3 border-b border-slate-100">
+                      <p className="text-[11px] font-extrabold text-[#2563eb] uppercase tracking-wider">Professeur</p>
+                      <p className="text-sm font-bold text-slate-900 truncate mt-0.5">{user?.name}</p>
+                      <p className="text-xs font-medium text-slate-500 truncate">{user?.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link
+                        to="/"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#2563eb] hover:bg-blue-50/50 transition"
+                      >
+                        <Globe className="w-4 h-4 text-[#2563eb]" />
+                        Voir le site public
+                      </Link>
+                      {user?.role === 'admin' && (
+                        <Link
+                          to="/admin-dashboard"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#2563eb] hover:bg-blue-50/50 transition"
+                        >
+                          <Shield className="w-4 h-4 text-[#2563eb]" />
+                          Back-Office Admin
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setShowHistoryModal(true);
+                        }}
+                        className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#2563eb] hover:bg-blue-50/50 transition cursor-pointer"
+                      >
+                        <History className="w-4 h-4 text-[#2563eb]" />
+                        Historique d'activité
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setView('profile');
+                        }}
+                        className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#2563eb] hover:bg-blue-50/50 transition cursor-pointer"
+                      >
+                        <Settings className="w-4 h-4 text-[#2563eb]" />
+                        Paramètres
+                      </button>
+                    </div>
+                    <div className="pt-1 border-t border-slate-100">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Se déconnecter
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Barre niveaux mobile / tablette */}
+        <div className="lg:hidden px-4 pb-2.5 flex items-center gap-1.5 overflow-x-auto">
+          {HEADER_LEVELS.map((lvl) => {
+            const active = levelFilter === lvl.value;
+            return (
+              <button
+                key={lvl.value}
+                type="button"
+                onClick={() =>
+                  setLevelFilter((prev) => (prev === lvl.value ? 'all' : lvl.value))
+                }
+                className={`h-7 px-2.5 rounded-lg text-[11px] font-bold shrink-0 transition cursor-pointer ${
+                  active
+                    ? 'bg-blue-50 text-[#2563eb] border border-[#2563eb]/30'
+                    : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {lvl.label}
+              </button>
+            );
+          })}
+        </div>
+      </header>
+
+      {/* Overlay mobile */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-slate-950/40 backdrop-blur-[1px] z-30"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Corps : Barre latérale gauche + Contenu principal */}
+      <div className="flex min-h-[calc(100vh-3.5rem)]">
+        <aside
+          className={`fixed md:sticky top-14 left-0 h-[calc(100vh-3.5rem)] w-56 bg-[#f8fafc] border-r border-slate-200/70 z-30 flex flex-col justify-between transition-transform duration-300 shrink-0 ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          }`}
+        >
+          <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-6">
+            {sidebarGroups.map((group) => (
+              <div key={group} className="space-y-0.5">
+                {group !== 'PRINCIPAL' && (
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 pt-2 pb-1">
+                    {group}
+                  </p>
+                )}
+                {sidebarItems
+                  .filter((i) => i.group === group)
+                  .map((item) => {
+                    const Icon = item.icon;
+                    const active = view === item.key;
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => {
+                          setView(item.key);
+                          if (window.innerWidth < 768) setSidebarOpen(false);
+                        }}
+                        className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition cursor-pointer ${
+                          active
+                            ? 'bg-[#eff6ff] text-[#2563eb] font-semibold'
+                            : 'text-slate-600 font-medium hover:bg-slate-100/80 hover:text-slate-900'
+                        }`}
+                      >
+                        {active && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute left-0 top-1.5 bottom-1.5 w-[3.5px] rounded-r bg-[#2563eb]"
+                          />
                         )}
+                        <Icon
+                          className={`w-4 h-4 shrink-0 ${
+                            active ? 'text-[#2563eb]' : 'text-slate-500'
+                          }`}
+                        />
+                        <span className="flex-1 text-left truncate">{item.label}</span>
+                        {typeof item.count === 'number' && item.count > 0 && item.group !== 'PRINCIPAL' && (
+                          <span
+                            className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full ${
+                              item.alert
+                                ? 'bg-rose-500 text-white'
+                                : active
+                                ? 'bg-[#2563eb] text-white'
+                                : 'bg-slate-200/80 text-slate-600'
+                            }`}
+                          >
+                            {item.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+              </div>
+            ))}
+          </nav>
+
+          {/* Profil discret en bas de la sidebar avec déconnexion */}
+          <div className="px-3 py-2.5 border-t border-slate-200/70 bg-white/70">
+            <div className="flex items-center gap-2">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  referrerPolicy="no-referrer"
+                  className="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0"
+                />
+              ) : (
+                <span className="w-7 h-7 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                  {user?.name?.charAt(0)?.toUpperCase() || 'P'}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-slate-800 truncate">{user?.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Se déconnecter"
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition cursor-pointer shrink-0"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Zone de contenu principal */}
+        <main className="flex-1 min-w-0">
+          <div key={view} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-slide-up">
+            {view === 'overview' && renderOverview()}
+            {view === 'courses' && renderNewCoursesSection()}
+            {view === 'create-course' && (
+              <div className="space-y-5 animate-fade-slide-up">
+                {/* En-tête inline (Image 2) */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetCourseForm();
+                        setView('courses');
+                      }}
+                      className="h-9 px-3 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-xs font-bold text-slate-700 inline-flex items-center gap-1.5 cursor-pointer transition"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span>Retour</span>
+                    </button>
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                      {editingCourse ? 'Modifier le cours' : 'Créer un nouveau cours payant'}
+                    </h1>
+                  </div>
+                </div>
+
+                {errorMsg && (
+                  <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-700 p-3.5 rounded-2xl text-xs font-semibold">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
+                <form
+                  onSubmit={handleSubmitCourse}
+                  className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+                >
+                  {/* Colonne gauche (7 cols) : Informations générales */}
+                  <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-6 space-y-4">
+                    <h2 className="text-base font-extrabold text-slate-900">
+                      Informations générales
+                    </h2>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Titre du cours
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2563eb]"
+                        placeholder="ex : Fonctions Exponentielles & Logarithmes"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Sujet
+                        </label>
+                        <select
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                          className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 focus:outline-none focus:border-[#2563eb]"
+                        >
+                          {(availableSubjects.includes(subject)
+                            ? availableSubjects
+                            : [subject, ...availableSubjects].filter(Boolean)
+                          ).map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Niveau
+                        </label>
+                        <select
+                          value={level}
+                          onChange={(e) => setLevel(e.target.value)}
+                          className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 focus:outline-none focus:border-[#2563eb]"
+                        >
+                          {(availableLevels.some((l) => l.value === level) || !level
+                            ? availableLevels
+                            : [{ value: level, label: level }, ...availableLevels]
+                          ).map((l) => (
+                            <option key={l.value} value={l.value}>
+                              {l.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
-                  </>
-                )}
-              </div>
 
-              {/* Profil enseignant avec dropdown haute netteté */}
-              <div className="relative">
-                <button
-                  onClick={() => setMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-xl bg-[#eef2fb]/70 hover:bg-[#eef2fb] cursor-pointer transition"
-                >
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      referrerPolicy="no-referrer"
-                      className="w-8 h-8 rounded-full object-cover border border-indigo-200"
-                    />
-                  ) : (
-                    <span className="w-8 h-8 rounded-full bg-[#5c6be0] text-white flex items-center justify-center text-xs font-semibold">
-                      {user?.name?.charAt(0)?.toUpperCase() || 'P'}
-                    </span>
-                  )}
-                  <span className="hidden md:block text-[13px] font-semibold text-slate-800 max-w-[130px] truncate">
-                    {user?.name}
-                  </span>
-                  <span className="hidden lg:inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#ef4444] text-white">
-                    Professeur
-                  </span>
-                  <ChevronDown className="hidden md:block w-3.5 h-3.5 text-slate-400" />
-                </button>
-
-                {menuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
-                    <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 isolate">
-                      <div className="px-4 pb-3 border-b border-slate-100">
-                        <p className="text-[11px] font-extrabold text-[#ef4444] uppercase tracking-wider">Professeur</p>
-                        <p className="text-sm font-bold text-slate-900 truncate mt-0.5">{user?.name}</p>
-                        <p className="text-xs font-medium text-slate-500 truncate">{user?.email}</p>
+                    {/* Image de couverture */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Image de couverture
+                      </label>
+                      <div className="flex items-center gap-4 p-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/70">
+                        <div className="w-16 h-14 rounded-xl bg-slate-200/70 flex items-center justify-center text-slate-400 shrink-0 overflow-hidden">
+                          {imageFile ? (
+                            <img
+                              src={URL.createObjectURL(imageFile)}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : editingCourse?.image ? (
+                            <img
+                              src={editingCourse.image}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <BookOpen className="w-6 h-6" />
+                          )}
+                        </div>
+                        <label className="h-9 px-4 rounded-xl border border-slate-200 bg-white hover:border-[#2563eb] text-xs font-bold text-slate-700 hover:text-[#2563eb] inline-flex items-center gap-2 cursor-pointer transition shadow-2xs">
+                          <ImagePlus className="w-4 h-4" />
+                          <span>{imageFile ? imageFile.name : 'Upload'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setImageFile(e.target.files[0])}
+                            className="hidden"
+                          />
+                        </label>
                       </div>
-                      <div className="py-1">
-                        {user?.role === 'admin' && (
-                          <Link
-                            to="/admin-dashboard"
-                            onClick={() => setMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition"
-                          >
-                            <Shield className="w-4 h-4 text-[#5c6be0]" />
-                            Back-Office Admin
-                          </Link>
+                    </div>
+
+                    {/* Description pédagogique */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Description pédagogique
+                      </label>
+                      <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
+                        <div className="flex flex-wrap items-center gap-1 px-3 py-1.5 border-b border-slate-100 bg-slate-50/70 text-xs font-bold text-slate-600">
+                          {[
+                            { label: '∑', insert: '$\\sum $' },
+                            { label: '∫', insert: '$\\int f(x)\\,dx$' },
+                            { label: 'a/b', insert: '$\\frac{a}{b}$' },
+                            { label: 'xʸ', insert: '$x^n$' },
+                          ].map((item) => (
+                            <button
+                              key={item.label}
+                              type="button"
+                              onClick={() =>
+                                setDescription((prev) => `${prev}${prev ? ' ' : ''}${item.insert}`)
+                              }
+                              className="px-2 py-1 rounded hover:bg-white hover:text-[#2563eb] cursor-pointer"
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                          required
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          className="w-full h-28 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none"
+                          placeholder="Détaillez le programme, les objectifs et les notions abordées..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Colonne droite (5 cols) : Programme & Contenu + Tarification & Publication */}
+                  <div className="lg:col-span-5 space-y-5">
+                    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-3">
+                      <h2 className="text-base font-extrabold text-slate-900">
+                        Programme &amp; Contenu du cours
+                      </h2>
+                      <div className="space-y-2.5 text-[13px]">
+                        {/* 1. Ajouter un chapitre */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedDraftSlot((prev) =>
+                              prev === 'chapter' ? null : 'chapter'
+                            )
+                          }
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/80 hover:bg-slate-100/80 border border-dashed border-slate-300 flex items-center justify-between gap-2.5 font-medium text-slate-700 cursor-pointer transition text-left"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Plus className="w-4 h-4 text-slate-500 shrink-0" />
+                            <span className="truncate">
+                              {draftChapterTitle.trim()
+                                ? `Chapitre : ${draftChapterTitle.trim()}`
+                                : 'Ajouter un chapitre'}
+                            </span>
+                          </div>
+                          {draftChapterTitle.trim() && (
+                            <span className="text-[11px] font-bold text-[#059669] shrink-0">
+                              Prêt
+                            </span>
+                          )}
+                        </button>
+                        {expandedDraftSlot === 'chapter' && (
+                          <div className="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <input
+                              type="text"
+                              value={draftChapterTitle}
+                              onChange={(e) => setDraftChapterTitle(e.target.value)}
+                              placeholder="ex: Chapitre 1 : Primitives & Fonctions"
+                              className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#2563eb]"
+                            />
+                          </div>
                         )}
+
+                        {/* 2. Vidéo de cours 1 (Téléverser) */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedDraftSlot((prev) =>
+                              prev === 'video' ? null : 'video'
+                            )
+                          }
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#eff6ff]/80 hover:bg-[#eff6ff] border border-[#2563eb]/50 flex items-center justify-between gap-2 font-medium text-slate-800 cursor-pointer transition text-left"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <GripVertical className="w-4 h-4 text-slate-400 shrink-0" />
+                            <Video className="w-4 h-4 text-slate-600 shrink-0" />
+                            <span className="truncate">
+                              {draftVideoUrl.trim()
+                                ? 'Vidéo de cours 1 (Lien ajouté)'
+                                : 'Vidéo de cours 1 (Téléverser)'}
+                            </span>
+                          </div>
+                          <ChevronDown
+                            className={`w-4 h-4 text-slate-500 shrink-0 transition-transform ${
+                              expandedDraftSlot === 'video' ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </button>
+                        {expandedDraftSlot === 'video' && (
+                          <div className="px-3 py-2.5 rounded-xl bg-blue-50/40 border border-[#2563eb]/30 space-y-1.5">
+                            <input
+                              type="url"
+                              value={draftVideoUrl}
+                              onChange={(e) => setDraftVideoUrl(e.target.value)}
+                              placeholder="Coller un lien YouTube ou vidéo (https://...)"
+                              className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#2563eb]"
+                            />
+                          </div>
+                        )}
+
+                        {/* 3. Fiche PDF 1 (Téléverser) */}
+                        <label className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200 flex items-center justify-between gap-2.5 font-medium text-slate-700 cursor-pointer transition">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <GripVertical className="w-4 h-4 text-slate-400 shrink-0" />
+                            <FileText className="w-4 h-4 text-slate-600 shrink-0" />
+                            <span className="truncate">
+                              {draftPdfFile
+                                ? `PDF : ${draftPdfFile.name}`
+                                : 'Fiche PDF 1 (Téléverser)'}
+                            </span>
+                          </div>
+                          {draftPdfFile && (
+                            <span className="text-[11px] font-bold text-[#059669] shrink-0">
+                              Joint
+                            </span>
+                          )}
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            className="hidden"
+                            onChange={(e) => setDraftPdfFile(e.target.files?.[0] || null)}
+                          />
+                        </label>
+
+                        {/* 4. Exercice 1 (Créer) */}
                         <button
                           type="button"
                           onClick={() => {
-                            setMenuOpen(false);
-                            setShowHistoryModal(true);
+                            if (editingCourse) {
+                              openExerciseModal(editingCourse);
+                            } else {
+                              setExpandedDraftSlot((prev) =>
+                                prev === 'exercise' ? null : 'exercise'
+                              );
+                            }
                           }}
-                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition cursor-pointer"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200 flex items-center justify-between gap-2.5 font-medium text-slate-700 cursor-pointer transition text-left"
                         >
-                          <History className="w-4 h-4 text-[#5c6be0]" />
-                          Historique d'activité
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <GripVertical className="w-4 h-4 text-slate-400 shrink-0" />
+                            <Edit3 className="w-4 h-4 text-slate-600 shrink-0" />
+                            <span className="truncate">
+                              {draftExerciseTitle.trim()
+                                ? `Exercice : ${draftExerciseTitle.trim()}`
+                                : 'Exercice 1 (Créer)'}
+                            </span>
+                          </div>
                         </button>
-                        <Link
-                          to="/profile"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition"
-                        >
-                          <Settings className="w-4 h-4 text-[#5c6be0]" />
-                          Paramètres du profil
-                        </Link>
+                        {expandedDraftSlot === 'exercise' && !editingCourse && (
+                          <div className="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                            <input
+                              type="text"
+                              value={draftExerciseTitle}
+                              onChange={(e) => setDraftExerciseTitle(e.target.value)}
+                              placeholder="Titre de l'exercice ou TD (optionnel)"
+                              className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-[#2563eb]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setView('exercises')}
+                              className="text-[11px] font-bold text-[#2563eb] hover:underline cursor-pointer"
+                            >
+                              Ouvrir le studio Exercices &amp; Quiz →
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <div className="pt-1 border-t border-slate-100">
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+
+                      <div className="flex items-center gap-3 pt-1 text-[13px] font-medium text-slate-800 select-none">
+                        <label className="neon-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={firstLessonFreePreview}
+                            onChange={() => setFirstLessonFreePreview((v) => !v)}
+                          />
+                          <div className="neon-checkbox__frame">
+                            <div className="neon-checkbox__box">
+                              <div className="neon-checkbox__check-container">
+                                <svg viewBox="0 0 24 24" className="neon-checkbox__check">
+                                  <path d="M3,12.5l7,7L21,5"></path>
+                                </svg>
+                              </div>
+                              <div className="neon-checkbox__glow"></div>
+                              <div className="neon-checkbox__borders">
+                                <span></span><span></span><span></span><span></span>
+                              </div>
+                            </div>
+                            <div className="neon-checkbox__effects">
+                              <div className="neon-checkbox__particles">
+                                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                              </div>
+                              <div className="neon-checkbox__rings">
+                                <div className="ring"></div><div className="ring"></div><div className="ring"></div>
+                              </div>
+                              <div className="neon-checkbox__sparks">
+                                <span></span><span></span><span></span><span></span>
+                              </div>
+                            </div>
+                          </div>
+                        </label>
+                        <span
+                          onClick={() => setFirstLessonFreePreview((v) => !v)}
+                          className="cursor-pointer"
                         >
-                          <LogOut className="w-4 h-4" />
-                          Se déconnecter
+                          Aperçu gratuit pour la 1ère leçon
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+                      <h2 className="text-base font-extrabold text-slate-900">
+                        Tarification &amp; Publication
+                      </h2>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Prix du cours (en F CFA)
+                          </label>
+                          <input
+                            type="number"
+                            required={!isFree}
+                            disabled={isFree}
+                            value={isFree ? 0 : price}
+                            onChange={(e) =>
+                              setPrice(e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)
+                            }
+                            className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100 focus:outline-none focus:border-[#2563eb]"
+                            placeholder="ex: 10 000 F CFA"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Statut
+                          </label>
+                          <select
+                            value={isPublished ? 'published' : 'draft'}
+                            onChange={(e) => setIsPublished(e.target.value === 'published')}
+                            className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#2563eb]"
+                          >
+                            <option value="published">Publié en ligne</option>
+                            <option value="draft">Brouillon</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 items-center">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Durée d'accès
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={duration}
+                            onChange={(e) => setDuration(e.target.value)}
+                            className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800"
+                            placeholder="ex: 3 mois"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 pt-4 select-none">
+                          <label className="neon-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={isFree}
+                              onChange={() => setIsFree((prev) => !prev)}
+                            />
+                            <div className="neon-checkbox__frame">
+                              <div className="neon-checkbox__box">
+                                <div className="neon-checkbox__check-container">
+                                  <svg viewBox="0 0 24 24" className="neon-checkbox__check">
+                                    <path d="M3,12.5l7,7L21,5"></path>
+                                  </svg>
+                                </div>
+                                <div className="neon-checkbox__glow"></div>
+                                <div className="neon-checkbox__borders">
+                                  <span></span><span></span><span></span><span></span>
+                                </div>
+                              </div>
+                              <div className="neon-checkbox__effects">
+                                <div className="neon-checkbox__particles">
+                                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                                <div className="neon-checkbox__rings">
+                                  <div className="ring"></div><div className="ring"></div><div className="ring"></div>
+                                </div>
+                                <div className="neon-checkbox__sparks">
+                                  <span></span><span></span><span></span><span></span>
+                                </div>
+                              </div>
+                            </div>
+                          </label>
+                          <span
+                            onClick={() => setIsFree((prev) => !prev)}
+                            className="cursor-pointer"
+                          >
+                            Cours gratuit
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetCourseForm();
+                            setView('courses');
+                          }}
+                          className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={creating}
+                          className="gradient-button gradient-button--sm"
+                        >
+                          {creating ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <span className="gradient-text">
+                              {editingCourse ? 'Enregistrer' : 'Publier le cours en ligne'}
+                            </span>
+                          )}
                         </button>
                       </div>
                     </div>
-                  </>
-                )}
+                  </div>
+                </form>
               </div>
-            </div>
-          </header>
+            )}
+            {(view === 'exercises' || view === 'quizzes') && renderNewExercisesQuizSection()}
+            {view === 'students' && renderStudentsSection()}
+            {view === 'revenue' && renderRevenueSection()}
+            {view === 'profile' && renderNewSettingsSection()}
+            {view === 'qa' && renderQaSection()}
+            {view === 'reviews' && renderReviewsSection()}
+            {view === 'communication' && renderCommunicationSection()}
+          </div>
+        </main>
+      </div>
 
-          {/* Bannière titre de section (uniquement pour les sous-vues, pour éviter les doublons sur l'overview) */}
-          {view !== 'overview' && (
-            <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-slate-100">
-              <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white flex items-center justify-center shadow-sm shrink-0">
-                  <ActiveBannerIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">
-                    {activeSidebarItem?.label || 'Espace Enseignant'}
-                  </h1>
-                  <p className="text-[13px] text-slate-500 mt-0.5">
-                    Aliou Sow Academy — Gérez vos cours, exercices, quiz, élèves, Q&amp;R et communication.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {view === 'overview' && renderOverview()}
-          {view === 'courses' && renderCoursesSection()}
-          {view === 'exercises' && renderExercisesSection()}
-          {view === 'quizzes' && renderQuizzesSection()}
-          {view === 'students' && renderStudentsSection()}
-          {view === 'qa' && renderQaSection()}
-          {view === 'reviews' && renderReviewsSection()}
-          {view === 'communication' && renderCommunicationSection()}
-          {view === 'profile' && renderProfileSection()}
-        </div>
-      </main>
-
-      {/* Modal Création / Édition de cours */}
-      {showCourseModal && (
+      {/* Ancien modal conservé inactif pour compatibilité */}
+      {false && showCourseModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-[0_25px_70px_rgba(15,23,42,0.25)] relative flex flex-col max-h-[92vh] overflow-y-auto"
+            className="w-full max-w-4xl bg-[#f4f7fb] rounded-3xl border border-slate-200 shadow-[0_25px_70px_rgba(15,23,42,0.28)] relative flex flex-col max-h-[92vh] overflow-hidden"
           >
-            <button
-              onClick={() => {
-                setShowCourseModal(false);
-                resetCourseForm();
-              }}
-              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* En-tête */}
-            <div className="flex items-center gap-3.5 mb-6 pr-8">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-[#5c6be0] flex items-center justify-center shrink-0 shadow-xs">
-                <BookOpen className="w-6 h-6" />
-              </div>
+            {/* En-tête modal */}
+            <div className="px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                  {editingCourse ? 'Modifier la matière' : 'Créer une nouvelle matière'}
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                  {editingCourse ? 'Modifier le cours' : 'Créer un nouveau cours payant'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Configurez le titre, la matière, la classe et le tarif de votre cours.
+                  Configurez les informations générales, le tarif en F CFA et la publication.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCourseModal(false);
+                  resetCourseForm();
+                }}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             {errorMsg && (
-              <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-700 p-3.5 rounded-2xl text-xs font-semibold mb-4">
+              <div className="mx-6 mt-4 flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-700 p-3.5 rounded-2xl text-xs font-semibold">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmitCourse} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5 text-[#5c6be0]" />
-                  <span>Titre de la matière</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white focus:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#5c6be0] focus:ring-4 focus:ring-[#5c6be0]/10 transition shadow-2xs"
-                  placeholder="ex: Mécanique de Newton et Forces"
-                />
-              </div>
+            <form
+              onSubmit={handleSubmitCourse}
+              className="flex-1 overflow-y-auto p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5"
+            >
+              {/* Colonne gauche (7 cols) : Informations générales */}
+              <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+                <h4 className="text-base font-extrabold text-slate-900">
+                  Informations générales
+                </h4>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <AlignLeft className="w-3.5 h-3.5 text-[#5c6be0]" />
-                  <span>Description</span>
-                </label>
-                <textarea
-                  required
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full h-24 p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white focus:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#5c6be0] focus:ring-4 focus:ring-[#5c6be0]/10 transition shadow-2xs resize-none"
-                  placeholder="Détaillez le programme et les notions abordées..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-[#5c6be0]" />
-                    <span>Matière</span>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Titre du cours
                   </label>
-                  <select
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white focus:bg-white text-sm text-slate-900 focus:outline-none focus:border-[#5c6be0] shadow-2xs"
-                  >
-                    {(availableSubjects.includes(subject)
-                      ? availableSubjects
-                      : [subject, ...availableSubjects].filter(Boolean)
-                    ).map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    type="text"
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2563eb]"
+                    placeholder="ex : Fonctions Exponentielles & Logarithmes"
+                  />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Sujet
+                    </label>
+                    <select
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 focus:outline-none focus:border-[#2563eb]"
+                    >
+                      {(availableSubjects.includes(subject)
+                        ? availableSubjects
+                        : [subject, ...availableSubjects].filter(Boolean)
+                      ).map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Niveau
+                    </label>
+                    <select
+                      value={level}
+                      onChange={(e) => setLevel(e.target.value)}
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 focus:outline-none focus:border-[#2563eb]"
+                    >
+                      {(availableLevels.some((l) => l.value === level) || !level
+                        ? availableLevels
+                        : [{ value: level, label: level }, ...availableLevels]
+                      ).map((l) => (
+                        <option key={l.value} value={l.value}>
+                          {l.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Image de couverture */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-[#5c6be0]" />
-                    <span>Niveau</span>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Image de couverture
                   </label>
-                  <select
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value)}
-                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white focus:bg-white text-sm text-slate-900 focus:outline-none focus:border-[#5c6be0] shadow-2xs"
-                  >
-                    {(availableLevels.some((l) => l.value === level) || !level
-                      ? availableLevels
-                      : [{ value: level, label: level }, ...availableLevels]
-                    ).map((l) => (
-                      <option key={l.value} value={l.value}>
-                        {l.label}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-4 p-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/70">
+                    <div className="w-16 h-14 rounded-xl bg-slate-200/70 flex items-center justify-center text-slate-400 shrink-0 overflow-hidden">
+                      {imageFile ? (
+                        <img
+                          src={URL.createObjectURL(imageFile)}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : editingCourse?.image ? (
+                        <img
+                          src={editingCourse.image}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <BookOpen className="w-6 h-6" />
+                      )}
+                    </div>
+                    <label className="h-9 px-4 rounded-xl border border-slate-200 bg-white hover:border-[#2563eb] text-xs font-bold text-slate-700 hover:text-[#2563eb] inline-flex items-center gap-2 cursor-pointer transition shadow-2xs">
+                      <ImagePlus className="w-4 h-4" />
+                      <span>{imageFile ? imageFile.name : 'Upload'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImageFile(e.target.files[0])}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Description pédagogique avec barre d'outils LaTeX */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Description pédagogique
+                  </label>
+                  <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
+                    <div className="flex flex-wrap items-center gap-1 px-3 py-1.5 border-b border-slate-100 bg-slate-50/70 text-xs font-bold text-slate-600">
+                      {[
+                        { label: '∑', insert: '$\\sum $' },
+                        { label: '∫', insert: '$\\int f(x)\\,dx$' },
+                        { label: 'a/b', insert: '$\\frac{a}{b}$' },
+                        { label: 'xʸ', insert: '$x^n$' },
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() =>
+                            setDescription((prev) => `${prev}${prev ? ' ' : ''}${item.insert}`)
+                          }
+                          className="px-2 py-1 rounded hover:bg-white hover:text-[#2563eb] cursor-pointer"
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      required
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full h-24 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none"
+                      placeholder="Détaillez le programme, les objectifs et les notions abordées..."
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#5c6be0]" />
-                  <span>Durée d'accès</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white focus:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#5c6be0] shadow-2xs"
-                  placeholder="ex: 3 mois, 1 an"
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70">
-                <div>
-                  <p className="text-sm font-bold text-slate-800">Visibilité du cours</p>
-                  <p className="text-xs text-slate-500">
-                    {isPublished ? 'Publié : visible dans le catalogue élèves.' : 'Brouillon : visible uniquement par vous.'}
+              {/* Colonne droite (5 cols) : Aperçu Programme + Tarification & Publication */}
+              <div className="lg:col-span-5 space-y-5 flex flex-col justify-between">
+                {/* Carte Programme & Contenu */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-3">
+                  <h4 className="text-base font-extrabold text-slate-900">
+                    Programme &amp; Contenu du cours
+                  </h4>
+                  <div className="space-y-2 text-xs text-slate-600">
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-2 font-semibold">
+                      <Plus className="w-3.5 h-3.5 text-[#2563eb]" />
+                      <span>Chapitres modulaires (après création)</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-blue-50/60 border border-blue-200/60 flex items-center gap-2 font-semibold text-slate-800">
+                      <Video className="w-3.5 h-3.5 text-[#2563eb]" />
+                      <span>Vidéos de cours HD &amp; Séances Direct</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-2 font-semibold">
+                      <FileText className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Fiches PDF &amp; Exercices corrigés</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Vous pourrez ajouter vos chapitres, vidéos et fiches PDF dès l'enregistrement dans « Mes Cours &amp; Leçons ».
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsPublished((v) => !v)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition ${
-                    isPublished ? 'bg-emerald-500 text-white shadow-xs' : 'bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  {isPublished ? 'Publié' : 'Brouillon'}
-                </button>
-              </div>
 
-              <div
-                onClick={() => setIsFree((prev) => !prev)}
-                className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition ${
-                  isFree ? 'bg-indigo-50/60 border-indigo-200' : 'bg-slate-50/70 border-slate-200'
-                }`}
-              >
-                <div>
-                  <p className="text-sm font-bold text-slate-800">Cours gratuit (offre promotionnelle)</p>
-                  <p className="text-xs text-slate-500">Accès en un clic sans paiement.</p>
-                </div>
-                <div
-                  className={`w-11 h-6 rounded-full relative transition-colors ${
-                    isFree ? 'bg-[#2563eb]' : 'bg-slate-300'
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      isFree ? 'translate-x-5' : 'translate-x-0.5'
-                    }`}
-                  ></div>
-                </div>
-              </div>
+                {/* Carte Tarification & Publication */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+                  <h4 className="text-base font-extrabold text-slate-900">
+                    Tarification &amp; Publication
+                  </h4>
 
-              <div className="grid grid-cols-2 gap-4">
-                {isFree ? (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Valeur normale (FCFA)
-                    </label>
-                    <input
-                      type="number"
-                      value={originalPrice}
-                      onChange={(e) => setOriginalPrice(parseInt(e.target.value, 10) || 0)}
-                      className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/60 text-sm focus:outline-none focus:border-[#5c6be0]"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Prix du cours (F CFA)
+                      </label>
+                      <input
+                        type="number"
+                        required={!isFree}
+                        disabled={isFree}
+                        value={isFree ? 0 : price}
+                        onChange={(e) => setPrice(parseInt(e.target.value, 10) || 0)}
+                        className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 disabled:bg-slate-100 focus:outline-none focus:border-[#2563eb]"
+                        placeholder="ex: 10 000"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Statut
+                      </label>
+                      <select
+                        value={isPublished ? 'published' : 'draft'}
+                        onChange={(e) => setIsPublished(e.target.value === 'published')}
+                        className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#2563eb]"
+                      >
+                        <option value="published">Publié en ligne</option>
+                        <option value="draft">Brouillon</option>
+                      </select>
+                    </div>
                   </div>
-                ) : (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Tarif (FCFA)
+
+                  <div className="grid grid-cols-2 gap-3 items-center">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Durée d'accès
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={duration}
+                        onChange={(e) => setDuration(e.target.value)}
+                        className="w-full h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800"
+                        placeholder="ex: 3 mois"
+                      />
+                    </div>
+
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 pt-4 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={isFree}
+                        onChange={(e) => setIsFree((prev) => !prev)}
+                        className="rounded border-slate-300 text-[#2563eb] focus:ring-[#2563eb]"
+                      />
+                      <span>Cours gratuit</span>
                     </label>
-                    <input
-                      type="number"
-                      required
-                      value={price}
-                      onChange={(e) => setPrice(parseInt(e.target.value, 10) || 0)}
-                      className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/60 text-sm focus:outline-none focus:border-[#5c6be0]"
-                    />
                   </div>
-                )}
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <ImagePlus className="w-3.5 h-3.5 text-[#5c6be0]" />
-                    <span>Couverture</span>
-                  </label>
-                  <label className="flex items-center gap-2 px-3 h-11 bg-slate-50/70 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 rounded-xl cursor-pointer transition shadow-2xs">
-                    <ImagePlus className="w-4 h-4 text-indigo-500 shrink-0" />
-                    <span className="truncate text-xs font-semibold text-slate-600">
-                      {imageFile ? imageFile.name : 'Choisir une image...'}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setImageFile(e.target.files[0])}
-                      className="hidden"
-                    />
-                  </label>
+                  <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCourseModal(false);
+                        resetCourseForm();
+                      }}
+                      className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="h-10 px-5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-60"
+                    >
+                      {creating ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <span>
+                          {editingCourse ? 'Enregistrer' : 'Publier le cours en ligne'}
+                        </span>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex justify-end items-center gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCourseModal(false);
-                    resetCourseForm();
-                  }}
-                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="px-6 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-blue-600/25 hover:shadow-lg disabled:opacity-60"
-                >
-                  {creating ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <span>{editingCourse ? 'Mettre à jour le cours' : 'Créer le cours'}</span>
-                  )}
-                </button>
               </div>
             </form>
           </motion.div>

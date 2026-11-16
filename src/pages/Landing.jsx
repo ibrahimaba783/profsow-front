@@ -174,7 +174,7 @@ const useCountUp = (target, start, duration = 1400) => {
 const StatCard = ({ icon: Icon, target, label, suffix = '', start }) => {
   const value = useCountUp(target, start);
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_24px_rgba(15,23,42,0.06)] p-8 text-center hover:-translate-y-1.5 transition-all duration-300">
+    <div className="uiverse-glow-card p-8 text-center">
       <div className="w-14 h-14 rounded-2xl bg-amber-50 text-[#f59e0b] flex items-center justify-center mx-auto mb-5 shadow-xs">
         <Icon className="w-7 h-7" strokeWidth={1.8} />
       </div>
@@ -512,18 +512,22 @@ const Landing = () => {
                 {isLoggedIn ? (
                   <Link
                     to={dashboardPath}
-                    className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] text-white text-sm font-bold shadow-[0_10px_25px_-4px_rgba(245,158,11,0.35)] transition-all duration-200 hover:scale-[1.02]"
+                    className="gradient-button"
                   >
-                    <span>Accéder à mon espace</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <span className="gradient-text">
+                      <span>Accéder à mon espace</span>
+                      <ArrowRight className="w-4 h-4 text-[#4ecdc4]" />
+                    </span>
                   </Link>
                 ) : (
                   <Link
                     to="/register"
-                    className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] text-white text-sm font-bold shadow-[0_10px_25px_-4px_rgba(245,158,11,0.35)] transition-all duration-200 hover:scale-[1.02]"
+                    className="gradient-button"
                   >
-                    <span>Inscrivez-vous dès maintenant</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <span className="gradient-text">
+                      <span>Inscrivez-vous dès maintenant</span>
+                      <ArrowRight className="w-4 h-4 text-[#4ecdc4]" />
+                    </span>
                   </Link>
                 )}
 
@@ -587,7 +591,7 @@ const Landing = () => {
                 {/* 1. Carte flottante : Cours vidéo (haut gauche) */}
                 <div
                   style={{ animation: 'float 4s ease-in-out infinite' }}
-                  className="absolute top-10 -left-6 sm:-left-10 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_32px_rgba(15,23,42,0.14)] border border-slate-100 px-4 py-2.5 flex items-center gap-3 z-30"
+                  className="absolute top-10 -left-6 sm:-left-10 uiverse-glow-card px-4 py-2.5 flex items-center gap-3 z-30"
                 >
                   <div className="w-8 h-8 rounded-full bg-amber-50 text-[#f59e0b] flex items-center justify-center shrink-0 shadow-xs">
                     <Play className="w-3.5 h-3.5 fill-[#f59e0b] translate-x-0.5" />
@@ -601,7 +605,7 @@ const Landing = () => {
                 {/* 2. Carte flottante : Quiz corrigés (milieu droite) */}
                 <div
                   style={{ animation: 'float 4s ease-in-out infinite 1.5s' }}
-                  className="absolute top-1/2 -right-6 sm:-right-8 -translate-y-1/2 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_32px_rgba(15,23,42,0.14)] border border-slate-100 px-4 py-2.5 flex items-center gap-3 z-30"
+                  className="absolute top-1/2 -right-6 sm:-right-8 -translate-y-1/2 uiverse-glow-card px-4 py-2.5 flex items-center gap-3 z-30"
                 >
                   <div className="w-8 h-8 rounded-full bg-teal-50 text-[#009688] flex items-center justify-center shrink-0 shadow-xs">
                     <Check className="w-4 h-4 stroke-[3]" />
@@ -615,7 +619,7 @@ const Landing = () => {
                 {/* 3. Carte flottante : Séances en direct (bas gauche) */}
                 <div
                   style={{ animation: 'float 4s ease-in-out infinite 0.8s' }}
-                  className="absolute bottom-6 -left-6 sm:-left-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_32px_rgba(15,23,42,0.14)] border border-slate-100 px-4 py-2.5 flex items-center gap-3 z-30"
+                  className="absolute bottom-6 -left-6 sm:-left-8 uiverse-glow-card px-4 py-2.5 flex items-center gap-3 z-30"
                 >
                   <span className="relative flex h-3 w-3 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
@@ -739,79 +743,81 @@ const Landing = () => {
                 return (
                   <Reveal key={item.id} delay={idx * 0.08}>
                     <div
-                      className={`group bg-white rounded-3xl overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.06)] border border-slate-100 flex flex-col h-full transition-all duration-300 ${
-                        isAvailable
-                          ? 'hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(0,150,136,0.14)] cursor-pointer'
-                          : 'opacity-90'
+                      className={`group uiverse-glow-card p-[3px] flex flex-col h-full ${
+                        isAvailable ? 'cursor-pointer' : 'opacity-95'
                       }`}
                     >
-                      {/* Bannière supérieure : Verte si >= 1 matière, Grisée si 0 matière */}
-                      <div
-                        className={`relative h-44 flex items-center justify-center overflow-hidden transition-colors duration-300 ${
-                          isAvailable ? 'bg-[#009688]' : 'bg-slate-300'
-                        }`}
-                      >
-                        <div className="absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-white/10" />
-                        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10" />
+                      <div className="flex flex-col flex-1 rounded-[17px] overflow-hidden bg-white">
+                        {/* Bannière supérieure : Verte si >= 1 matière, Grisée si 0 matière */}
+                        <div
+                          className={`relative h-44 flex items-center justify-center overflow-hidden transition-colors duration-300 ${
+                            isAvailable ? 'bg-[#009688]' : 'bg-slate-200/80'
+                          }`}
+                        >
+                          <div className="absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-white/10" />
+                          <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10" />
 
-                        {item.examBadge && (
-                          <span className="absolute top-4 right-4 bg-[#f59e0b] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs uppercase tracking-wider">
-                            {item.examBadge}
-                          </span>
-                        )}
-
-                        <div className="w-24 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg text-slate-900 text-2xl font-black group-hover:scale-105 transition-transform duration-300">
-                          {item.short}
-                        </div>
-                      </div>
-
-                      <div className="p-6 sm:p-8 flex flex-col flex-1">
-                        {!isAvailable && (
-                          <span className="inline-block self-start text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
-                            BIENTÔT DISPONIBLE
-                          </span>
-                        )}
-
-                        <h3 className={`text-xl font-black text-slate-900 mb-1 transition-colors ${isAvailable ? 'group-hover:text-[#009688]' : ''}`}>
-                          {item.name}
-                        </h3>
-                        <p className="text-slate-500 text-xs sm:text-sm mb-6">{item.desc}</p>
-
-                        {/* Vraies données de l'API : matières, chapitres et leçons */}
-                        <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-400 mb-6 flex-wrap">
-                          <span className="flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5" />
-                            <span>{stats.subjectsCount} matière{stats.subjectsCount > 1 ? 's' : ''}</span>
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Briefcase className="w-3.5 h-3.5" />
-                            <span>{stats.totalChapters} chapitre{stats.totalChapters > 1 ? 's' : ''}</span>
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Play className="w-3.5 h-3.5 text-[#009688]" />
-                            <span>{stats.totalLessons} leçon{stats.totalLessons > 1 ? 's' : ''}</span>
-                          </span>
-                        </div>
-
-                        {/* Bouton d'action selon disponibilité */}
-                        <div className="mt-auto">
-                          {isAvailable ? (
-                            <Link
-                              to={`/courses?level=${encodeURIComponent(item.id)}`}
-                              className="w-full py-3 px-4 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs group-hover:shadow-md cursor-pointer"
-                            >
-                              <span>Accéder au programme</span>
-                              <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
-                            </Link>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled
-                              className="w-full py-3 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold cursor-not-allowed text-center select-none pointer-events-none transition-none"
-                            >
-                              Bientôt disponible
-                            </button>
+                          {item.examBadge && (
+                            <span className="absolute top-4 right-4 bg-[#f59e0b] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs uppercase tracking-wider">
+                              {item.examBadge}
+                            </span>
                           )}
+
+                          <div className="w-24 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg text-slate-900 text-2xl font-black group-hover:scale-105 transition-transform duration-300">
+                            {item.short}
+                          </div>
+                        </div>
+
+                        <div className="p-6 sm:p-8 flex flex-col flex-1">
+                          {!isAvailable && (
+                            <span className="inline-block self-start text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+                              BIENTÔT DISPONIBLE
+                            </span>
+                          )}
+
+                          <h3 className={`text-xl font-black text-slate-900 mb-1 transition-colors ${isAvailable ? 'group-hover:text-[#009688]' : ''}`}>
+                            {item.name}
+                          </h3>
+                          <p className="text-slate-500 text-xs sm:text-sm mb-6">{item.desc}</p>
+
+                          {/* Vraies données de l'API : matières, chapitres et leçons */}
+                          <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-400 mb-6 flex-wrap">
+                            <span className="flex items-center gap-1.5">
+                              <BookOpen className="w-3.5 h-3.5" />
+                              <span>{stats.subjectsCount} matière{stats.subjectsCount > 1 ? 's' : ''}</span>
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Briefcase className="w-3.5 h-3.5" />
+                              <span>{stats.totalChapters} chapitre{stats.totalChapters > 1 ? 's' : ''}</span>
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Play className="w-3.5 h-3.5 text-[#009688]" />
+                              <span>{stats.totalLessons} leçon{stats.totalLessons > 1 ? 's' : ''}</span>
+                            </span>
+                          </div>
+
+                          {/* Bouton d'action selon disponibilité */}
+                          <div className="mt-auto">
+                            {isAvailable ? (
+                              <Link
+                                to={`/courses?level=${encodeURIComponent(item.id)}`}
+                                className="w-full gradient-button gradient-button--sm"
+                              >
+                                <span className="gradient-text">
+                                  <span>Accéder au programme</span>
+                                  <ArrowRight className="w-4 h-4 text-[#2563eb] group-hover:translate-x-1.5 transition-transform" />
+                                </span>
+                              </Link>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled
+                                className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed text-center select-none pointer-events-none transition-none"
+                              >
+                                Bientôt disponible
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -831,76 +837,78 @@ const Landing = () => {
                 return (
                   <Reveal key={item.id} delay={idx * 0.08}>
                     <div
-                      className={`group bg-white rounded-3xl overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.06)] border border-slate-100 flex flex-col h-full transition-all duration-300 ${
-                        isAvailable
-                          ? 'hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(0,150,136,0.14)] cursor-pointer'
-                          : 'opacity-90'
+                      className={`group uiverse-glow-card p-[3px] flex flex-col h-full ${
+                        isAvailable ? 'cursor-pointer' : 'opacity-95'
                       }`}
                     >
-                      <div
-                        className={`relative h-44 flex items-center justify-center overflow-hidden transition-colors duration-300 ${
-                          isAvailable ? 'bg-[#009688]' : 'bg-slate-300'
-                        }`}
-                      >
-                        <div className="absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-white/10" />
-                        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10" />
+                      <div className="flex flex-col flex-1 rounded-[17px] overflow-hidden bg-white">
+                        <div
+                          className={`relative h-44 flex items-center justify-center overflow-hidden transition-colors duration-300 ${
+                            isAvailable ? 'bg-[#009688]' : 'bg-slate-200/80'
+                          }`}
+                        >
+                          <div className="absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-white/10" />
+                          <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10" />
 
-                        {item.examBadge && (
-                          <span className="absolute top-4 right-4 bg-[#f59e0b] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs uppercase tracking-wider">
-                            {item.examBadge}
-                          </span>
-                        )}
-
-                        <div className="w-24 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg text-slate-900 text-2xl font-black group-hover:scale-105 transition-transform duration-300">
-                          {item.short}
-                        </div>
-                      </div>
-
-                      <div className="p-6 sm:p-8 flex flex-col flex-1">
-                        {!isAvailable && (
-                          <span className="inline-block self-start text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
-                            BIENTÔT DISPONIBLE
-                          </span>
-                        )}
-
-                        <h3 className={`text-xl font-black text-slate-900 mb-1 transition-colors ${isAvailable ? 'group-hover:text-[#009688]' : ''}`}>
-                          {item.name}
-                        </h3>
-                        <p className="text-slate-500 text-xs sm:text-sm mb-6">{item.desc}</p>
-
-                        <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-400 mb-6 flex-wrap">
-                          <span className="flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5" />
-                            <span>{stats.subjectsCount} matière{stats.subjectsCount > 1 ? 's' : ''}</span>
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Briefcase className="w-3.5 h-3.5" />
-                            <span>{stats.totalChapters} chapitre{stats.totalChapters > 1 ? 's' : ''}</span>
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Play className="w-3.5 h-3.5 text-[#009688]" />
-                            <span>{stats.totalLessons} leçon{stats.totalLessons > 1 ? 's' : ''}</span>
-                          </span>
-                        </div>
-
-                        <div className="mt-auto">
-                          {isAvailable ? (
-                            <Link
-                              to={`/courses?level=${encodeURIComponent(item.id)}`}
-                              className="w-full py-3 px-4 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs group-hover:shadow-md cursor-pointer"
-                            >
-                              <span>Accéder au programme</span>
-                              <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
-                            </Link>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled
-                              className="w-full py-3 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold cursor-not-allowed text-center select-none pointer-events-none transition-none"
-                            >
-                              Bientôt disponible
-                            </button>
+                          {item.examBadge && (
+                            <span className="absolute top-4 right-4 bg-[#f59e0b] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs uppercase tracking-wider">
+                              {item.examBadge}
+                            </span>
                           )}
+
+                          <div className="w-24 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg text-slate-900 text-2xl font-black group-hover:scale-105 transition-transform duration-300">
+                            {item.short}
+                          </div>
+                        </div>
+
+                        <div className="p-6 sm:p-8 flex flex-col flex-1">
+                          {!isAvailable && (
+                            <span className="inline-block self-start text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+                              BIENTÔT DISPONIBLE
+                            </span>
+                          )}
+
+                          <h3 className={`text-xl font-black text-slate-900 mb-1 transition-colors ${isAvailable ? 'group-hover:text-[#009688]' : ''}`}>
+                            {item.name}
+                          </h3>
+                          <p className="text-slate-500 text-xs sm:text-sm mb-6">{item.desc}</p>
+
+                          <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-400 mb-6 flex-wrap">
+                            <span className="flex items-center gap-1.5">
+                              <BookOpen className="w-3.5 h-3.5" />
+                              <span>{stats.subjectsCount} matière{stats.subjectsCount > 1 ? 's' : ''}</span>
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Briefcase className="w-3.5 h-3.5" />
+                              <span>{stats.totalChapters} chapitre{stats.totalChapters > 1 ? 's' : ''}</span>
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Play className="w-3.5 h-3.5 text-[#009688]" />
+                              <span>{stats.totalLessons} leçon{stats.totalLessons > 1 ? 's' : ''}</span>
+                            </span>
+                          </div>
+
+                          <div className="mt-auto">
+                            {isAvailable ? (
+                              <Link
+                                to={`/courses?level=${encodeURIComponent(item.id)}`}
+                                className="w-full gradient-button gradient-button--sm"
+                              >
+                                <span className="gradient-text">
+                                  <span>Accéder au programme</span>
+                                  <ArrowRight className="w-4 h-4 text-[#2563eb] group-hover:translate-x-1.5 transition-transform" />
+                                </span>
+                              </Link>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled
+                                className="w-full py-3 px-4 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed text-center select-none pointer-events-none transition-none"
+                              >
+                                Bientôt disponible
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1020,7 +1028,7 @@ const Landing = () => {
                   return (
                     <div
                       key={item.title}
-                      className="p-4 rounded-2xl bg-[#f8fafc] border border-slate-100 flex items-start gap-3.5 hover:border-[#009688]/30 hover:shadow-xs transition duration-200"
+                      className="uiverse-glow-card p-4 flex items-start gap-3.5"
                     >
                       <div className="w-10 h-10 rounded-xl bg-amber-50 text-[#f59e0b] flex items-center justify-center shrink-0 shadow-2xs">
                         <Icon className="w-5 h-5" />
@@ -1038,10 +1046,12 @@ const Landing = () => {
                 <button
                   type="button"
                   onClick={() => handleTriggerInstall('general')}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition shadow-sm hover:scale-[1.02] cursor-pointer"
+                  className="gradient-button gradient-button--sm"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Installer l'application sur cet appareil</span>
+                  <span className="gradient-text">
+                    <Download className="w-4 h-4 text-[#4ecdc4]" />
+                    <span>Installer l'application sur cet appareil</span>
+                  </span>
                 </button>
               </div>
             </Reveal>
@@ -1155,7 +1165,7 @@ const Landing = () => {
                     <button
                       type="button"
                       onClick={() => handleTriggerInstall(platformKey)}
-                      className="w-full text-left group bg-[#f8fafc] hover:bg-white rounded-2xl p-6 border border-slate-100 hover:border-[#009688]/40 hover:shadow-lg transition-all duration-300 flex items-start justify-between h-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#009688]/30"
+                      className="w-full text-left group uiverse-glow-card p-6 flex items-start justify-between h-full cursor-pointer focus:outline-none"
                     >
                       <div className="space-y-1">
                         <div className="w-9 h-9 rounded-xl bg-teal-50 text-[#009688] flex items-center justify-center mb-3 shadow-2xs group-hover:scale-110 group-hover:bg-[#009688] group-hover:text-white transition-all duration-200">
@@ -1270,9 +1280,9 @@ const Landing = () => {
           {loading ? (
             <CourseSkeletonRow />
           ) : filteredCourses.length === 0 ? (
-            <div className="border border-dashed border-slate-300 rounded-2xl py-14 px-6 text-center max-w-lg mx-auto">
-              <p className="text-slate-800 font-bold mb-1">Aucune matière ne correspond à ce filtre.</p>
-              <p className="text-slate-500 text-xs mb-4">
+            <div className="uiverse-glow-card py-14 px-6 text-center max-w-lg mx-auto">
+              <p className="text-slate-900 font-bold mb-1">Aucune matière ne correspond à ce filtre.</p>
+              <p className="text-slate-500 text-xs mb-5">
                 Essayez de réinitialiser vos critères de sélection.
               </p>
               <button
@@ -1282,9 +1292,9 @@ const Landing = () => {
                   setActiveClassFilter('Toutes les classes');
                   setOnlyFree(false);
                 }}
-                className="px-4 py-2 bg-[#009688] text-white text-xs font-bold rounded-lg hover:bg-[#00796b]"
+                className="gradient-button gradient-button--sm"
               >
-                Réinitialiser les filtres
+                <span className="gradient-text">Réinitialiser les filtres</span>
               </button>
             </div>
           ) : (
@@ -1428,10 +1438,12 @@ const Landing = () => {
               <div className="pt-4">
                 <Link
                   to="/courses"
-                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] text-white text-xs sm:text-sm font-bold shadow-[0_10px_25px_-4px_rgba(245,158,11,0.35)] transition-all duration-200 hover:scale-[1.02]"
+                  className="group gradient-button"
                 >
-                  <span>Explorer nos matières</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                  <span className="gradient-text">
+                    <span>Explorer nos matières</span>
+                    <ArrowRight className="w-4 h-4 text-[#4ecdc4] group-hover:translate-x-1.5 transition-transform" />
+                  </span>
                 </Link>
               </div>
             </Reveal>
@@ -1617,7 +1629,7 @@ const Landing = () => {
               </p>
 
               {/* Boîte d'assistance contact */}
-              <div className="p-6 rounded-2xl bg-[#e7f7f4]/60 border border-[#009688]/20 flex items-start gap-4">
+              <div className="uiverse-glow-card p-6 flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-[#009688] text-white flex items-center justify-center shrink-0 shadow-xs">
                   <Smartphone className="w-5 h-5" />
                 </div>
@@ -1648,7 +1660,7 @@ const Landing = () => {
                 const isOpen = openFaq === index;
                 return (
                   <Reveal key={index} delay={index * 0.06}>
-                    <div className="border border-slate-100 rounded-2xl bg-[#f8fafc] overflow-hidden transition-all duration-300">
+                    <div className="uiverse-glow-card overflow-hidden">
                       <button
                         type="button"
                         onClick={() => setOpenFaq(isOpen ? -1 : index)}
@@ -1663,7 +1675,7 @@ const Landing = () => {
                       </button>
 
                       {isOpen && (
-                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100/60 pt-3">
+                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
                           {faq.answer}
                         </div>
                       )}

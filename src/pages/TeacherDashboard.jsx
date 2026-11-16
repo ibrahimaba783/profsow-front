@@ -3887,14 +3887,14 @@ const TeacherDashboard = () => {
               <img src={logo} alt="Aliou Sow Academy" className="w-7 h-7 object-contain" />
             </Link>
 
-            {/* Bascule rapide Mathématiques / Physique-Chimie (toujours colorées comme sur la maquette) */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Bascule rapide Mathématiques / Physique-Chimie (compacte sur mobile) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
               <button
                 type="button"
                 onClick={() =>
                   setSubjectFilter((prev) => (prev === 'Mathématiques' ? 'all' : 'Mathématiques'))
                 }
-                className={`h-8 px-3 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer bg-[#2563eb] hover:bg-[#1d4ed8] text-white ${
+                className={`h-8 px-2 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold inline-flex items-center gap-1 sm:gap-1.5 transition cursor-pointer bg-[#2563eb] hover:bg-[#1d4ed8] text-white shrink-0 ${
                   subjectFilter === 'Mathématiques'
                     ? 'ring-2 ring-blue-300 ring-offset-1'
                     : subjectFilter === 'Physique-Chimie'
@@ -3903,7 +3903,8 @@ const TeacherDashboard = () => {
                 }`}
               >
                 <Calculator className="w-3.5 h-3.5" />
-                <span>Mathématiques</span>
+                <span className="sm:hidden">Maths</span>
+                <span className="hidden sm:inline">Mathématiques</span>
               </button>
 
               <button
@@ -3913,7 +3914,7 @@ const TeacherDashboard = () => {
                     prev === 'Physique-Chimie' ? 'all' : 'Physique-Chimie'
                   )
                 }
-                className={`h-8 px-3 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer bg-[#059669] hover:bg-emerald-700 text-white ${
+                className={`h-8 px-2 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold inline-flex items-center gap-1 sm:gap-1.5 transition cursor-pointer bg-[#059669] hover:bg-emerald-700 text-white shrink-0 ${
                   subjectFilter === 'Physique-Chimie'
                     ? 'ring-2 ring-emerald-300 ring-offset-1'
                     : subjectFilter === 'Mathématiques'
@@ -4177,7 +4178,7 @@ const TeacherDashboard = () => {
       {/* Overlay mobile */}
       {sidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-slate-950/40 backdrop-blur-[1px] z-30"
+          className="md:hidden fixed inset-0 bg-slate-950/40 backdrop-blur-[1px] z-40"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
@@ -4185,10 +4186,24 @@ const TeacherDashboard = () => {
       {/* Corps : Barre latérale gauche + Contenu principal */}
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         <aside
-          className={`fixed md:sticky top-14 left-0 h-[calc(100vh-3.5rem)] w-56 bg-[#f8fafc] border-r border-slate-200/70 z-30 flex flex-col justify-between transition-transform duration-300 shrink-0 ${
+          className={`fixed md:sticky top-0 md:top-14 left-0 h-screen md:h-[calc(100vh-3.5rem)] w-60 md:w-56 bg-[#f8fafc] border-r border-slate-200/70 z-50 md:z-30 flex flex-col justify-between transition-transform duration-300 shrink-0 ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
         >
+          <div className="md:hidden px-4 h-14 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
+            <div className="flex items-center gap-2 min-w-0">
+              <img src={logo} alt="Aliou Sow Academy" className="w-7 h-7 object-contain shrink-0" />
+              <span className="text-xs font-extrabold text-slate-900 truncate">Espace Professeur</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
+              aria-label="Fermer le menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
           <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-6">
             {sidebarGroups.map((group) => (
               <div key={group} className="space-y-0.5">

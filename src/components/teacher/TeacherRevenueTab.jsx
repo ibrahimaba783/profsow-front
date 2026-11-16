@@ -230,7 +230,7 @@ const TeacherRevenueTab = ({
       </div>
 
       {/* 3 KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-5">
         {/* Solde disponible */}
         <div className="uiverse-glow-card p-5">
           <div className="flex items-center justify-between gap-2">
@@ -315,7 +315,7 @@ const TeacherRevenueTab = ({
       </div>
 
       {/* Grille principale : Historique + Moyens de retrait */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Historique des transactions & retraits */}
         <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">

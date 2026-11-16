@@ -254,7 +254,7 @@ const TeacherCoursesTab = ({
   };
 
   return (
-    <div className="space-y-5 animate-fade-slide-up">
+    <div className="space-y-6 animate-fade-slide-up">
       {/* En-tête : Titre gros et gras + champ de recherche arrondi à droite */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-[26px] sm:text-[28px] font-extrabold text-slate-900 tracking-tight">
@@ -283,7 +283,7 @@ const TeacherCoursesTab = ({
       </div>
 
       {/* Grille Master-Detail (~40% gauche / ~60% droite) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* COLONNE GAUCHE (5 cols ~ 42%) : Cartes de cours */}
         <div className="lg:col-span-5 space-y-3">
           {filteredCourses.length === 0 ? (

@@ -10,6 +10,8 @@ import AdminOverviewTab from '../components/admin/AdminOverviewTab';
 import AdminSecurityTab from '../components/admin/AdminSecurityTab';
 import AdminUsersTab from '../components/admin/AdminUsersTab';
 import AdminSubscriptionsTab from '../components/admin/AdminSubscriptionsTab';
+import AdminCatalogPromoTab from '../components/admin/AdminCatalogPromoTab';
+import AdminSystemConfigTab from '../components/admin/AdminSystemConfigTab';
 import AdminContentTab from '../components/admin/AdminContentTab';
 import AdminNotificationsTab from '../components/admin/AdminNotificationsTab';
 import AdminTroubleshootingTab from '../components/admin/AdminTroubleshootingTab';
@@ -159,7 +161,7 @@ const FEATURE_LIST = [
 ];
 
 const inputClass =
-  'w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15 transition';
+  'w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-[#2563eb]/15 transition';
 
 const AdminDashboard = () => {
   const { user, loading: authLoading, logout } = useContext(AuthContext);
@@ -198,6 +200,7 @@ const AdminDashboard = () => {
   };
 
   // Filtres & recherche
+  const [globalSearch, setGlobalSearch] = useState('');
   const [courseSearch, setCourseSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
@@ -239,6 +242,10 @@ const AdminDashboard = () => {
 
   // Modal Abonnement manuel
   const [showSubModal, setShowSubModal] = useState(false);
+  const [subStudentSearch, setSubStudentSearch] = useState('');
+  const [subLevelFilter, setSubLevelFilter] = useState('Tous');
+  const [subReason, setSubReason] = useState('');
+  const [subNotifyEmail, setSubNotifyEmail] = useState(true);
   const [subForm, setSubForm] = useState({
     studentId: '',
     courseId: '',
@@ -246,6 +253,7 @@ const AdminDashboard = () => {
     amount: 0,
     durationMonths: 12,
   });
+  const [subSelectedCourseIds, setSubSelectedCourseIds] = useState([]);
   const [savingSub, setSavingSub] = useState(false);
 
   // Brouillon local des paramètres no-code
@@ -369,30 +377,27 @@ const AdminDashboard = () => {
     }
   }, [user?._id, user?.role]);
 
-  if (authLoading || loading || !user || user.role !== 'admin') {
+  if (authLoading || !user || user.role !== 'admin') {
     return (
-      <div className="theme-myschools min-h-screen flex items-center justify-center bg-gradient-to-br from-[#6372e8] via-[#6b5cc4] to-[#7c52a5] px-4">
-        <div className="w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/40 flex flex-col items-center text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#f6f7fb] px-4">
+        <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-lg border border-slate-200/80 flex flex-col items-center text-center">
           <div className="relative mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#6372e8] shadow-sm">
-              <ShieldCheck className="w-8 h-8 text-[#6372e8]" />
+            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+              <ShieldCheck className="w-8 h-8 text-indigo-600" />
             </div>
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center">
-              <div className="w-3.5 h-3.5 border-2 border-indigo-200 border-t-[#6372e8] rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
             </div>
           </div>
           <h2 className="text-base font-black text-slate-900 tracking-tight">
             Aliou Sow Academy
           </h2>
-          <p className="text-[11px] font-bold text-[#6372e8] uppercase tracking-wider mt-0.5 mb-2">
+          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider mt-0.5 mb-2">
             Espace Administrateur
           </p>
           <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
-            Synchronisation des données et préparation de votre tableau de bord...
+            Vérification de votre session administrateur...
           </p>
-          <div className="w-40 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-4">
-            <div className="h-full bg-gradient-to-r from-[#6372e8] to-[#7c52a5] rounded-full animate-pulse w-full"></div>
-          </div>
         </div>
       </div>
     );
@@ -628,25 +633,46 @@ const AdminDashboard = () => {
 
   // --- ACTIONS ABONNEMENTS ---
   const openGrantSubModal = () => {
+    const firstCourseId = courses[0]?._id || '';
     setSubForm({
       studentId: studentsList[0]?._id || '',
-      courseId: courses[0]?._id || '',
+      courseId: firstCourseId,
       paymentMethod: 'Offert (Admin)',
       amount: 0,
       durationMonths: 12,
     });
+    setSubSelectedCourseIds(firstCourseId ? [firstCourseId] : []);
+    setSubStudentSearch('');
+    setSubLevelFilter('Tous');
     setShowSubModal(true);
   };
 
   const handleGrantSub = async (e) => {
     e.preventDefault();
+    const targetCourseIds =
+      subSelectedCourseIds.length > 0
+        ? subSelectedCourseIds
+        : subForm.courseId
+        ? [subForm.courseId]
+        : [];
+    if (!subForm.studentId || targetCourseIds.length === 0) {
+      showToast('error', 'Veuillez sélectionner un élève et au moins un cours.');
+      return;
+    }
     setSavingSub(true);
     try {
-      await api('/admin/subscriptions', {
-        method: 'POST',
-        body: JSON.stringify(subForm),
-      });
-      showToast('success', 'Abonnement accordé avec succès.');
+      for (const cid of targetCourseIds) {
+        await api('/admin/subscriptions', {
+          method: 'POST',
+          body: JSON.stringify({ ...subForm, courseId: cid }),
+        });
+      }
+      showToast(
+        'success',
+        targetCourseIds.length > 1
+          ? `${targetCourseIds.length} accès accordés avec succès.`
+          : 'Abonnement accordé avec succès.'
+      );
       setShowSubModal(false);
       await fetchAllData();
     } catch (err) {
@@ -859,38 +885,32 @@ const AdminDashboard = () => {
   const pendingReportsCount = reports.filter((r) => r.status === 'pending').length;
 
   const sidebarItems = [
-    { key: 'overview', label: "Vue d'ensemble", icon: LayoutDashboard, group: 'TABLEAU DE BORD' },
-    { key: 'courses', label: 'Matières & Cours', icon: BookOpen, count: courses.length, group: 'GESTION' },
-    { key: 'subscriptions', label: 'Abonnements', icon: CreditCard, count: subscriptions.length, group: 'GESTION' },
-    { key: 'users', label: 'Utilisateurs', icon: Users, count: usersList.length, group: 'GESTION' },
-    {
-      key: 'troubleshooting',
-      label: 'Résolution des Problèmes',
-      icon: Wrench,
-      group: 'GESTION',
-      priority: true,
-    },
+    { key: 'overview', label: "Vue d'ensemble", icon: LayoutDashboard, group: 'TOUR DE CONTRÔLE' },
+    { key: 'subscriptions', label: 'Transactions', icon: CreditCard, count: subscriptions.length, group: 'TOUR DE CONTRÔLE' },
+    { key: 'users', label: 'Utilisateurs & Accès', icon: Users, count: usersList.length, group: 'TOUR DE CONTRÔLE' },
+    { key: 'courses', label: 'Catalogue & Promo', icon: BookOpen, count: courses.length, group: 'TOUR DE CONTRÔLE' },
     {
       key: 'security',
-      label: 'Sécurité & Signalements',
+      label: 'Sécurité',
       icon: ShieldAlert,
       count: pendingReportsCount,
-      group: 'GESTION',
+      group: 'TOUR DE CONTRÔLE',
       priority: true,
     },
+    { key: 'settings', label: 'Configuration Système', icon: Settings, group: 'TOUR DE CONTRÔLE' },
     {
       key: 'notifications',
-      label: 'Notifications & Alertes',
+      label: 'Notifications',
       icon: Bell,
       count: unreadAlertsCount,
-      group: 'COMMUNICATION',
+      group: 'OUTILS AVANCÉS',
     },
-    { key: 'features', label: 'Fonctionnalités', icon: Sliders, group: 'CONFIGURATION' },
-    { key: 'content', label: 'Contenu & Avis', icon: Megaphone, group: 'CONFIGURATION' },
-    { key: 'settings', label: 'Paramètres site', icon: Settings, group: 'CONFIGURATION' },
+    { key: 'troubleshooting', label: 'Résolution Problèmes', icon: Wrench, group: 'OUTILS AVANCÉS' },
+    { key: 'features', label: 'Fonctionnalités', icon: Sliders, group: 'OUTILS AVANCÉS' },
+    { key: 'content', label: 'Contenu & Avis', icon: Megaphone, group: 'OUTILS AVANCÉS' },
   ];
 
-  const sidebarGroups = ['TABLEAU DE BORD', 'GESTION', 'COMMUNICATION', 'CONFIGURATION'];
+  const sidebarGroups = ['TOUR DE CONTRÔLE', 'OUTILS AVANCÉS'];
 
   const stats = overview?.stats || {
     users: { student: 0, teacher: 0, admin: 0, total: 0 },
@@ -902,59 +922,207 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="theme-myschools min-h-screen bg-gradient-to-br from-[#6372e8] via-[#6b5cc4] to-[#7c52a5] text-slate-800 antialiased">
+    <div className="min-h-screen bg-[#f6f7fb] text-slate-900 antialiased font-sans">
+      {/* Topbar blanche sticky */}
+      <header className="sticky top-0 z-40 h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
+        {/* Gauche : Burger + Logo + Badge Tour de Contrôle */}
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((v) => !v)}
+            aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 flex items-center justify-center cursor-pointer transition shrink-0"
+          >
+            {sidebarOpen ? <ChevronLeft className="w-4 h-4 hidden lg:block" /> : null}
+            <Menu className={`w-4 h-4 ${sidebarOpen ? 'lg:hidden' : ''}`} />
+          </button>
+
+          <Link to="/" className="flex items-center gap-2.5 min-w-0 pr-2">
+            <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-slate-100 p-1.5 flex items-center justify-center shrink-0">
+              <img src={logo} alt="Aliou Sow Academy" className="w-full h-full object-contain" />
+            </div>
+            <div className="min-w-0 flex flex-col leading-tight gap-0.5">
+              <span className="text-[14px] sm:text-[15px] font-bold tracking-tight text-slate-900 truncate">
+                Aliou Sow
+              </span>
+              <span className="inline-flex items-center w-fit px-2 py-[2px] rounded-md bg-slate-900 text-indigo-300 border border-indigo-500/30 text-[9px] font-bold tracking-wider uppercase whitespace-nowrap">
+                ADMIN • TOUR DE CONTRÔLE
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Centre : Barre de recherche globale */}
+        <div className="hidden md:flex items-center flex-1 max-w-md mx-2 relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+          <input
+            type="text"
+            value={globalSearch}
+            onChange={(e) => setGlobalSearch(e.target.value)}
+            placeholder="Rechercher une transaction, un élève, un cours..."
+            className="w-full h-9 pl-9 pr-8 rounded-full bg-slate-50 border border-slate-200/90 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-blue-500/15 transition"
+          />
+          {globalSearch && (
+            <button
+              type="button"
+              onClick={() => setGlobalSearch('')}
+              className="absolute right-2.5 p-0.5 rounded-full text-slate-400 hover:text-slate-600 cursor-pointer"
+              aria-label="Effacer la recherche"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Droite : Statut système + Badge ADMIN + Nouvelle Matière + Cloche + Avatar */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <span className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            Système en ligne
+          </span>
+
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 text-indigo-300 border border-indigo-500/30 text-[11px] font-bold tracking-wide">
+            <span className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center text-[10px]">A</span>
+            ADMIN
+          </span>
+
+          <button
+            type="button"
+            onClick={openCreateCourse}
+            className="gradient-button gradient-button--sm !px-3 !py-1.5 !text-xs flex items-center gap-1.5 shrink-0"
+            title="Nouvelle Matière"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Nouvelle Matière</span>
+          </button>
+
+          {/* Cloche de notifications */}
+          <button
+            type="button"
+            onClick={() => setView('notifications')}
+            className="relative w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-700 flex items-center justify-center transition cursor-pointer shrink-0"
+            title="Notifications et alertes"
+          >
+            <Bell className="w-4 h-4" />
+            {unreadAlertsCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm">
+                {unreadAlertsCount > 9 ? '9+' : unreadAlertsCount}
+              </span>
+            )}
+          </button>
+
+          {/* Menu profil */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full hover:bg-slate-100 cursor-pointer transition"
+            >
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  referrerPolicy="no-referrer"
+                  className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                />
+              ) : (
+                <span className="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center text-xs font-bold">
+                  {user.name?.charAt(0)?.toUpperCase() || 'A'}
+                </span>
+              )}
+              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+            </button>
+
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
+                <div className="absolute right-0 top-11 w-64 bg-white rounded-2xl shadow-xl border border-slate-200/90 py-3 z-50 isolate">
+                  <div className="px-4 pb-3 border-b border-slate-100">
+                    <p className="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Administrateur</p>
+                    <p className="text-sm font-bold text-slate-900 truncate mt-0.5">{user.name}</p>
+                    <p className="text-xs font-medium text-slate-500 truncate">{user.email}</p>
+                  </div>
+                  <div className="py-1">
+                    <Link
+                      to="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 transition"
+                    >
+                      <User className="w-4 h-4 text-indigo-600" />
+                      Mon profil &amp; paramètres
+                    </Link>
+                    <Link
+                      to="/teacher-dashboard"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 transition"
+                    >
+                      <GraduationCap className="w-4 h-4 text-indigo-600" />
+                      Vue Enseignant
+                    </Link>
+                    <Link
+                      to="/"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 transition"
+                    >
+                      <Globe className="w-4 h-4 text-slate-500" />
+                      Voir le site
+                    </Link>
+                  </div>
+                  <div className="pt-1 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        navigate('/');
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Se déconnecter
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
       {/* Overlay mobile */}
       {sidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-slate-950/50 backdrop-blur-[1px] z-30"
+          className="lg:hidden fixed inset-0 bg-slate-950/40 backdrop-blur-[1px] z-40"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
 
-      {/* Sidebar verticale violet-indigo style My Schools */}
+      {/* Sidebar claire latérale */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 w-64 bg-gradient-to-b from-[#4c3882] via-[#5b4397] to-[#3f2d70] text-white z-40 flex flex-col shadow-2xl transition-transform duration-300 ${
+        className={`fixed top-0 lg:top-14 bottom-0 left-0 w-[272px] bg-slate-900 text-slate-300 border-r border-slate-800 z-50 lg:z-30 flex flex-col transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Logo + Badge Rôle */}
-        <div className="px-5 pt-5 pb-4 border-b border-white/10">
-          <div className="flex items-center justify-between gap-2">
-            <Link to="/" className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center shrink-0">
-                <img src={logo} alt="Aliou Sow Academy" className="w-full h-full object-contain" />
-              </div>
-              <div className="min-w-0 leading-tight">
-                <span className="block text-[15px] font-bold tracking-tight text-white truncate">
-                  Aliou Sow
-                </span>
-                <span className="block text-[10px] font-semibold tracking-[0.18em] text-indigo-200 uppercase">
-                  Academy
-                </span>
-              </div>
-            </Link>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(false)}
-              className="md:hidden p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white cursor-pointer"
-              aria-label="Fermer le menu"
-            >
-              <X className="w-4 h-4" />
-            </button>
+        {/* En-tête mobile de la sidebar */}
+        <div className="lg:hidden px-4 py-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-900 text-white">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src={logo} alt="Aliou Sow Academy" className="w-7 h-7 object-contain shrink-0" />
+            <span className="text-sm font-bold text-white truncate">Tour de Contrôle</span>
           </div>
-          <div className="mt-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ef4444] text-white text-xs font-semibold shadow-sm">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Administrateur
-            </span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+            aria-label="Fermer le menu"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Navigation groupée */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
           {sidebarGroups.map((group) => (
             <div key={group} className="space-y-1">
-              <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/55 px-3 pt-1 pb-1">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500 px-3 pb-1">
                 {group}
               </p>
               {sidebarItems
@@ -965,22 +1133,25 @@ const AdminDashboard = () => {
                   return (
                     <button
                       key={item.key}
+                      type="button"
                       onClick={() => {
                         setView(item.key);
-                        if (window.innerWidth < 768) setSidebarOpen(false);
+                        if (window.innerWidth < 1024) setSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition cursor-pointer ${
+                      className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-200 cursor-pointer ${
                         active
-                          ? 'bg-white/20 text-white font-semibold shadow-sm border-l-4 border-white'
-                          : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
+                          ? 'uiverse-nav-pill--dark-active text-white font-semibold shadow-lg shadow-indigo-600/30'
+                          : 'uiverse-nav-pill--dark text-slate-300 font-medium hover:text-white hover:translate-x-1'
                       }`}
                     >
-                      <Icon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 text-left truncate">{item.label}</span>
-                      {typeof item.count === 'number' && (
+                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
+                      <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
+                      {typeof item.count === 'number' && item.count > 0 && (
                         <span
                           className={`text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full ${
-                            active ? 'bg-white text-[#4c3882]' : 'bg-white/15 text-white'
+                            active
+                              ? 'bg-white/20 text-white'
+                              : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
                           }`}
                         >
                           {item.count}
@@ -992,45 +1163,45 @@ const AdminDashboard = () => {
             </div>
           ))}
 
-          <div className="space-y-1 pt-2 border-t border-white/10">
-            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/55 px-3 pt-1 pb-1">
+          <div className="space-y-1 pt-3 border-t border-slate-800">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500 px-3 pb-1">
               RACCOURCIS
             </p>
             <Link
               to="/teacher-dashboard"
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium text-white/85 hover:bg-white/10 hover:text-white transition"
+              className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-[13.5px] font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all duration-200"
             >
-              <GraduationCap className="w-4 h-4 shrink-0" />
+              <GraduationCap className="w-4 h-4 shrink-0 text-slate-400" />
               <span className="flex-1 text-left truncate">Vue Enseignant</span>
             </Link>
             <Link
               to="/profile"
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium text-white/85 hover:bg-white/10 hover:text-white transition"
+              className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-[13.5px] font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all duration-200"
             >
-              <User className="w-4 h-4 shrink-0" />
+              <User className="w-4 h-4 shrink-0 text-slate-400" />
               <span className="flex-1 text-left truncate">Mon profil complet</span>
             </Link>
           </div>
         </nav>
 
         {/* Profil épinglé en bas de la sidebar */}
-        <div className="border-t border-white/15 bg-black/15 p-3.5">
-          <div className="flex items-center gap-2.5">
+        <div className="p-3 border-t border-slate-800 bg-slate-900/95">
+          <div className="uiverse-profile-glow--dark flex items-center gap-2.5 p-3">
             {user.avatar ? (
               <img
                 src={user.avatar}
                 alt={user.name}
                 referrerPolicy="no-referrer"
-                className="w-9 h-9 rounded-full object-cover border-2 border-white/30 shrink-0"
+                className="w-9 h-9 rounded-full object-cover border border-slate-600 shrink-0"
               />
             ) : (
-              <span className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-semibold shrink-0">
+              <span className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-semibold shrink-0">
                 {user.name?.charAt(0)?.toUpperCase() || 'A'}
               </span>
             )}
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-semibold text-white truncate">{user.name}</p>
-              <p className="text-[11px] text-white/70 truncate">{user.email}</p>
+              <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
             </div>
             <button
               type="button"
@@ -1039,7 +1210,7 @@ const AdminDashboard = () => {
                 navigate('/');
               }}
               title="Se déconnecter"
-              className="p-2 rounded-lg bg-white/10 hover:bg-rose-500 text-white transition cursor-pointer shrink-0"
+              className="p-2 rounded-xl bg-slate-700/60 border border-slate-600/50 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/30 text-slate-300 transition cursor-pointer shrink-0"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -1048,135 +1219,8 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Contenu principal */}
-      <main className={`min-h-screen transition-all duration-300 ${sidebarOpen ? 'md:pl-64' : ''}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
-          {/* Barre supérieure flottante blanche */}
-          <header className="bg-white rounded-2xl shadow-lg px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 border border-slate-100 relative z-30">
-            <div className="flex items-center gap-3 min-w-0">
-              <button
-                type="button"
-                onClick={() => setSidebarOpen((v) => !v)}
-                aria-label={sidebarOpen ? 'Replier le menu' : 'Ouvrir le menu'}
-                className="w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center cursor-pointer transition shrink-0"
-              >
-                {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-              </button>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[15px] sm:text-base font-bold tracking-tight text-slate-800 truncate">
-                    Aliou Sow Academy
-                  </span>
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#eef2fb] text-[#4c3882]">
-                    Back-Office
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 truncate">Administration centrale de la plateforme</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <Link
-                to="/"
-                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-slate-200 hover:border-[#2563eb] text-[13px] font-semibold text-slate-700 hover:text-[#2563eb] transition"
-              >
-                <Globe className="w-3.5 h-3.5" />
-                Voir le site
-              </Link>
-
-              <button
-                onClick={openCreateCourse}
-                className="h-9 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Nouvelle Matière</span>
-              </button>
-
-              {/* Cloche de notifications */}
-              <button
-                type="button"
-                onClick={() => setView('notifications')}
-                className="relative w-9 h-9 rounded-xl bg-[#eef2fb] hover:bg-indigo-100 text-[#4c3882] flex items-center justify-center transition cursor-pointer"
-                title="Notifications et alertes"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadAlertsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center animate-pulse shadow-sm">
-                    {unreadAlertsCount > 9 ? '9+' : unreadAlertsCount}
-                  </span>
-                )}
-              </button>
-
-              <div className="relative">
-                <button
-                  onClick={() => setMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-xl bg-[#eef2fb]/70 hover:bg-[#eef2fb] cursor-pointer transition"
-                >
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      referrerPolicy="no-referrer"
-                      className="w-8 h-8 rounded-full object-cover border border-indigo-200"
-                    />
-                  ) : (
-                    <span className="w-8 h-8 rounded-full bg-[#5c6be0] text-white flex items-center justify-center text-xs font-semibold">
-                      {user.name?.charAt(0)?.toUpperCase() || 'A'}
-                    </span>
-                  )}
-                  <span className="hidden md:block text-[13px] font-semibold text-slate-800 max-w-[130px] truncate">
-                    {user.name}
-                  </span>
-                  <span className="hidden lg:inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#ef4444] text-white">
-                    Admin
-                  </span>
-                  <ChevronDown className="hidden md:block w-3.5 h-3.5 text-slate-400" />
-                </button>
-
-                {menuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}></div>
-                    <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 isolate">
-                      <div className="px-4 pb-3 border-b border-slate-100">
-                        <p className="text-[11px] font-extrabold text-[#ef4444] uppercase tracking-wider">Administrateur</p>
-                        <p className="text-sm font-bold text-slate-900 truncate mt-0.5">{user.name}</p>
-                        <p className="text-xs font-medium text-slate-500 truncate">{user.email}</p>
-                      </div>
-                      <div className="py-1">
-                        <Link
-                          to="/profile"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition"
-                        >
-                          <User className="w-4 h-4 text-[#5c6be0]" />
-                          Mon profil &amp; paramètres
-                        </Link>
-                        <Link
-                          to="/teacher-dashboard"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:text-[#5c6be0] hover:bg-[#eef2fb]/60 transition"
-                        >
-                          <GraduationCap className="w-4 h-4 text-[#5c6be0]" />
-                          Vue Enseignant
-                        </Link>
-                      </div>
-                      <div className="pt-1 border-t border-slate-100">
-                        <button
-                          onClick={() => {
-                            logout();
-                            navigate('/');
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 cursor-pointer transition"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Se déconnecter
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </header>
+      <main className={`min-h-[calc(100vh-3.5rem)] transition-all duration-300 ${sidebarOpen ? 'lg:pl-[272px]' : ''}`}>
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
           {/* Notification Toast */}
           {toast.text && (
@@ -1197,6 +1241,13 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          <motion.div
+            key={view}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="space-y-6"
+          >
           {/* ===================== 1. VUE D'ENSEMBLE ===================== */}
           {view === 'overview' && (
             <AdminOverviewTab
@@ -1209,105 +1260,30 @@ const AdminDashboard = () => {
               onNavigateTab={(tab) => setView(tab)}
               onOpenCreateCourse={openCreateCourse}
               onOpenGrantSubModal={openGrantSubModal}
+              onOpenSubModal={openGrantSubModal}
+              onExportBackup={handleDownloadBackup}
+              onOpenBroadcastModal={() => setView('notifications')}
+              globalSearch={globalSearch}
             />
           )}
 
           {/* ===================== 2. MODULES & COURS ===================== */}
           {view === 'courses' && (
-            <div className="space-y-5">
-              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#06b6d4] to-[#0ea5e9] text-white flex items-center justify-center shadow-sm shrink-0">
-                    <BookOpen className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">Gestion des Modules &amp; Cours</h1>
-                    <p className="text-xs sm:text-sm text-slate-500">
-                      Créez, modifiez, assignez un professeur ou ouvrez le gestionnaire de chapitres et quiz.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={openCreateCourse}
-                  className="px-5 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold flex items-center gap-2 cursor-pointer transition shrink-0 shadow-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  Nouveau Module
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl p-4 shadow-md flex items-center">
-                <div className="relative w-full max-w-md">
-                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    value={courseSearch}
-                    onChange={(e) => setCourseSearch(e.target.value)}
-                    placeholder="Rechercher une matière, niveau, professeur..."
-                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-[#eef2fb]/50 text-sm focus:outline-none focus:bg-white focus:border-[#2563eb]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {filteredCourses.map((c) => (
-                  <div key={c._id} className="bg-white rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between">
-                    <div>
-                      <div className="aspect-[16/9] bg-slate-100 relative overflow-hidden">
-                        <img src={c.image} alt={c.title} className="w-full h-full object-cover" />
-                        <span className="absolute top-3 right-3 text-[11px] font-bold bg-white/95 text-slate-800 px-3 py-1 rounded-full shadow">
-                          {c.studentsCount || 0} inscrit{(c.studentsCount || 0) > 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <div className="p-5 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[11px] font-bold bg-sky-500 text-white px-2.5 py-0.5 rounded-full">
-                            {c.subject}
-                          </span>
-                          <span className="text-[11px] font-bold bg-amber-400 text-slate-900 px-2.5 py-0.5 rounded-full">
-                            {formatLevel(c.level)}
-                          </span>
-                        </div>
-                        <h3 className="text-base font-bold text-slate-800 line-clamp-2">{c.title}</h3>
-                        <p className="text-xs text-slate-500 line-clamp-2">{c.description}</p>
-                        <p className="text-xs text-slate-600 pt-1">
-                          Prof : <strong>{c.teacher?.name || 'Non assigné'}</strong>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="px-5 py-3.5 bg-[#eef2fb]/50 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-[#2563eb] tabular-nums">
-                        {c.isFree || c.price === 0 ? 'Gratuit' : `${Number(c.price).toLocaleString('fr-FR')} FCFA`}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => openEditCourse(c)}
-                          className="p-2 rounded-lg bg-amber-400 hover:bg-amber-500 text-slate-900 transition cursor-pointer shadow-sm"
-                          title="Modifier"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCourse(c._id)}
-                          className="p-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white transition cursor-pointer shadow-sm"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                        <Link
-                          to={`/courses/${c._id}`}
-                          className="p-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition shadow-sm"
-                          title="Gérer chapitres, leçons & quiz"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <AdminCatalogPromoTab
+              courses={courses}
+              subscriptions={subscriptions}
+              settings={draftSettings}
+              courseSearch={courseSearch}
+              setCourseSearch={setCourseSearch}
+              globalSearch={globalSearch}
+              onOpenCreateCourse={openCreateCourse}
+              onOpenEditCourse={openEditCourse}
+              onDeleteCourse={handleDeleteCourse}
+              onRefresh={fetchAllData}
+              showToast={showToast}
+              setConfirmState={setConfirmState}
+              formatLevel={formatLevel}
+            />
           )}
 
           {/* ===================== 3. ABONNEMENTS ===================== */}
@@ -1331,6 +1307,7 @@ const AdminDashboard = () => {
               onOpenGrantModal={openGrantSubModal}
               setToast={setToast}
               setConfirmState={setConfirmState}
+              globalSearch={globalSearch}
             />
           )}
 
@@ -1338,6 +1315,9 @@ const AdminDashboard = () => {
           {view === 'users' && (
             <AdminUsersTab
               usersList={usersList}
+              subscriptions={subscriptions}
+              courses={courses}
+              settings={draftSettings}
               currentAdminId={user._id}
               onSuspendUser={handleSuspendUser}
               onToggleBlockUser={handleToggleBlockUser}
@@ -1363,6 +1343,7 @@ const AdminDashboard = () => {
               onRefresh={fetchAllData}
               showToast={showToast}
               setConfirmState={setConfirmState}
+              globalSearch={globalSearch}
             />
           )}
 
@@ -1376,6 +1357,7 @@ const AdminDashboard = () => {
               onRefresh={fetchAllData}
               showToast={showToast}
               setConfirmState={setConfirmState}
+              globalSearch={globalSearch}
             />
           )}
 
@@ -1384,6 +1366,11 @@ const AdminDashboard = () => {
             <AdminSecurityTab
               reports={reports}
               securityLogs={securityLogs}
+              usersList={usersList}
+              courses={courses}
+              settings={draftSettings}
+              onRefresh={fetchAllData}
+              showToast={showToast}
               onUpdateReport={handleUpdateReport}
               onRefreshLogs={handleRefreshLogs}
               onSuspendUser={handleSuspendUser}
@@ -1407,6 +1394,7 @@ const AdminDashboard = () => {
               }}
               setToast={setToast}
               setConfirmState={setConfirmState}
+              globalSearch={globalSearch}
             />
           )}
 
@@ -1856,288 +1844,23 @@ const AdminDashboard = () => {
               onDeleteReview={handleDeleteReview}
               setToast={setToast}
               setConfirmState={setConfirmState}
+              globalSearch={globalSearch}
             />
           )}
 
           {/* ===================== 7. PARAMÈTRES DU SITE ===================== */}
           {view === 'settings' && (
-            <div className="space-y-5">
-              <div className="bg-white rounded-2xl shadow-md px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#5c6be0] to-[#4657d4] text-white flex items-center justify-center shadow-sm shrink-0">
-                    <Settings className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl sm:text-[22px] font-bold tracking-tight text-slate-800">Paramètres Généraux du Site</h1>
-                    <p className="text-xs sm:text-sm text-slate-500">
-                      Configurez l&apos;identité de la plateforme, les coordonnées, les numéros de paiement et les réseaux sociaux.
-                    </p>
-                  </div>
-                </div>
-                <span className="px-3 py-1 rounded-full bg-[#ef4444] text-white text-xs font-bold">
-                  Administration
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
-                  <h2 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">
-                    Identité &amp; Tarification par défaut
-                  </h2>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600">Nom de la plateforme</label>
-                      <input
-                        type="text"
-                        value={draftSettings.siteInfo?.platformName || ''}
-                        onChange={(e) =>
-                          setDraftSettings((prev) => ({
-                            ...prev,
-                            siteInfo: { ...prev.siteInfo, platformName: e.target.value },
-                          }))
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600">Nom affiché du professeur principal</label>
-                      <input
-                        type="text"
-                        value={draftSettings.siteInfo?.teacherDisplayName || ''}
-                        onChange={(e) =>
-                          setDraftSettings((prev) => ({
-                            ...prev,
-                            siteInfo: { ...prev.siteInfo, teacherDisplayName: e.target.value },
-                          }))
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-semibold text-slate-600">Tarif standard (FCFA)</label>
-                        <input
-                          type="number"
-                          value={draftSettings.siteInfo?.defaultPrice ?? 6000}
-                          onChange={(e) =>
-                            setDraftSettings((prev) => ({
-                              ...prev,
-                              siteInfo: { ...prev.siteInfo, defaultPrice: Number(e.target.value) },
-                            }))
-                          }
-                          className={inputClass}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-slate-600">Durée standard</label>
-                        <input
-                          type="text"
-                          value={draftSettings.siteInfo?.defaultDuration || ''}
-                          onChange={(e) =>
-                            setDraftSettings((prev) => ({
-                              ...prev,
-                              siteInfo: { ...prev.siteInfo, defaultDuration: e.target.value },
-                            }))
-                          }
-                          className={inputClass}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-semibold text-slate-600">Numéro Wave</label>
-                        <input
-                          type="text"
-                          value={draftSettings.siteInfo?.waveNumber || ''}
-                          onChange={(e) =>
-                            setDraftSettings((prev) => ({
-                              ...prev,
-                              siteInfo: { ...prev.siteInfo, waveNumber: e.target.value },
-                            }))
-                          }
-                          className={inputClass}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-slate-600">Numéro Orange Money</label>
-                        <input
-                          type="text"
-                          value={draftSettings.siteInfo?.orangeMoneyNumber || ''}
-                          onChange={(e) =>
-                            setDraftSettings((prev) => ({
-                              ...prev,
-                              siteInfo: { ...prev.siteInfo, orangeMoneyNumber: e.target.value },
-                            }))
-                          }
-                          className={inputClass}
-                        />
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() =>
-                        setDraftSettings((prev) => ({
-                          ...prev,
-                          siteInfo: {
-                            ...prev.siteInfo,
-                            maintenanceMode: !prev.siteInfo?.maintenanceMode,
-                          },
-                        }))
-                      }
-                      className="flex items-center justify-between p-3.5 rounded-xl border border-indigo-100 bg-[#eef2fb]/50 cursor-pointer"
-                    >
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">Mode Maintenance</p>
-                        <p className="text-xs text-slate-500">Affiche un bandeau de maintenance aux visiteurs.</p>
-                      </div>
-                      <div
-                        className={`w-11 h-6 rounded-full relative transition-colors ${
-                          draftSettings.siteInfo?.maintenanceMode ? 'bg-rose-500' : 'bg-slate-300'
-                        }`}
-                      >
-                        <div
-                          className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                            draftSettings.siteInfo?.maintenanceMode ? 'translate-x-5' : 'translate-x-0.5'
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
-                  <h2 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-3">
-                    Coordonnées &amp; Réseaux sociaux
-                  </h2>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-semibold text-slate-600">Téléphone contact</label>
-                        <input
-                          type="text"
-                          value={draftSettings.channels?.contactPhone || ''}
-                          onChange={(e) =>
-                            setDraftSettings((prev) => ({
-                              ...prev,
-                              channels: { ...prev.channels, contactPhone: e.target.value },
-                            }))
-                          }
-                          className={inputClass}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-slate-600">Numéro WhatsApp</label>
-                        <input
-                          type="text"
-                          value={draftSettings.channels?.whatsappNumber || ''}
-                          onChange={(e) =>
-                            setDraftSettings((prev) => ({
-                              ...prev,
-                              channels: { ...prev.channels, whatsappNumber: e.target.value },
-                            }))
-                          }
-                          className={inputClass}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600">E-mail de contact public</label>
-                      <input
-                        type="email"
-                        value={draftSettings.channels?.contactEmail || ''}
-                        onChange={(e) =>
-                          setDraftSettings((prev) => ({
-                            ...prev,
-                            channels: { ...prev.channels, contactEmail: e.target.value },
-                          }))
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600">Lien TikTok</label>
-                      <input
-                        type="url"
-                        value={draftSettings.channels?.tiktokUrl || ''}
-                        onChange={(e) =>
-                          setDraftSettings((prev) => ({
-                            ...prev,
-                            channels: { ...prev.channels, tiktokUrl: e.target.value },
-                          }))
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600">Lien YouTube</label>
-                      <input
-                        type="url"
-                        value={draftSettings.channels?.youtubeUrl || ''}
-                        onChange={(e) =>
-                          setDraftSettings((prev) => ({
-                            ...prev,
-                            channels: { ...prev.channels, youtubeUrl: e.target.value },
-                          }))
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600">Lien Google Meet par défaut</label>
-                      <input
-                        type="url"
-                        value={draftSettings.channels?.globalMeetLink || ''}
-                        onChange={(e) =>
-                          setDraftSettings((prev) => ({
-                            ...prev,
-                            channels: { ...prev.channels, globalMeetLink: e.target.value },
-                          }))
-                        }
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-              {/* Sauvegardes de la base de données */}
-              <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <Database className="w-5 h-5 text-[#009688]" />
-                  <h2 className="text-base font-bold text-slate-800">Sauvegardes de la base de données (Export JSON)</h2>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Téléchargez une archive JSON horodatée complète de votre base de données MongoDB (Utilisateurs, Cours, Abonnements, Signalements, Avis, Paramètres et Journaux d'audit de sécurité) pour sécuriser vos données hors-ligne ou restaurer en cas d'incident.
-                </p>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-                  <span className="text-xs text-slate-400">Statut : Connecté à MongoDB Atlas</span>
-                  <button
-                    type="button"
-                    onClick={handleDownloadBackup}
-                    className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm transition"
-                  >
-                    <Download className="w-4 h-4 text-emerald-400" />
-                    Télécharger la sauvegarde complète (.json)
-                  </button>
-                </div>
-              </section>
-
-              <div className="flex justify-end">
-                <button
-                  disabled={savingSettings}
-                  onClick={() =>
-                    persistSettings(
-                      { siteInfo: draftSettings.siteInfo, channels: draftSettings.channels },
-                      'Paramètres du site sauvegardés !'
-                    )
-                  }
-                  className="h-11 px-8 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-bold cursor-pointer transition shadow-md"
-                >
-                  {savingSettings ? 'Enregistrement...' : 'Sauvegarder tous les paramètres'}
-                </button>
-              </div>
-            </div>
+            <AdminSystemConfigTab
+              draftSettings={draftSettings}
+              setDraftSettings={setDraftSettings}
+              courses={courses}
+              onSaveSettings={() => persistSettings(draftSettings, 'Configuration système enregistrée !')}
+              savingSettings={savingSettings}
+              onDownloadBackup={handleDownloadBackup}
+              showToast={showToast}
+            />
           )}
+          </motion.div>
         </div>
       </main>
 
@@ -2197,7 +1920,7 @@ const AdminDashboard = () => {
                   placeholder="Décrivez les objectifs et chapitres de cette matière..."
                   value={courseForm.description}
                   onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
-                  className="w-full h-24 p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white focus:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10 transition shadow-2xs resize-none"
+                  className="w-full h-24 p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white focus:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-[#2563eb]/10 transition shadow-2xs resize-none"
                 />
               </div>
 
@@ -2276,7 +1999,7 @@ const AdminDashboard = () => {
                   type="checkbox"
                   checked={courseForm.isFree}
                   onChange={(e) => setCourseForm({ ...courseForm, isFree: e.target.checked })}
-                  className="w-5 h-5 rounded text-[#2563eb] accent-[#2563eb] cursor-pointer"
+                  className="w-5 h-5 rounded text-indigo-600 accent-[#2563eb] cursor-pointer"
                 />
               </div>
 
@@ -2492,96 +2215,267 @@ const AdminDashboard = () => {
       )}
 
       {/* ===================== MODAL ABONNEMENT MANUEL ===================== */}
-      {showSubModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl relative">
-            <button
-              onClick={() => setShowSubModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer"
+      {showSubModal && (() => {
+        const qSub = subStudentSearch.trim().toLowerCase();
+        const filteredSubStudents = studentsList.filter(
+          (st) =>
+            !qSub ||
+            (st.name || '').toLowerCase().includes(qSub) ||
+            (st.email || '').toLowerCase().includes(qSub)
+        );
+        const filteredSubCourses = courses.filter(
+          (c) => subLevelFilter === 'Tous' || formatLevel(c.level) === subLevelFilter || c.level === subLevelFilter
+        );
+        const selectedStudentObj = studentsList.find((st) => st._id === subForm.studentId);
+        const selectedCourseObj = courses.find((c) => c._id === subForm.courseId);
+
+        return (
+          <div className="fixed inset-0 bg-slate-900/55 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <form
+              onSubmit={handleGrantSub}
+              className="w-full max-w-2xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden"
             >
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Accorder un abonnement manuel</h3>
-            <form onSubmit={handleGrantSub} className="space-y-3.5">
-              <div>
-                <label className="text-xs font-semibold text-slate-600">Élève</label>
-                <select
-                  required
-                  value={subForm.studentId}
-                  onChange={(e) => setSubForm({ ...subForm, studentId: e.target.value })}
-                  className={inputClass}
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <h3 className="text-lg font-extrabold text-slate-900">
+                  Ouvrir un accès manuel à un élève
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowSubModal(false)}
+                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer"
                 >
-                  <option value="">-- Choisir un élève --</option>
-                  {studentsList.map((st) => (
-                    <option key={st._id} value={st._id}>
-                      {st.name} ({st.email})
-                    </option>
-                  ))}
-                </select>
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600">Module de cours</label>
-                <select
-                  required
-                  value={subForm.courseId}
-                  onChange={(e) => setSubForm({ ...subForm, courseId: e.target.value })}
-                  className={inputClass}
-                >
-                  <option value="">-- Choisir une matière --</option>
-                  {courses.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.title} ({c.subject} - {formatLevel(c.level)})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-600">Mode</label>
-                  <select
-                    value={subForm.paymentMethod}
-                    onChange={(e) => setSubForm({ ...subForm, paymentMethod: e.target.value })}
-                    className={inputClass}
+
+              <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-5">
+                {/* Colonne gauche : Formulaire */}
+                <div className="md:col-span-8 space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Rechercher un élève (Nom / Email)
+                    </label>
+                    <input
+                      type="text"
+                      value={subStudentSearch}
+                      onChange={(e) => {
+                        setSubStudentSearch(e.target.value);
+                        const match = studentsList.find(
+                          (st) =>
+                            st.name?.toLowerCase().includes(e.target.value.toLowerCase()) ||
+                            st.email?.toLowerCase().includes(e.target.value.toLowerCase())
+                        );
+                        if (match) setSubForm((prev) => ({ ...prev, studentId: match._id }));
+                      }}
+                      placeholder="ex: Fatou D. Sow ou email..."
+                      className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 mb-1.5 focus:outline-none focus:bg-white focus:border-indigo-500"
+                    />
+                    <select
+                      required
+                      value={subForm.studentId}
+                      onChange={(e) => setSubForm({ ...subForm, studentId: e.target.value })}
+                      className="w-full h-9 px-3 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800"
+                    >
+                      <option value="">-- Choisir un élève --</option>
+                      {filteredSubStudents.map((st) => (
+                        <option key={st._id} value={st._id}>
+                          {st.name} ({st.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Matière &amp; Cours à débloquer ({subSelectedCourseIds.length} sélectionné{subSelectedCourseIds.length > 1 ? 's' : ''})
+                      </label>
+                      <div className="max-h-32 overflow-y-auto rounded-xl bg-slate-50 border border-slate-200 p-2 space-y-1">
+                        {filteredSubCourses.map((c) => {
+                          const checked = subSelectedCourseIds.includes(c._id);
+                          return (
+                            <label
+                              key={c._id}
+                              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs cursor-pointer transition ${
+                                checked ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-700 hover:bg-white'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  setSubSelectedCourseIds((prev) =>
+                                    prev.includes(c._id)
+                                      ? prev.filter((id) => id !== c._id)
+                                      : [...prev, c._id]
+                                  );
+                                }}
+                                className="rounded border-slate-300 text-indigo-600 focus:ring-[#2563eb]"
+                              />
+                              <span className="truncate">{c.title}</span>
+                              <span className="text-[10px] text-slate-400 ml-auto shrink-0">
+                                {formatLevel(c.level)}
+                              </span>
+                            </label>
+                          );
+                        })}
+                        {filteredSubCourses.length === 0 && (
+                          <p className="text-[11px] text-slate-400 py-2 text-center">Aucun cours pour ce niveau.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Niveau
+                      </label>
+                      <select
+                        value={subLevelFilter}
+                        onChange={(e) => setSubLevelFilter(e.target.value)}
+                        className="w-full h-9 px-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800"
+                      >
+                        {['Tous', '4ème', '3ème', '2nde S', '1ère S', 'Terminale S'].map((lvl) => (
+                          <option key={lvl} value={lvl}>
+                            {lvl}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Raison de l&apos;accès manuel
+                    </label>
+                    <input
+                      type="text"
+                      value={subReason}
+                      onChange={(e) => setSubReason(e.target.value)}
+                      placeholder="ex: Paiement espèces reçu, Cas exceptionnel..."
+                      className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Durée (mois)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={36}
+                        value={subForm.durationMonths}
+                        onChange={(e) =>
+                          setSubForm({ ...subForm, durationMonths: Number(e.target.value) })
+                        }
+                        className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Mode
+                      </label>
+                      <select
+                        value={subForm.paymentMethod}
+                        onChange={(e) => setSubForm({ ...subForm, paymentMethod: e.target.value })}
+                        className="w-full h-9 px-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800"
+                      >
+                        <option value="Offert (Admin)">Offert</option>
+                        <option value="Espèces">Espèces</option>
+                        <option value="Wave">Wave direct</option>
+                        <option value="Orange Money">Orange Money</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Montant (F CFA)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={subForm.amount}
+                        onChange={(e) => setSubForm({ ...subForm, amount: Number(e.target.value) })}
+                        className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-600 mr-1">Notification :</span>
+                      <button
+                        type="button"
+                        onClick={() => setSubNotifyEmail(false)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border cursor-pointer ${
+                          !subNotifyEmail
+                            ? 'bg-[#1e293b] text-white border-[#1e293b]'
+                            : 'bg-white text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        Ne pas notifier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSubNotifyEmail(true)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border cursor-pointer ${
+                          subNotifyEmail
+                            ? 'bg-[#1e293b] text-white border-[#1e293b]'
+                            : 'bg-white text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        Envoyer Email confirmation
+                      </button>
+                    </div>
+
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
+                      Accès Validé - Validité: {subForm.durationMonths || 1} Mois
+                    </span>
+                  </div>
+                </div>
+
+                {/* Colonne droite : Aperçu de l'accès */}
+                <div className="md:col-span-4 bg-slate-50 rounded-2xl border border-slate-200/80 p-4 flex flex-col justify-between gap-4">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>Aperçu de l&apos;accès</span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 space-y-1.5 pt-1">
+                      <p>
+                        Élève :{' '}
+                        <strong className="text-slate-900">
+                          {selectedStudentObj?.name || 'Non sélectionné'}
+                        </strong>
+                      </p>
+                      <p>
+                        Cours :{' '}
+                        <strong className="text-slate-900">
+                          {selectedCourseObj?.title || 'Non sélectionné'}
+                        </strong>
+                      </p>
+                      <p>
+                        Durée : <strong>{subForm.durationMonths || 1} mois</strong>
+                      </p>
+                      <p>
+                        Paiement : <strong>{subForm.paymentMethod}</strong>
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingSub}
+                    className="gradient-button gradient-button--sm w-full !py-2.5 !text-xs flex items-center justify-center disabled:opacity-60"
                   >
-                    <option value="Offert (Admin)">Offert (Admin)</option>
-                    <option value="Wave">Wave (Validé)</option>
-                    <option value="Orange Money">Orange Money (Validé)</option>
-                    <option value="Espèces">Espèces</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-600">Durée (mois)</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={36}
-                    value={subForm.durationMonths}
-                    onChange={(e) => setSubForm({ ...subForm, durationMonths: Number(e.target.value) })}
-                    className={inputClass}
-                  />
+                    {savingSub ? 'Activation...' : "Ouvrir l'accès maintenant"}
+                  </button>
                 </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-600">Montant (FCFA)</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={subForm.amount}
-                  onChange={(e) => setSubForm({ ...subForm, amount: Number(e.target.value) })}
-                  className={inputClass}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={savingSub}
-                className="w-full h-11 rounded-xl bg-[#f59d0e] hover:bg-[#d97706] text-white text-sm font-bold cursor-pointer mt-2 shadow-sm"
-              >
-                {savingSub ? 'Activation...' : "Activer l'accès élève"}
-              </button>
             </form>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <ConfirmModal
         open={Boolean(confirmState)}

@@ -1,21 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import {
-  CreditCard,
   Search,
-  Filter,
+  Download,
+  Plus,
   CalendarPlus,
   Trash2,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  RefreshCw,
-  Plus,
-  ArrowUpDown,
   History,
   X,
-  ExternalLink,
-  Smartphone,
   Check,
+  Hourglass,
+  TrendingUp,
+  ArrowRight,
+  FileText,
+  Power,
+  Printer,
 } from 'lucide-react';
 
 const AdminSubscriptionsTab = ({
@@ -26,12 +24,13 @@ const AdminSubscriptionsTab = ({
   onOpenGrantModal,
   setToast,
   setConfirmState,
+  globalSearch = '',
 }) => {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // all, active, expired, expiring_soon
-  const [methodFilter, setMethodFilter] = useState('all'); // all, wave, orange, free, card
+  const [activePill, setActivePill] = useState('all'); // all, wave, orange, expired, free
   const [historyModalSub, setHistoryModalSub] = useState(null);
   const [extendModalSub, setExtendModalSub] = useState(null);
+  const [receiptModalSub, setReceiptModalSub] = useState(null);
   const [extendMonths, setExtendMonths] = useState(1);
 
   const getStudentAvatar = (sub) => {
@@ -43,14 +42,12 @@ const AdminSubscriptionsTab = ({
 
   const now = useMemo(() => new Date(), []);
 
-  // Metrics
+  // Calcul des métriques financières réelles
   const metrics = useMemo(() => {
     let totalRevenue = 0;
     let activeCount = 0;
     let expiredCount = 0;
     let expiringSoonCount = 0;
-    let waveTotal = 0;
-    let orangeTotal = 0;
 
     subscriptions.forEach((s) => {
       const amt = Number(s.amount || 0);
@@ -64,47 +61,83 @@ const AdminSubscriptionsTab = ({
       } else {
         expiredCount++;
       }
-
-      const method = (s.paymentMethod || '').toLowerCase();
-      if (method.includes('wave')) waveTotal += amt;
-      if (method.includes('orange') || method.includes('om')) orangeTotal += amt;
     });
 
-    return { totalRevenue, activeCount, expiredCount, expiringSoonCount, waveTotal, orangeTotal };
+    const netTeacher = Math.round(totalRevenue * 0.8);
+    const pendingBalance = Math.max(totalRevenue - netTeacher, 0);
+
+    return {
+      totalRevenue,
+      netTeacher,
+      pendingBalance,
+      activeCount,
+      expiredCount,
+      expiringSoonCount,
+    };
   }, [subscriptions, now]);
 
-  // Filtering
+  // Filtrage combiné (recherche locale + globale + pilule active)
+  const effectiveSearch = (search || globalSearch).trim().toLowerCase();
+
   const filteredSubs = useMemo(() => {
     return subscriptions.filter((s) => {
-      const q = search.trim().toLowerCase();
       const matchSearch =
-        !q ||
-        s.student?.name?.toLowerCase().includes(q) ||
-        s.student?.email?.toLowerCase().includes(q) ||
-        s.course?.title?.toLowerCase().includes(q) ||
-        s.transactionId?.toLowerCase().includes(q) ||
-        s.phoneNumber?.toLowerCase().includes(q);
+        !effectiveSearch ||
+        s.student?.name?.toLowerCase().includes(effectiveSearch) ||
+        s.student?.email?.toLowerCase().includes(effectiveSearch) ||
+        s.course?.title?.toLowerCase().includes(effectiveSearch) ||
+        s.transactionId?.toLowerCase().includes(effectiveSearch) ||
+        s._id?.toLowerCase().includes(effectiveSearch) ||
+        s.phoneNumber?.toLowerCase().includes(effectiveSearch);
 
       const exp = new Date(s.expiresAt);
       const isActive = s.status === 'active' && exp > now;
-      const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
-      const isExpiringSoon = isActive && diffDays <= 7 && diffDays >= 0;
-
-      let matchStatus = true;
-      if (statusFilter === 'active') matchStatus = isActive;
-      else if (statusFilter === 'expired') matchStatus = !isActive;
-      else if (statusFilter === 'expiring_soon') matchStatus = isExpiringSoon;
-
-      let matchMethod = true;
       const method = (s.paymentMethod || '').toLowerCase();
-      if (methodFilter === 'wave') matchMethod = method.includes('wave');
-      else if (methodFilter === 'orange') matchMethod = method.includes('orange') || method.includes('om');
-      else if (methodFilter === 'free') matchMethod = method.includes('gratuit') || method.includes('offert') || s.amount === 0;
-      else if (methodFilter === 'card') matchMethod = method.includes('carte') || method.includes('card');
 
-      return matchSearch && matchStatus && matchMethod;
+      let matchPill = true;
+      if (activePill === 'wave') matchPill = method.includes('wave');
+      else if (activePill === 'orange') matchPill = method.includes('orange') || method.includes('om');
+      else if (activePill === 'expired') matchPill = !isActive || s.status === 'failed' || s.status === 'cancelled';
+      else if (activePill === 'free') matchPill = method.includes('gratuit') || method.includes('offert') || Number(s.amount || 0) === 0;
+
+      return matchSearch && matchPill;
     });
-  }, [subscriptions, search, statusFilter, methodFilter, now]);
+  }, [subscriptions, effectiveSearch, activePill, now]);
+
+  const handleExportCSV = () => {
+    const headers = ['ID Transaction', 'Elève', 'Email', 'Cours acheté', 'Montant (F CFA)', 'Méthode', 'Date', 'Statut'];
+    const rows = filteredSubs.map((s) => {
+      const txId = s.transactionId || `TRX_${(s._id || '').slice(-6).toUpperCase()}`;
+      const exp = new Date(s.expiresAt);
+      const isActive = s.status === 'active' && exp > now;
+      const statusLabel = isActive ? 'Validé' : 'Expiré';
+      const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleString('fr-FR') : '';
+      return [
+        txId,
+        s.student?.name || 'Élève',
+        s.student?.email || '',
+        s.course?.title || 'Matière',
+        s.amount || 0,
+        s.paymentMethod || 'Wave',
+        dateStr,
+        statusLabel,
+      ]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(',');
+    });
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `transactions-aliou-sow-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setToast?.({ type: 'success', text: 'Export CSV téléchargé avec succès.' });
+  };
 
   const handleApplyExtension = async () => {
     if (!extendModalSub) return;
@@ -115,7 +148,7 @@ const AdminSubscriptionsTab = ({
         `Abonnement prolongé de ${extendMonths} mois avec succès.`
       );
       setExtendModalSub(null);
-    } catch (err) {
+    } catch {
       setToast?.({ type: 'error', text: "Erreur lors de la prolongation de l'abonnement." });
     }
   };
@@ -153,369 +186,440 @@ const AdminSubscriptionsTab = ({
     });
   };
 
-  const getMethodBadge = (method = '') => {
+  const formatTxDate = (dateValue) => {
+    if (!dateValue) return '—';
+    const d = new Date(dateValue);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const renderMethodBadge = (method = '') => {
     const m = method.toLowerCase();
-    if (m.includes('wave')) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#1dc8f2]/15 text-[#0c8ba8] border border-[#1dc8f2]/30">
-          <Smartphone className="w-3 h-3 text-[#1dc8f2]" />
-          Wave
-        </span>
-      );
-    }
     if (m.includes('orange') || m.includes('om')) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200">
-          <Smartphone className="w-3 h-3 text-orange-600" />
-          Orange Money
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-900 text-orange-400 text-[11px] font-bold">
+          OM
         </span>
       );
     }
     if (m.includes('gratuit') || m.includes('offert')) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
           Offert
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-        {method || 'Standard'}
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-50 border border-sky-200 text-sky-700 text-[11px] font-bold">
+        <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+        Wave
       </span>
     );
   };
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-white rounded-2xl shadow-md px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-slate-100">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#009688] to-[#00796b] text-white flex items-center justify-center shadow-sm shrink-0">
-            <CreditCard className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                Gestion des Abonnements & Paiements
-              </h1>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-teal-50 text-[#009688] font-bold border border-teal-200">
-                Paiements Wave & OM
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Historique complet des transactions, suivi des renouvellements et contrôle des accès élèves.
-            </p>
-          </div>
+      {/* En-tête : Titre + Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-[26px] font-extrabold text-slate-900 tracking-tight">
+            Transactions &amp; Trésorerie
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Suivi des encaissements Wave / Orange Money, part professeur et gestion des accès élèves.
+          </p>
         </div>
-
-        <button
-          type="button"
-          onClick={onOpenGrantModal}
-          className="px-5 py-2.5 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-sm font-bold flex items-center justify-center gap-2 transition shrink-0 shadow-sm shadow-[#009688]/20 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          Accorder un abonnement
-        </button>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <CheckCircle className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Abonnements Actifs</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-0.5">{metrics.activeCount}</p>
-            <p className="text-[11px] text-emerald-600 font-medium">Accès cours validés</p>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Expirant sous 7j</p>
-            <p className="text-2xl font-extrabold text-amber-600 mt-0.5">{metrics.expiringSoonCount}</p>
-            <p className="text-[11px] text-amber-600 font-medium">À relancer pour réabonnement</p>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Abonnements Expirés</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-0.5">{metrics.expiredCount}</p>
-            <p className="text-[11px] text-slate-400 font-medium">Accès clôturés</p>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-indigo-50 text-[#009688] flex items-center justify-center shrink-0">
-            <CreditCard className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Encaissé</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-0.5">
-              {metrics.totalRevenue.toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500">FCFA</span>
-            </p>
-            <p className="text-[11px] text-slate-500 font-medium">Wave: {metrics.waveTotal.toLocaleString('fr-FR')} | OM: {metrics.orangeTotal.toLocaleString('fr-FR')}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par élève, matière, transaction ID..."
-            className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:bg-white focus:border-[#009688] transition"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2 items-center">
-          {/* Status filters */}
-          <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
-            {[
-              { id: 'all', label: 'Tous' },
-              { id: 'active', label: 'Actifs' },
-              { id: 'expiring_soon', label: 'Expirant sous 7j' },
-              { id: 'expired', label: 'Expirés' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  statusFilter === tab.id
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Payment method selector */}
-          <select
-            value={methodFilter}
-            onChange={(e) => setMethodFilter(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#009688]"
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={onOpenGrantModal}
+            className="gradient-button gradient-button--sm !px-3.5 !py-2 !text-xs inline-flex items-center gap-1.5"
           >
-            <option value="all">Toutes méthodes</option>
-            <option value="wave">Wave</option>
-            <option value="orange">Orange Money</option>
-            <option value="free">Offert / Promo</option>
-            <option value="card">Carte bancaire</option>
-          </select>
+            <Plus className="w-3.5 h-3.5" />
+            <span>Accorder un accès</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Exporter CSV</span>
+          </button>
         </div>
       </div>
 
-      {/* Subscriptions Table */}
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+      {/* 3 Cartes KPI financières (.uiverse-glow-card) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* KPI 1 : Volume brut encaissé */}
+        <div className="uiverse-glow-card p-6 flex flex-col justify-between min-h-[132px]">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[13px] font-medium text-slate-600">Volume brut encaissé</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums tracking-tight">
+                {metrics.totalRevenue.toLocaleString('fr-FR')}{' '}
+                <span className="text-base font-bold text-slate-700">F CFA</span>
+              </p>
+            </div>
+            <TrendingUp className="w-5 h-5 text-slate-400 shrink-0" />
+          </div>
+          <div className="mt-3 h-8 w-full overflow-hidden">
+            <svg viewBox="0 0 220 40" className="w-full h-full" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="treasuryGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.02" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0 36 L35 28 L72 30 L108 18 L145 22 L182 10 L220 6 L220 40 L0 40 Z"
+                fill="url(#treasuryGrad)"
+              />
+              <path
+                d="M0 36 L35 28 L72 30 L108 18 L145 22 L182 10 L220 6"
+                fill="none"
+                stroke="#4f46e5"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* KPI 2 : Net reversé au Professeur */}
+        <div className="uiverse-glow-card p-6 flex flex-col justify-between min-h-[132px]">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[13px] font-medium text-slate-600">Net reversé au Professeur</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums tracking-tight">
+                {metrics.netTeacher.toLocaleString('fr-FR')}{' '}
+                <span className="text-base font-bold text-slate-700">F CFA</span>{' '}
+                <span className="text-sm font-semibold text-slate-500">(80 %)</span>
+              </p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-slate-400 shrink-0" />
+          </div>
+          <p className="text-xs text-slate-500 mt-3">
+            80 % après commission plateforme (20 %) • {metrics.activeCount} accès actif(s)
+          </p>
+        </div>
+
+        {/* KPI 3 : Solde en attente de virement */}
+        <div className="uiverse-glow-card p-6 flex flex-col justify-between min-h-[132px]">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[13px] font-medium text-slate-600">Solde &amp; Frais plateforme (20 %)</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums tracking-tight">
+                {metrics.pendingBalance.toLocaleString('fr-FR')}{' '}
+                <span className="text-base font-bold text-slate-700">F CFA</span>
+              </p>
+            </div>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/70 flex items-center justify-center shrink-0">
+              <Hourglass className="w-4 h-4 text-amber-600" />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 mt-3">
+            {metrics.expiringSoonCount > 0
+              ? `${metrics.expiringSoonCount} abonnement(s) expirant sous 7j`
+              : `${metrics.expiredCount} abonnement(s) expiré(s)`}
+          </p>
+        </div>
+      </div>
+
+      {/* Journal détaillé des transactions */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 space-y-3.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <h2 className="text-[16px] font-bold text-slate-900">
+              Journal détaillé des transactions
+            </h2>
+
+            {/* Recherche locale */}
+            <div className="relative w-full md:w-72">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher élève, cours, ID..."
+                className="w-full h-9 pl-9 pr-8 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-indigo-600 transition"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Pilules de filtre */}
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { key: 'all', label: 'Tous', activeCls: 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/20' },
+              { key: 'wave', label: 'Wave', activeCls: 'bg-sky-50 text-sky-700 border-sky-300' },
+              { key: 'orange', label: 'Orange Money', activeCls: 'bg-orange-50 text-orange-700 border-orange-300' },
+              { key: 'expired', label: 'Échecs / Expirés', activeCls: 'bg-rose-50 text-rose-700 border-rose-300' },
+              { key: 'free', label: 'Offerts / Manuels', activeCls: 'bg-purple-50 text-purple-700 border-purple-300' },
+            ].map((pill) => {
+              const isActive = activePill === pill.key;
+              return (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => setActivePill(pill.key)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                    isActive
+                      ? pill.activeCls
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {pill.label}
+                </button>
+              );
+            })}
+            <span className="text-xs text-slate-400 ml-auto font-medium">
+              {filteredSubs.length} résultat(s)
+            </span>
+          </div>
+        </div>
+
+        {/* Tableau complet */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-              <tr>
-                <th className="px-5 py-3.5">Élève</th>
-                <th className="px-5 py-3.5">Matière & Niveau</th>
-                <th className="px-5 py-3.5">Paiement & Montant</th>
-                <th className="px-5 py-3.5">Période & Expiration</th>
-                <th className="px-5 py-3.5">Statut</th>
-                <th className="px-5 py-3.5 text-right">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/90 border-b border-slate-200/70 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-3.5 px-5">Élève</th>
+                <th className="py-3.5 px-4">Cours acheté</th>
+                <th className="py-3.5 px-4">Montant</th>
+                <th className="py-3.5 px-4">Méthode</th>
+                <th className="py-3.5 px-4">Statut</th>
+                <th className="py-3.5 px-5 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredSubs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400 text-sm">
-                    Aucun abonnement ne correspond aux critères sélectionnés.
-                  </td>
-                </tr>
-              ) : (
-                filteredSubs.map((s) => {
-                  const exp = new Date(s.expiresAt);
-                  const start = new Date(s.startDate || s.createdAt);
-                  const isActive = s.status === 'active' && exp > now;
-                  const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
-                  const isExpiringSoon = isActive && diffDays <= 7 && diffDays >= 0;
+            <tbody className="divide-y divide-slate-100 text-[13px]">
+              {filteredSubs.map((sub) => {
+                const avatar = getStudentAvatar(sub);
+                const exp = new Date(sub.expiresAt);
+                const isActive = sub.status === 'active' && exp > now;
+                const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+                const isExpiringSoon = isActive && diffDays <= 7 && diffDays >= 0;
+                const txId = sub.transactionId || `TRX_${(sub._id || '').slice(-5).toUpperCase()}`;
 
-                  const studentAvatar = getStudentAvatar(s);
-
-                  return (
-                    <tr key={s._id} className="hover:bg-slate-50/80 transition">
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
-                            {studentAvatar ? (
-                              <img
-                                src={studentAvatar}
-                                alt={s.student?.name || 'Élève'}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">
-                                {s.student?.name?.[0]?.toUpperCase() || 'E'}
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">{s.student?.name || 'Élève supprimé'}</p>
-                            <p className="text-xs text-slate-400">{s.student?.email || 'N/A'}</p>
-                            {s.phoneNumber && (
-                              <p className="text-[11px] text-slate-500 font-mono">{s.phoneNumber}</p>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-3.5">
-                        <p className="font-semibold text-slate-800">{s.course?.title || 'Module supprimé'}</p>
-                        <p className="text-xs text-slate-400 font-mono truncate max-w-[200px]" title={s.transactionId}>
-                          Réf: {s.transactionId || 'MANUEL'}
-                        </p>
-                      </td>
-
-                      <td className="px-5 py-3.5">
-                        <p className="font-extrabold text-slate-900">
-                          {Number(s.amount || 0).toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500">FCFA</span>
-                        </p>
-                        <div className="mt-1 flex items-center gap-1.5">
-                          {getMethodBadge(s.paymentMethod)}
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-3.5">
-                        <div className="space-y-0.5 text-xs">
-                          <p className="text-slate-500">
-                            Du {start.toLocaleDateString('fr-FR')} au {exp.toLocaleDateString('fr-FR')}
-                          </p>
-                          {isActive ? (
-                            isExpiringSoon ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">
-                                <Clock className="w-3 h-3" /> Expire dans {diffDays} jour{diffDays > 1 ? 's' : ''}
-                              </span>
-                            ) : (
-                              <span className="text-[11px] text-emerald-600 font-medium">
-                                Reste {diffDays} jours
-                              </span>
-                            )
+                return (
+                  <tr key={sub._id} className="hover:bg-slate-50/70 transition">
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-2.5 min-w-[140px]">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                          {avatar ? (
+                            <img
+                              src={avatar}
+                              alt={sub.student?.name || 'Élève'}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
-                            <span className="text-[11px] text-rose-500 font-medium">
-                              Expiré depuis {Math.abs(diffDays)} jours
-                            </span>
+                            <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-[10px]">
+                              {sub.student?.name?.charAt(0)?.toUpperCase() || 'E'}
+                            </div>
                           )}
                         </div>
-                      </td>
-
-                      <td className="px-5 py-3.5">
-                        {isActive ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-sm">
-                            <CheckCircle className="w-3 h-3" />
-                            Actif
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-500 text-white shadow-sm">
-                            <AlertTriangle className="w-3 h-3" />
-                            Expiré
-                          </span>
-                        )}
-                        {s.autoRenew && (
-                          <span className="block mt-1 text-[10px] text-teal-700 font-bold">
-                            Renouvellement auto
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-5 py-3.5 text-right">
-                        <div className="inline-flex items-center gap-1.5">
-                          {/* Prolonger */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setExtendModalSub(s);
-                              setExtendMonths(1);
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-[#009688] hover:text-[#00796b] text-xs font-bold transition inline-flex items-center gap-1 border border-teal-200 cursor-pointer"
-                            title="Prolonger la durée"
-                          >
-                            <CalendarPlus className="w-3.5 h-3.5" />
-                            Prolonger
-                          </button>
-
-                          {/* Basculer Statut */}
-                          <button
-                            type="button"
-                            onClick={() => confirmToggleStatus(s)}
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition border cursor-pointer ${
-                              isActive
-                                ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
-                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
-                            }`}
-                            title={isActive ? 'Forcer expiration' : 'Réactiver'}
-                          >
-                            {isActive ? 'Expirer' : 'Activer'}
-                          </button>
-
-                          {/* Historique */}
-                          <button
-                            type="button"
-                            onClick={() => setHistoryModalSub(s)}
-                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
-                            title="Voir l'historique"
-                          >
-                            <History className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Supprimer */}
-                          <button
-                            type="button"
-                            onClick={() => confirmDelete(s)}
-                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer border border-rose-200"
-                            title="Supprimer définitivement"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-800 truncate max-w-[145px]">
+                            {sub.student?.name || 'Élève'}
+                          </p>
+                          <p className="text-[11px] font-mono text-slate-400">{txId}</p>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <p className="text-slate-700 font-medium max-w-[170px] truncate">
+                        {sub.course?.title || 'Matière'}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        {formatTxDate(sub.createdAt || sub.startDate)}
+                      </p>
+                    </td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap tabular-nums">
+                      {(sub.amount || 0).toLocaleString('fr-FR')} F CFA
+                    </td>
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {renderMethodBadge(sub.paymentMethod)}
+                    </td>
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {isExpiringSoon ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
+                          En attente renouv.
+                        </span>
+                      ) : isActive ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                          Validé
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/80">
+                          Expiré
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setReceiptModalSub(sub)}
+                          className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-slate-300 text-xs font-semibold text-slate-700 cursor-pointer transition"
+                        >
+                          Reçu
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExtendModalSub(sub);
+                            setExtendMonths(1);
+                          }}
+                          title="Prolonger l'abonnement"
+                          className="p-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-indigo-600 border border-slate-200/80 transition cursor-pointer"
+                        >
+                          <CalendarPlus className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setHistoryModalSub(sub)}
+                          title="Historique"
+                          className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200/80 transition cursor-pointer"
+                        >
+                          <History className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => confirmToggleStatus(sub)}
+                          title={isActive ? "Forcer l'expiration" : 'Réactiver'}
+                          className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                            isActive
+                              ? 'bg-slate-50 hover:bg-amber-50 text-slate-500 hover:text-amber-600 border-slate-200/80'
+                              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                          }`}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => confirmDelete(sub)}
+                          title="Supprimer"
+                          className="p-1.5 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200/80 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {filteredSubs.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-sm text-slate-400">
+                    Aucune transaction ne correspond aux critères sélectionnés.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* MODAL: PROLONGER ABONNEMENT */}
-      {extendModalSub && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100">
+      {/* MODAL : APERÇU REÇU DE TRANSACTION */}
+      {receiptModalSub && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
-                <CalendarPlus className="w-5 h-5 text-[#009688]" />
-                <h3 className="font-bold text-slate-900">Prolonger l'abonnement</h3>
+                <FileText className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-bold text-slate-900">Reçu de transaction</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReceiptModalSub(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-sm">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <span className="text-slate-500">Référence</span>
+                <span className="font-mono font-bold text-slate-900">
+                  {receiptModalSub.transactionId || `TRX_${(receiptModalSub._id || '').slice(-6).toUpperCase()}`}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Élève</span>
+                <span className="font-bold text-slate-900">{receiptModalSub.student?.name || 'Élève'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Cours acheté</span>
+                <span className="font-semibold text-slate-800 text-right max-w-[200px] truncate">
+                  {receiptModalSub.course?.title || 'Matière'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Méthode</span>
+                <span>{renderMethodBadge(receiptModalSub.paymentMethod)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Date</span>
+                <span className="text-slate-700">{formatTxDate(receiptModalSub.createdAt || receiptModalSub.startDate)}</span>
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                <span className="font-bold text-slate-700">Montant payé</span>
+                <span className="text-lg font-extrabold text-indigo-600">
+                  {(receiptModalSub.amount || 0).toLocaleString('fr-FR')} F CFA
+                </span>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-700 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Imprimer
+              </button>
+              <button
+                type="button"
+                onClick={() => setReceiptModalSub(null)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PROLONGER L'ABONNEMENT */}
+      {extendModalSub && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <CalendarPlus className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-bold text-slate-900">Prolonger l&apos;abonnement</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setExtendModalSub(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -568,7 +672,7 @@ const AdminSubscriptionsTab = ({
                       onClick={() => setExtendMonths(btn.val)}
                       className={`py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
                         extendMonths === btn.val
-                          ? 'bg-[#009688] text-white border-[#009688] shadow-sm'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                           : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -578,10 +682,10 @@ const AdminSubscriptionsTab = ({
                 </div>
               </div>
 
-              <div className="p-3 bg-teal-50 rounded-xl text-xs text-teal-800 flex items-start gap-2 border border-teal-100">
-                <Check className="w-4 h-4 text-[#009688] shrink-0 mt-0.5" />
+              <div className="p-3 bg-blue-50 rounded-xl text-xs text-blue-800 flex items-start gap-2 border border-blue-100">
+                <Check className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                 <p>
-                  La nouvelle date d'expiration sera automatiquement repoussée de <strong>{extendMonths} mois</strong> à partir de la date d'expiration actuelle (ou d'aujourd'hui si déjà expiré).
+                  La nouvelle date d&apos;expiration sera automatiquement repoussée de <strong>{extendMonths} mois</strong> à partir de la date d&apos;expiration actuelle (ou d&apos;aujourd&apos;hui si déjà expiré).
                 </p>
               </div>
             </div>
@@ -590,14 +694,14 @@ const AdminSubscriptionsTab = ({
               <button
                 type="button"
                 onClick={() => setExtendModalSub(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
               >
                 Annuler
               </button>
               <button
                 type="button"
                 onClick={handleApplyExtension}
-                className="px-5 py-2 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold shadow-sm transition"
+                className="gradient-button gradient-button--sm !px-4 !py-2 !text-xs"
               >
                 Confirmer la prolongation
               </button>
@@ -608,8 +712,8 @@ const AdminSubscriptionsTab = ({
 
       {/* MODAL: HISTORIQUE DES MODIFICATIONS */}
       {historyModalSub && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
                 <History className="w-5 h-5 text-slate-700" />
@@ -618,7 +722,7 @@ const AdminSubscriptionsTab = ({
               <button
                 type="button"
                 onClick={() => setHistoryModalSub(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -665,7 +769,7 @@ const AdminSubscriptionsTab = ({
                   </div>
                 ) : (
                   <div className="text-center py-6 text-slate-400 text-xs">
-                    Aucune modification historique spécifique n'a encore été consignée pour cet abonnement.
+                    Aucune modification historique spécifique n&apos;a encore été consignée pour cet abonnement.
                   </div>
                 )}
               </div>
@@ -675,7 +779,7 @@ const AdminSubscriptionsTab = ({
               <button
                 type="button"
                 onClick={() => setHistoryModalSub(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition cursor-pointer"
               >
                 Fermer
               </button>

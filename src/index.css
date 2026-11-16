@@ -2102,6 +2102,118 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ===== UIVERSE NAV PILL GLOW (Sidebar items & profile card) ===== */
+.uiverse-nav-pill,
+.uiverse-nav-pill--dark,
+.uiverse-nav-pill--active,
+.uiverse-nav-pill--dark-active,
+.uiverse-profile-glow,
+.uiverse-profile-glow--dark {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.uiverse-profile-glow,
+.uiverse-profile-glow--dark {
+  border-radius: 16px;
+}
+
+.uiverse-nav-pill > *,
+.uiverse-nav-pill--dark > *,
+.uiverse-nav-pill--active > *,
+.uiverse-nav-pill--dark-active > *,
+.uiverse-profile-glow > *,
+.uiverse-profile-glow--dark > * {
+  position: relative;
+  z-index: 1;
+}
+
+.uiverse-nav-pill--active::before,
+.uiverse-nav-pill--dark-active::before,
+.uiverse-nav-pill:hover::before,
+.uiverse-nav-pill--dark:hover::before,
+.uiverse-profile-glow::before,
+.uiverse-profile-glow--dark::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  height: 400%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 50deg,
+    rgb(0, 183, 255) 110deg,
+    rgb(255, 48, 255) 170deg,
+    transparent 230deg 360deg
+  );
+  animation: rotBGimg 3.5s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uiverse-nav-pill:hover::after {
+  content: "";
+  position: absolute;
+  background: #f8fafc;
+  inset: 2px;
+  border-radius: 10px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uiverse-nav-pill--dark:hover::after {
+  content: "";
+  position: absolute;
+  background: #1e293b;
+  inset: 2px;
+  border-radius: 10px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uiverse-profile-glow::after {
+  content: "";
+  position: absolute;
+  background: #f8fafc;
+  inset: 2px;
+  border-radius: 14px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uiverse-profile-glow--dark::after {
+  content: "";
+  position: absolute;
+  background: #1e293b;
+  inset: 2px;
+  border-radius: 14px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uiverse-nav-pill--active::after {
+  content: "";
+  position: absolute;
+  background: #eff6ff;
+  inset: 2px;
+  border-radius: 10px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uiverse-nav-pill--dark-active::after {
+  content: "";
+  position: absolute;
+  background: #4f46e5;
+  inset: 2px;
+  border-radius: 10px;
+  z-index: 0;
+  pointer-events: none;
+}
+
 /* ===== UIVERSE NEON FORM (yashasvi9199 - Mode Clair) ===== */
 .uiverse-form-card {
   background-image: linear-gradient(163deg, #00c896 0%, #2563eb 100%);

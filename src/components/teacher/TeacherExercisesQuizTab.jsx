@@ -348,7 +348,7 @@ const TeacherExercisesQuizTab = ({
 
   if (studioOpen) {
     return (
-      <div className="space-y-5 animate-fade-slide-up">
+      <div className="space-y-6 animate-fade-slide-up">
         {/* En-tête inline Studio (Image 8) */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -373,7 +373,7 @@ const TeacherExercisesQuizTab = ({
             await handleSaveQuiz(e);
             setStudioOpen(false);
           }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
         >
           {/* Paramètres Généraux (4 cols) */}
           <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
@@ -731,7 +731,7 @@ const TeacherExercisesQuizTab = ({
   }
 
   return (
-    <div className="space-y-5 animate-fade-slide-up">
+    <div className="space-y-6 animate-fade-slide-up">
       {/* En-tête + Recherche */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-[28px] font-extrabold text-slate-900 tracking-tight">
@@ -857,7 +857,7 @@ const TeacherExercisesQuizTab = ({
 
       {/* VUE CATALOGUE 3 COLONNES (Image 4) */}
       {(activeTab === 'all' || activeTab === 'qcm' || activeTab === 'pdf' || activeTab === 'annales') && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Colonne 1 (4 cols) : Liste des TD / Quiz */}
           <div className="lg:col-span-4 space-y-3">
             {combinedItems.length === 0 ? (

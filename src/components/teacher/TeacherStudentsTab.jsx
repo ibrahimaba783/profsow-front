@@ -187,7 +187,7 @@ const TeacherStudentsTab = ({
   }, [effectiveStudents, courses, search, courseFilter, statusFilter, now]);
 
   return (
-    <div className="space-y-5 animate-fade-slide-up">
+    <div className="space-y-6 animate-fade-slide-up">
       {/* En-tête + Recherche */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-[28px] font-extrabold text-slate-900 tracking-tight">
@@ -261,7 +261,7 @@ const TeacherStudentsTab = ({
       </div>
 
       {/* 3 KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="uiverse-glow-card p-5 flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-blue-50 text-[#2563eb] flex items-center justify-center shrink-0">
             <Users className="w-5 h-5" />

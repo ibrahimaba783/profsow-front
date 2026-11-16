@@ -4186,7 +4186,7 @@ const TeacherDashboard = () => {
       {/* Corps : Barre latérale gauche + Contenu principal */}
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         <aside
-          className={`fixed md:sticky top-0 md:top-14 left-0 h-screen md:h-[calc(100vh-3.5rem)] w-60 md:w-56 bg-[#f8fafc] border-r border-slate-200/70 z-50 md:z-30 flex flex-col justify-between transition-transform duration-300 shrink-0 ${
+          className={`fixed md:sticky top-0 md:top-14 left-0 h-screen md:h-[calc(100vh-3.5rem)] w-[272px] bg-[#f8fafc] border-r border-slate-200/80 z-50 md:z-30 flex flex-col justify-between transition-transform duration-300 shrink-0 ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
         >
@@ -4225,24 +4225,18 @@ const TeacherDashboard = () => {
                           setView(item.key);
                           if (window.innerWidth < 768) setSidebarOpen(false);
                         }}
-                        className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition cursor-pointer ${
+                        className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-200 cursor-pointer ${
                           active
-                            ? 'bg-[#eff6ff] text-[#2563eb] font-semibold'
-                            : 'text-slate-600 font-medium hover:bg-slate-100/80 hover:text-slate-900'
+                            ? 'uiverse-nav-pill--active text-blue-700 font-semibold shadow-sm'
+                            : 'uiverse-nav-pill text-slate-600 font-medium hover:translate-x-1 hover:text-slate-900'
                         }`}
                       >
-                        {active && (
-                          <span
-                            aria-hidden="true"
-                            className="absolute left-0 top-1.5 bottom-1.5 w-[3.5px] rounded-r bg-[#2563eb]"
-                          />
-                        )}
                         <Icon
                           className={`w-4 h-4 shrink-0 ${
-                            active ? 'text-[#2563eb]' : 'text-slate-500'
+                            active ? 'text-blue-600' : 'text-slate-400'
                           }`}
                         />
-                        <span className="flex-1 text-left truncate">{item.label}</span>
+                        <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
                         {typeof item.count === 'number' && item.count > 0 && item.group !== 'PRINCIPAL' && (
                           <span
                             className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full ${
@@ -4263,29 +4257,32 @@ const TeacherDashboard = () => {
             ))}
           </nav>
 
-          {/* Profil discret en bas de la sidebar avec déconnexion */}
-          <div className="px-3 py-2.5 border-t border-slate-200/70 bg-white/70">
-            <div className="flex items-center gap-2">
+          {/* Profil épinglé en bas de la sidebar avec déconnexion */}
+          <div className="p-3 border-t border-slate-200/80 bg-white/60">
+            <div className="uiverse-profile-glow flex items-center gap-2.5 p-3 shadow-xs">
               {user?.avatar ? (
                 <img
                   src={user.avatar}
                   alt={user.name}
                   referrerPolicy="no-referrer"
-                  className="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0"
+                  className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
                 />
               ) : (
-                <span className="w-7 h-7 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                <span className="w-9 h-9 rounded-full bg-[#1e293b] text-white flex items-center justify-center text-sm font-bold shrink-0">
                   {user?.name?.charAt(0)?.toUpperCase() || 'P'}
                 </span>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-slate-800 truncate">{user?.name}</p>
+                <p className="text-[13px] font-semibold text-slate-900 truncate">{user?.name}</p>
+                {user?.email && (
+                  <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
+                )}
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
                 title="Se déconnecter"
-                className="p-1.5 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition cursor-pointer shrink-0"
+                className="p-2 rounded-xl bg-white border border-slate-200/70 hover:bg-red-50 hover:text-red-600 hover:border-red-100 text-slate-500 transition cursor-pointer shrink-0"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>

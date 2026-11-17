@@ -44,7 +44,7 @@ export const DEFAULT_SETTINGS = {
   },
   channels: {
     contactPhone: '+221 77 102 33 99',
-    contactEmail: 'Sowaliou2504@gmail.com',
+    contactEmail: 'sowaliou2504@gmail.com',
     whatsappNumber: '+221771023399',
     facebookUrl: '',
     tiktokUrl: 'https://www.tiktok.com/@aliousow9216',

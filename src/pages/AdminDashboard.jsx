@@ -922,7 +922,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f7fb] text-slate-900 antialiased font-sans">
+    <div className="min-h-screen bg-[#f6f7fb] text-slate-900 antialiased font-sans overflow-x-hidden">
       {/* Topbar blanche sticky */}
       <header className="sticky top-0 z-40 h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
         {/* Gauche : Burger + Logo + Badge Tour de Contrôle */}

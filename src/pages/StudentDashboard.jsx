@@ -383,7 +383,7 @@ const StudentDashboard = () => {
       : 0;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 overflow-x-hidden">
       {/* Barre du haut fixe (exact style Bakeli) */}
       <header className="fixed top-0 inset-x-0 h-[72px] bg-white border-b border-slate-200 z-40 flex items-center justify-between gap-4 px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2 shrink-0">

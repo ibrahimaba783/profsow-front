@@ -3864,10 +3864,10 @@ const TeacherDashboard = () => {
   ];
 
   return (
-    <div className="teacher-dashboard-inter min-h-screen bg-[#f4f7fb] text-slate-900 antialiased">
+    <div className="teacher-dashboard-inter min-h-screen bg-[#f4f7fb] text-slate-900 antialiased overflow-x-hidden">
       {/* En-tête fixe */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200/80">
-        <div className="px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+        <div className="px-2.5 sm:px-6 h-14 flex items-center justify-between gap-1.5 sm:gap-3">
           {/* Gauche : Menu mobile + Logo discret + Bascule rapide Matières */}
           <div className="flex items-center gap-2 min-w-0">
             <button
@@ -3956,11 +3956,11 @@ const TeacherDashboard = () => {
           </div>
 
           {/* Droite : + Créer un cours + Cloche + Profil */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <button
               type="button"
               onClick={openCreateModal}
-              className="gradient-button gradient-button--sm shrink-0"
+              className="gradient-button gradient-button--sm !px-2.5 sm:!px-4 shrink-0"
             >
               <span className="gradient-text">
                 <Plus className="w-3.5 h-3.5 text-[#4ecdc4]" />

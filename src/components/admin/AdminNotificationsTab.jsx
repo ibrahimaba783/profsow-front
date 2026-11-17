@@ -260,7 +260,7 @@ const AdminNotificationsTab = ({
         <div className="lg:col-span-7 space-y-4">
           {/* Filtres & Recherche */}
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-wrap gap-2 items-center justify-between">
-            <div className="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs">
+            <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl gap-1 text-xs w-full sm:w-auto">
               {[
                 { id: 'all', label: 'Toutes' },
                 { id: 'unread', label: 'Non lues' },

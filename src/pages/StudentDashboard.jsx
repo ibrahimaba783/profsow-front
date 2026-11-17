@@ -35,9 +35,19 @@ import {
 import logo from '../assets/logo-aliou-sow-academy-navbar.png';
 
 const mapInitialView = (rawView) => {
+  if (rawView === 'catalog' || rawView === 'catalogue') return 'catalog';
   if (rawView === 'mine' || rawView === 'parcours') return 'mine';
   if (rawView === 'progress' || rawView === 'certifications') return 'progress';
+  if (rawView === 'profile' || rawView === 'achats') return 'profile';
   return 'all';
+};
+
+const normalizeLevelKey = (lvl = '') => {
+  const s = String(lvl).toLowerCase().trim();
+  if (s === 'ts' || s.includes('terminale')) return 'ts';
+  if (s.includes('1ère') || s.includes('1ere')) return '1ere s';
+  if (s.includes('2nde') || s.includes('seconde')) return '2nde s';
+  return s;
 };
 
 const countCourseLessons = (course) =>
@@ -220,7 +230,7 @@ const StudentDashboard = () => {
   const q = query.trim().toLowerCase();
   const matches = (c) =>
     (subjectFilter === 'Tous' || c.subject === subjectFilter) &&
-    (levelFilter === 'Tous' || c.level === levelFilter) &&
+    (levelFilter === 'Tous' || normalizeLevelKey(c.level) === normalizeLevelKey(levelFilter)) &&
     (!freeOnly || c.isFree || c.price === 0) &&
     (!q || `${c.title} ${c.subject} ${c.level}`.toLowerCase().includes(q));
 
@@ -235,29 +245,95 @@ const StudentDashboard = () => {
     (subjectFilter !== 'Tous' ? 1 : 0) + (levelFilter !== 'Tous' ? 1 : 0) + (freeOnly ? 1 : 0);
 
   const renderCard = (course, enrolled) => {
+    const isFree = course.isFree || Number(course.price || 0) === 0;
+    const lessonsCount = countCourseLessons(course);
+    const isPhysics = (course.subject || '').toLowerCase().includes('physique');
+
     return (
-      <CourseCard
-        course={course}
-        onClick={() => navigate(`/courses/${course._id}`)}
-        topRightBadge={
-          enrolled ? (
-            <span className="text-[10px] font-bold bg-[#009688] text-white px-2.5 py-1 rounded-full shadow-sm">
-              Accès complet
+      <div className="uiverse-glow-card flex flex-col h-full">
+        <div
+          onClick={() => navigate(`/courses/${course._id}`)}
+          className="aspect-[16/9] bg-slate-100 relative overflow-hidden cursor-pointer group"
+        >
+          <img
+            src={course.image}
+            alt={course.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          <span
+            className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs ${
+              enrolled
+                ? 'bg-[#009688] text-white'
+                : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            }`}
+          >
+            {enrolled ? 'Accès complet' : '1ère leçon gratuite'}
+          </span>
+        </div>
+
+        <div className="p-4 flex flex-col flex-1 gap-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className={`text-[11px] font-bold rounded-md px-2.5 py-0.5 truncate border ${
+                isPhysics
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200/70'
+                  : 'bg-sky-50 text-sky-700 border-sky-200/70'
+              }`}
+            >
+              {course.subject}
             </span>
-          ) : (
-            <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
-              1er chap. gratuit
+            <span className="text-[11px] font-bold bg-amber-50 text-amber-800 rounded-md px-2.5 py-0.5 shrink-0 border border-amber-200/60">
+              {formatLevel(course.level)}
             </span>
-          )
-        }
-        footerRight={
-          enrolled ? (
-            <span className="text-[#009688] text-xs font-bold flex items-center gap-0.5 shrink-0">
-              Continuer <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+
+          <h3
+            onClick={() => navigate(`/courses/${course._id}`)}
+            className="text-sm font-extrabold text-slate-900 leading-snug line-clamp-2 min-h-[2.5rem] hover:text-[#009688] transition-colors cursor-pointer"
+          >
+            {course.title}
+          </h3>
+
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span>
+              {lessonsCount} leçon{lessonsCount > 1 ? 's' : ''}
             </span>
-          ) : null
-        }
-      />
+            <span className="font-extrabold text-slate-900 text-sm tabular-nums">
+              {isFree ? 'Gratuit' : `${Number(course.price || 0).toLocaleString('fr-FR')} F CFA`}
+            </span>
+          </div>
+
+          <div className="mt-auto pt-3 border-t border-slate-100 flex items-center gap-2">
+            {enrolled || isFree ? (
+              <button
+                type="button"
+                onClick={() => navigate(`/courses/${course._id}`)}
+                className="gradient-button gradient-button--sm w-full !py-2 !px-3 !text-xs flex items-center justify-center gap-1.5"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>{enrolled ? 'Continuer le cours' : 'Accéder gratuitement'}</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/courses/${course._id}`)}
+                  className="flex-1 py-2 px-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer whitespace-nowrap"
+                >
+                  Aperçu gratuit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => startPayment(course)}
+                  className="gradient-button gradient-button--sm flex-1 !py-2 !px-2.5 !text-[11px] whitespace-nowrap flex items-center justify-center"
+                >
+                  Acheter Wave / OM
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -291,9 +367,11 @@ const StudentDashboard = () => {
   }
 
   const sidebarItems = [
-    { key: 'all', label: 'Toutes les matières', icon: LayoutGrid },
-    { key: 'mine', label: 'Mes matières', icon: BookOpen, count: myCourses.length },
-    { key: 'progress', label: 'Mes résultats & quiz', icon: Award, count: quizResults.length },
+    { key: 'all', label: 'Mon Espace', icon: LayoutDashboard },
+    { key: 'catalog', label: 'Catalogue des cours', icon: LayoutGrid },
+    { key: 'mine', label: 'Mes cours débloqués', icon: BookOpen, count: myCourses.length },
+    { key: 'progress', label: 'Exercices & Quiz', icon: Award, count: quizResults.length },
+    { key: 'profile', label: 'Mon Profil & Achats', icon: User },
   ];
 
   const avgQuizScore =
@@ -327,7 +405,7 @@ const StudentDashboard = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Qu'est-ce que vous souhaitez apprendre ?"
+            placeholder="Rechercher un cours..."
             className="flex-1 min-w-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
           />
           <button
@@ -408,41 +486,80 @@ const StudentDashboard = () => {
         ></div>
       )}
       <aside
-        className={`fixed top-[72px] bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-30 px-4 py-6 transition-transform duration-300 ${
+        className={`fixed top-[72px] bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-30 flex flex-col justify-between transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <p className="text-[11px] font-bold tracking-wider uppercase text-slate-400 px-3 mb-3">
-          ESPACE ÉLÈVE
-        </p>
-        <nav className="space-y-1.5">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const active = view === item.key;
-            return (
-              <button
-                key={item.key}
-                onClick={() => setView(item.key)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer ${
-                  active ? 'bg-amber-50/90 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <span
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    active ? 'bg-[#f59d0e] text-white shadow-xs' : 'bg-slate-100 text-slate-500'
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          <p className="text-[11px] font-bold tracking-wider uppercase text-slate-400 px-3 mb-3">
+            ESPACE ÉLÈVE
+          </p>
+          <nav className="space-y-1.5">
+            {sidebarItems.map((item) => {
+              const Icon = item.icon;
+              const active = view === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    setView(item.key);
+                    if (window.innerWidth < 768) setSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                    active
+                      ? 'uiverse-nav-pill--active text-slate-900 shadow-sm'
+                      : 'uiverse-nav-pill text-slate-600 hover:translate-x-1 hover:text-slate-900'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                </span>
-                <span className="flex-1 text-left">{item.label}</span>
-                {typeof item.count === 'number' && !active && (
-                  <span className="text-xs text-slate-400">{item.count}</span>
-                )}
-                {active && <ChevronRight className="w-4 h-4 text-[#f59d0e] shrink-0" />}
-              </button>
-            );
-          })}
-        </nav>
+                  <span
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      active ? 'bg-[#f59d0e] text-white shadow-xs' : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </span>
+                  <span className="flex-1 text-left truncate">{item.label}</span>
+                  {typeof item.count === 'number' && item.count > 0 && !active && (
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                      {item.count}
+                    </span>
+                  )}
+                  {active && <ChevronRight className="w-4 h-4 text-[#f59d0e] shrink-0" />}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Bloc profil en bas du menu avec bouton Déconnexion */}
+        <div className="p-3.5 border-t border-slate-100 bg-slate-50/70">
+          <div className="uiverse-profile-glow flex items-center gap-2.5 p-2.5 shadow-xs">
+            {user?.avatar && !user.avatar.includes('cld-sample.jpg') ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
+              />
+            ) : (
+              <span className="w-9 h-9 rounded-full bg-[#009688] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                {user?.name?.charAt(0)?.toUpperCase() || 'E'}
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-slate-900 truncate">{user?.name}</p>
+              <p className="text-[10px] text-slate-500 truncate">{user?.level || 'Élève'}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Déconnexion"
+              className="p-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200/70 transition cursor-pointer shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </aside>
 
       <button
@@ -469,55 +586,69 @@ const StudentDashboard = () => {
             </div>
           )}
 
-          {view === 'all' ? (
+          {view === 'all' || view === 'catalog' ? (
             <>
-              {/* BANNIÈRE DE BIENVENUE & STATS ÉLÈVE */}
+              {view === 'all' && (
+              <>
+              {/* BANNIÈRE DE BIENVENUE & STATS ÉLÈVE (Design Clair & Animations Uiverse) */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-[#0a3138] to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800/80"
+                transition={{ duration: 0.45 }}
+                className="uiverse-glow-card p-6 sm:p-8"
               >
-                {/* Glow decoratif */}
-                <div className="absolute top-0 right-0 -mr-16 -mt-16 w-72 h-72 rounded-full bg-[#009688]/20 blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-1/4 -mb-12 w-48 h-48 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />
-
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                   <div className="max-w-xl">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-500/30 text-teal-300 text-xs font-bold mb-3 shadow-2xs">
-                      <Sparkles className="w-3.5 h-3.5 text-teal-300" />
-                      <span>Espace d'apprentissage Aliou Sow Academy</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-[#009688] text-xs font-bold mb-3 shadow-2xs">
+                      <Sparkles className="w-3.5 h-3.5 text-[#009688]" />
+                      <span>Espace d&apos;apprentissage Aliou Sow Academy</span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900">
                       Bonjour, {user?.name || 'Élève'}
                     </h1>
-                    <p className="text-slate-300 text-sm sm:text-base mt-2 leading-relaxed">
+                    <p className="text-slate-600 text-sm sm:text-base mt-2 leading-relaxed">
                       Continuez votre progression en sciences, accédez aux cours vidéo, révisez vos chapitres et réussissez vos examens.
                     </p>
                   </div>
 
                   {/* 3 Widgets métriques de l'élève */}
                   <div className="grid grid-cols-3 gap-3 sm:gap-4 shrink-0">
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-3 sm:p-4 text-center">
-                      <div className="text-xl sm:text-2xl font-black text-white">{myCourses.length}</div>
-                      <div className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wider">
+                    <motion.div
+                      whileHover={{ y: -3 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3 sm:p-4 text-center shadow-2xs"
+                    >
+                      <div className="text-xl sm:text-2xl font-black text-slate-900 tabular-nums">
+                        {myCourses.length}
+                      </div>
+                      <div className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider mt-0.5">
                         Matières
                       </div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-3 sm:p-4 text-center">
-                      <div className="text-xl sm:text-2xl font-black text-teal-300">{allCoursesList.length}</div>
-                      <div className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wider">
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ y: -3 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-teal-50/70 border border-teal-200/70 rounded-2xl p-3 sm:p-4 text-center shadow-2xs"
+                    >
+                      <div className="text-xl sm:text-2xl font-black text-[#009688] tabular-nums">
+                        {allCoursesList.length}
+                      </div>
+                      <div className="text-[10px] sm:text-xs text-teal-700/80 font-bold uppercase tracking-wider mt-0.5">
                         Catalogue
                       </div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-3 sm:p-4 text-center">
-                      <div className="text-xl sm:text-2xl font-black text-amber-300">
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ y: -3 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-amber-50/70 border border-amber-200/70 rounded-2xl p-3 sm:p-4 text-center shadow-2xs"
+                    >
+                      <div className="text-xl sm:text-2xl font-black text-[#f59d0e] tabular-nums">
                         {quizResults.length > 0 ? `${avgQuizScore}%` : '—'}
                       </div>
-                      <div className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wider">
+                      <div className="text-[10px] sm:text-xs text-amber-700/80 font-bold uppercase tracking-wider mt-0.5">
                         Quiz
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
                 </div>
               </motion.div>
@@ -608,6 +739,9 @@ const StudentDashboard = () => {
                 </section>
               )}
 
+                            </>
+              )}
+
               {/* 2. CATALOGUE DES COURS */}
               <section className="space-y-6 pt-2">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -660,6 +794,37 @@ const StudentDashboard = () => {
                       )}
                     </button>
                   </div>
+                </div>
+
+                {/* Rangée de filtres horizontaux défilables par niveau scolaire */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  {[
+                    { value: 'Tous', label: 'Tous niveaux' },
+                    { value: '4ème', label: '4ème' },
+                    { value: '3ème', label: '3ème' },
+                    { value: '2nde S', label: '2nde' },
+                    { value: '1ère S', label: '1ère S' },
+                    { value: 'TS', label: 'Terminale S' },
+                  ].map((lvl) => {
+                    const isLvlSelected =
+                      lvl.value === 'Tous'
+                        ? levelFilter === 'Tous'
+                        : normalizeLevelKey(levelFilter) === normalizeLevelKey(lvl.value);
+                    return (
+                      <button
+                        key={lvl.value}
+                        type="button"
+                        onClick={() => setLevelFilter(lvl.value)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold border whitespace-nowrap transition cursor-pointer shrink-0 ${
+                          isLvlSelected
+                            ? 'bg-slate-900 border-slate-900 text-white shadow-xs'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                        }`}
+                      >
+                        {lvl.label}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Filtres rapides par discipline */}
@@ -744,10 +909,26 @@ const StudentDashboard = () => {
                 </div>
 
                 {filteredTrending.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 max-w-md mx-auto">
-                    <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                    <h4 className="text-slate-800 font-bold mb-1">Aucune matière trouvée</h4>
-                    <p className="text-xs text-slate-400">Essayez un autre mot-clé ou réinitialisez les filtres.</p>
+                  <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center text-slate-500 max-w-md mx-auto space-y-3">
+                    <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
+                    <div>
+                      <h4 className="text-slate-800 font-bold text-base">Aucun cours trouvé</h4>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Aucun cours ne correspond à votre sélection actuelle.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubjectFilter('Tous');
+                        setLevelFilter('Tous');
+                        setFreeOnly(false);
+                        setQuery('');
+                      }}
+                      className="gradient-button gradient-button--sm inline-flex items-center gap-1.5 !px-4 !py-2 !text-xs"
+                    >
+                      Voir tout le catalogue
+                    </button>
                   </div>
                 ) : (
                   <motion.div
@@ -816,7 +997,7 @@ const StudentDashboard = () => {
                       <div
                         key={course._id}
                         onClick={() => navigate(`/courses/${course._id}`)}
-                        className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition flex flex-col cursor-pointer"
+                        className="uiverse-glow-card flex flex-col cursor-pointer"
                       >
                         <div className="aspect-[16/9] bg-slate-100 relative overflow-hidden">
                           <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
@@ -916,7 +1097,7 @@ const StudentDashboard = () => {
                 )}
               </section>
             </div>
-          ) : (
+          ) : view === 'progress' ? (
             /* ================= VUE MES RÉSULTATS & QUIZ ================= */
             <div className="space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -980,6 +1161,125 @@ const StudentDashboard = () => {
                 )}
               </section>
             </div>
+          ) : view === 'profile' ? (
+            /* ================= VUE MON PROFIL & ACHATS ================= */
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-extrabold text-slate-900">Mon Profil &amp; Achats</h1>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Consultez vos informations personnelles, votre historique Wave / Orange Money et vos appareils connectés.
+                  </p>
+                </div>
+                <Link
+                  to="/profile"
+                  className="gradient-button gradient-button--sm inline-flex items-center gap-2 !px-4 !py-2 !text-xs self-start"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Modifier mon profil complet</span>
+                </Link>
+              </div>
+
+              {/* Informations personnelles */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  {user?.avatar && !user.avatar.includes('cld-sample.jpg') ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-14 h-14 rounded-2xl object-cover border border-slate-200"
+                    />
+                  ) : (
+                    <span className="w-14 h-14 rounded-2xl bg-[#009688] text-white flex items-center justify-center text-lg font-extrabold">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'E'}
+                    </span>
+                  )}
+                  <div>
+                    <h2 className="text-lg font-extrabold text-slate-900">{user?.name}</h2>
+                    <p className="text-xs text-slate-500">{user?.email}</p>
+                    {user?.phone && <p className="text-xs text-slate-500">{user.phone}</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
+                    Niveau : {user?.level || 'Non défini'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Historique des achats Wave / Orange Money */}
+              <section className="bg-white border border-slate-200 rounded-2xl p-6">
+                <h2 className="text-base font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-[#f59d0e]" />
+                  <span>Historique des achats Wave / Orange Money</span>
+                </h2>
+                {subscriptions.length === 0 ? (
+                  <p className="text-sm text-slate-500">Aucun achat enregistré pour le moment.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
+                          <th className="py-2.5 pr-4">Cours</th>
+                          <th className="py-2.5 px-3">Date</th>
+                          <th className="py-2.5 px-3">Montant</th>
+                          <th className="py-2.5 px-3">Moyen</th>
+                          <th className="py-2.5 pl-3 text-right">Statut</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs">
+                        {subscriptions.map((sub) => {
+                          const active = sub.status === 'active' && new Date(sub.expiresAt) > new Date();
+                          return (
+                            <tr key={sub._id}>
+                              <td className="py-3 pr-4 font-bold text-slate-800">
+                                {sub.course?.title || 'Cours'}
+                              </td>
+                              <td className="py-3 px-3 text-slate-500">
+                                {new Date(sub.createdAt || sub.startDate).toLocaleDateString('fr-FR')}
+                              </td>
+                              <td className="py-3 px-3 font-bold text-slate-900">
+                                {(sub.amount || 0).toLocaleString('fr-FR')} F CFA
+                              </td>
+                              <td className="py-3 px-3 font-semibold text-slate-700">
+                                {sub.paymentMethod || 'Wave'}
+                              </td>
+                              <td className="py-3 pl-3 text-right">
+                                <span
+                                  className={`px-2.5 py-0.5 rounded-full font-bold ${
+                                    active
+                                      ? 'bg-emerald-50 text-emerald-700'
+                                      : 'bg-rose-50 text-rose-700'
+                                  }`}
+                                >
+                                  {active ? 'Validé' : 'Expiré'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+
+              {/* Appareils connectés */}
+              <section className="bg-white border border-slate-200 rounded-2xl p-6">
+                <h2 className="text-base font-extrabold text-slate-900 mb-3 flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-[#009688]" />
+                  <span>Appareils autorisés (2 max)</span>
+                </h2>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Session active actuelle (Navigateur web)</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">
+                    Actif
+                  </span>
+                </div>
+              </section>
+            </div>
+          ) : (
+            <div />
           )}
         </div>
       </main>

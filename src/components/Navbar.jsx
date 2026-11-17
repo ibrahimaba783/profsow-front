@@ -89,7 +89,7 @@ const Navbar = () => {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Qu'est-ce que vous souhaitez apprendre ?"
+        placeholder="Rechercher un cours..."
         aria-label="Rechercher une matière"
         className="flex-1 min-w-0 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
       />

@@ -4214,7 +4214,7 @@ const TeacherDashboard = () => {
                 )}
                 {sidebarItems
                   .filter((i) => i.group === group)
-                  .map((item) => {
+                  .map((item, idx) => {
                     const Icon = item.icon;
                     const active = view === item.key;
                     return (
@@ -4228,7 +4228,9 @@ const TeacherDashboard = () => {
                         className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-200 cursor-pointer ${
                           active
                             ? 'uiverse-nav-pill--active text-blue-700 font-semibold shadow-sm'
-                            : 'uiverse-nav-pill text-slate-600 font-medium hover:translate-x-1 hover:text-slate-900'
+                            : idx % 2 === 0
+                            ? 'uiverse-nav-pill text-slate-600 font-medium hover:translate-x-1 hover:text-slate-900'
+                            : 'text-slate-600 font-medium hover:bg-slate-100/70 hover:translate-x-1 hover:text-slate-900'
                         }`}
                       >
                         <Icon

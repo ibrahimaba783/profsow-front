@@ -1127,7 +1127,7 @@ const AdminDashboard = () => {
               </p>
               {sidebarItems
                 .filter((i) => i.group === group)
-                .map((item) => {
+                .map((item, idx) => {
                   const Icon = item.icon;
                   const active = view === item.key;
                   return (
@@ -1141,7 +1141,9 @@ const AdminDashboard = () => {
                       className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-200 cursor-pointer ${
                         active
                           ? 'uiverse-nav-pill--dark-active text-white font-semibold shadow-lg shadow-indigo-600/30'
-                          : 'uiverse-nav-pill--dark text-slate-300 font-medium hover:text-white hover:translate-x-1'
+                          : idx % 2 === 0
+                          ? 'uiverse-nav-pill--dark text-slate-300 font-medium hover:text-white hover:translate-x-1'
+                          : 'text-slate-300 font-medium hover:bg-slate-800/80 hover:text-white hover:translate-x-1'
                       }`}
                     >
                       <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />

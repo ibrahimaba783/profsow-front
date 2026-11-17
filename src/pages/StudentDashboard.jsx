@@ -495,7 +495,7 @@ const StudentDashboard = () => {
             ESPACE ÉLÈVE
           </p>
           <nav className="space-y-1.5">
-            {sidebarItems.map((item) => {
+            {sidebarItems.map((item, idx) => {
               const Icon = item.icon;
               const active = view === item.key;
               return (
@@ -509,7 +509,9 @@ const StudentDashboard = () => {
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
                     active
                       ? 'uiverse-nav-pill--active text-slate-900 shadow-sm'
-                      : 'uiverse-nav-pill text-slate-600 hover:translate-x-1 hover:text-slate-900'
+                      : idx % 2 === 0
+                      ? 'uiverse-nav-pill text-slate-600 hover:translate-x-1 hover:text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-50 hover:translate-x-1 hover:text-slate-900'
                   }`}
                 >
                   <span

@@ -2132,8 +2132,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .uiverse-nav-pill--active::before,
 .uiverse-nav-pill--dark-active::before,
-.uiverse-nav-pill:hover::before,
-.uiverse-nav-pill--dark:hover::before,
+.uiverse-nav-pill::before,
+.uiverse-nav-pill--dark::before,
 .uiverse-profile-glow::before,
 .uiverse-profile-glow--dark::before {
   content: "";
@@ -2154,10 +2154,24 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
-.uiverse-nav-pill:hover::after {
+.uiverse-nav-pill::after {
   content: "";
   position: absolute;
+  background: #ffffff;
+  inset: 2px;
+  border-radius: 10px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uiverse-nav-pill:hover::after {
   background: #f8fafc;
+}
+
+.uiverse-nav-pill--dark::after {
+  content: "";
+  position: absolute;
+  background: #0f172a;
   inset: 2px;
   border-radius: 10px;
   z-index: 0;
@@ -2165,13 +2179,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .uiverse-nav-pill--dark:hover::after {
-  content: "";
-  position: absolute;
   background: #1e293b;
-  inset: 2px;
-  border-radius: 10px;
-  z-index: 0;
-  pointer-events: none;
 }
 
 .uiverse-profile-glow::after {
